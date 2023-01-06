@@ -1,0 +1,76 @@
+using System;
+using UnityEngine;
+
+namespace UnityEditor.U2D.Aseprite
+{
+    [Serializable]
+    internal struct AsepriteImporterSettings
+    {
+        [SerializeField] bool m_ImportHiddenLayers;
+        public bool importHiddenLayers
+        {
+            get => m_ImportHiddenLayers;
+            set => m_ImportHiddenLayers = value;
+        }
+
+        [SerializeField] LayerImportModes m_LayerImportMode;
+        public LayerImportModes layerImportMode
+        {
+            get => m_LayerImportMode;
+            set => m_LayerImportMode = value;
+        }
+
+        [SerializeField] PivotSpaces m_DefaultPivotSpace;
+        public PivotSpaces defaultPivotSpace
+        {
+            get => m_DefaultPivotSpace;
+            set => m_DefaultPivotSpace = value;
+        }
+
+        [SerializeField] SpriteAlignment m_DefaultPivotAlignment;
+        public SpriteAlignment defaultPivotAlignment
+        {
+            get => m_DefaultPivotAlignment;
+            set => m_DefaultPivotAlignment = value;
+        }
+        
+        [SerializeField] Vector2 m_CustomPivotPosition;
+        public Vector2 customPivotPosition
+        {
+            get => m_CustomPivotPosition;
+            set => m_CustomPivotPosition = value;
+        }
+
+        [SerializeField] bool m_GenerateModelPrefab;
+        public bool generateModelPrefab
+        {
+            get => m_GenerateModelPrefab;
+            set => m_GenerateModelPrefab = value;
+        }
+
+        [SerializeField] bool m_GenerateAnimationClips;
+        public bool generateAnimationClips
+        {
+            get => m_GenerateAnimationClips;
+            set => m_GenerateAnimationClips = value;
+        }
+
+        [SerializeField] bool m_AddShadowCasters;
+        public bool addShadowCasters
+        {
+            get => m_AddShadowCasters;
+            set => m_AddShadowCasters = value;
+        }
+
+        public bool IsDefault()
+        {
+            return !m_ImportHiddenLayers &&
+                   m_LayerImportMode == 0 &&
+                   m_DefaultPivotSpace == 0 &&
+                   m_DefaultPivotAlignment == 0 &&
+                   !m_GenerateModelPrefab &&
+                   !m_GenerateAnimationClips &&
+                   !m_AddShadowCasters;
+        }
+    }
+}

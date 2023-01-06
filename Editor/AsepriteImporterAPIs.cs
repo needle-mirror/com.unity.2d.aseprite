@@ -1,0 +1,370 @@
+using System;
+using UnityEngine;
+
+namespace UnityEditor.U2D.Aseprite
+{
+    public partial class AsepriteImporter 
+    {
+        /// <summary>
+        /// Which type of texture are we dealing with here.
+        /// </summary>
+        /// <value>Valid values are TextureImporterType.Default or TextureImporterType.Sprite.</value>
+        /// <exception cref="ArgumentException">Exception when non valid values are set.</exception>
+        public TextureImporterType textureType
+        {
+            get => m_TextureImporterSettings.textureType;
+            set
+            {
+                if (value == TextureImporterType.Sprite || value == TextureImporterType.Default)
+                {
+                    m_TextureImporterSettings.textureType = value;
+                    SetDirty();
+                }
+                else
+                    throw new System.ArgumentException("Invalid value. Valid values are TextureImporterType.Sprite or TextureImporterType.Default");
+            }
+        }    
+        
+        /// <summary>
+        /// Selects Single or Manual import mode for Sprite textures.
+        /// </summary>
+        /// <value>Valid values are SpriteImportMode.Multiple or SpriteImportMode.Single.</value>
+        /// <exception cref="ArgumentException">Exception when non valid values are set.</exception>
+        public SpriteImportMode spriteImportMode
+        {
+            get => (SpriteImportMode)m_TextureImporterSettings.spriteMode;
+            set
+            {
+                if (value == SpriteImportMode.Multiple || value == SpriteImportMode.Single)
+                {
+                    m_TextureImporterSettings.spriteMode = (int)value;
+                    SetDirty();
+                }
+                else
+                    throw new System.ArgumentException("Invalid value. Valid values are SpriteImportMode.Multiple or SpriteImportMode.Single");
+            }
+        }        
+        
+        /// <summary>
+        /// The number of pixels in the sprite that correspond to one unit in world space.
+        /// </summary>
+        public float spritePixelsPerUnit
+        {
+            get => m_TextureImporterSettings.spritePixelsPerUnit;
+            set
+            {
+                m_TextureImporterSettings.spritePixelsPerUnit = value;
+                SetDirty();
+            }
+        }        
+        
+        /// <summary>
+        /// Sets the type of mesh to ge generated for each Sprites.
+        /// </summary>
+        public SpriteMeshType spriteMeshType
+        {
+            get => m_TextureImporterSettings.spriteMeshType;
+            set
+            {
+                m_TextureImporterSettings.spriteMeshType = value;
+                SetDirty();
+            }
+        }    
+        
+        /// <summary>
+        /// The number of blank pixels to leave between the edge of the graphic and the mesh.
+        /// </summary>
+        public uint spriteExtrude
+        {
+            get => m_TextureImporterSettings.spriteExtrude;
+            set
+            {
+                m_TextureImporterSettings.spriteExtrude = value;
+                SetDirty();
+            }
+        }
+
+        /// <summary>
+        /// Should include hidden layers from the source file.
+        /// </summary>
+        public bool includeHiddenLayers
+        {
+            get => m_AsepriteImporterSettings.importHiddenLayers;
+            set => m_AsepriteImporterSettings.importHiddenLayers = value;
+        }
+        
+        /// <summary>
+        /// The import mode for all layers in the file.
+        /// </summary>
+        public LayerImportModes layerImportMode
+        {
+            get => m_AsepriteImporterSettings.layerImportMode;
+            set => m_AsepriteImporterSettings.layerImportMode = value;
+        }
+
+        /// <summary>
+        /// The space the Sprite pivots are being calculated.
+        /// </summary>
+        public PivotSpaces pivotSpace
+        {
+            get => m_AsepriteImporterSettings.defaultPivotSpace;
+            set => m_AsepriteImporterSettings.defaultPivotSpace = value;
+        }
+
+        /// <summary>
+        /// How a Sprite's graphic rectangle is aligned with its pivot point.
+        /// </summary>
+        public SpriteAlignment pivotAlignment
+        {
+            get => m_AsepriteImporterSettings.defaultPivotAlignment;
+            set => m_AsepriteImporterSettings.defaultPivotAlignment = value;
+        }
+        
+        
+        /// <summary>
+        /// Normalized position of the custom pivot.
+        /// </summary>
+        public Vector2 customPivotPosition
+        {
+            get => m_AsepriteImporterSettings.customPivotPosition;
+            set => m_AsepriteImporterSettings.customPivotPosition = value;
+        }
+
+        /// <summary>
+        /// Generate a Model Prefab based on the layers of the source asset.
+        /// </summary>
+        public bool generateModelPrefab
+        {
+            get => m_AsepriteImporterSettings.generateModelPrefab;
+            set => m_AsepriteImporterSettings.generateModelPrefab = value;
+        }
+        
+#if UNITY_2023_1_OR_NEWER        
+        /// <summary>
+        /// Add Shadow Casters to the generated GameObjects with SpriteRenderers.
+        /// </summary>
+        public bool addShadowCasters
+        {
+            get => m_AsepriteImporterSettings.addShadowCasters;
+            set
+            {
+                m_AsepriteImporterSettings.addShadowCasters = value;
+                SetDirty();
+            }
+        }  
+#endif        
+        
+        /// <summary>
+        /// Generate Animation Clips based on the frame data of the source asset.
+        /// </summary>
+        public bool generateAnimationClips
+        {
+            get => m_AsepriteImporterSettings.generateAnimationClips;
+            set => m_AsepriteImporterSettings.generateAnimationClips = value;
+        }        
+        
+        /// <summary>
+        /// Texture coordinate wrapping mode.
+        /// <br/><br/>Using wrapMode sets the same wrapping mode on all axes. Different per-axis wrap modes can be set using wrapModeU, wrapModeV, wrapModeW. Querying the value returns the U axis wrap mode (same as wrapModeU getter).
+        /// </summary>
+        public TextureWrapMode wrapMode
+        {
+            get => m_TextureImporterSettings.wrapMode;
+            set
+            {
+                m_TextureImporterSettings.wrapMode = value;
+                SetDirty();
+            }
+        }   
+        
+        /// <summary>
+        /// Texture U coordinate wrapping mode.
+        /// <br/><br/>Controls wrapping mode along texture U (horizontal) axis.
+        /// </summary>
+        public TextureWrapMode wrapModeU
+        {
+            get => m_TextureImporterSettings.wrapModeU;
+            set
+            {
+                m_TextureImporterSettings.wrapModeU = value;
+                SetDirty();
+            }
+        }
+        
+        /// <summary>
+        /// Texture V coordinate wrapping mode.
+        /// <br/><br/>Controls wrapping mode along texture V (vertical) axis.
+        /// </summary>
+        public TextureWrapMode wrapModeV
+        {
+            get => m_TextureImporterSettings.wrapModeV;
+            set
+            {
+                m_TextureImporterSettings.wrapModeV = value;
+                SetDirty();
+            }
+        }
+        
+        /// <summary>
+        /// Texture W coordinate wrapping mode for Texture3D.
+        /// <br/><br/>Controls wrapping mode along texture W (depth, only relevant for Texture3D) axis.
+        /// </summary>
+        public TextureWrapMode wrapModeW
+        {
+            get => m_TextureImporterSettings.wrapModeW;
+            set
+            {
+                m_TextureImporterSettings.wrapModeW = value;
+                SetDirty();
+            }
+        }
+        
+        /// <summary>
+        /// Filtering mode of the texture.
+        /// </summary>
+        public FilterMode filterMode
+        {
+            get => m_TextureImporterSettings.filterMode;
+            set
+            {
+                m_TextureImporterSettings.filterMode = value;
+                SetDirty();
+            }
+        }   
+        
+        /// <summary>
+        /// Anisotropic filtering level of the texture.
+        /// </summary>
+        public int aniso
+        {
+            get => m_TextureImporterSettings.aniso;
+            set
+            {
+                m_TextureImporterSettings.aniso = value;
+                SetDirty();
+            }
+        }       
+        
+#if UNITY_2022_2_OR_NEWER        
+        /// <summary>
+        /// Whether this texture stores data in sRGB (also called gamma) color space.
+        /// </summary>
+        public bool sRGBTexture
+        {
+            get => m_TextureImporterSettings.sRGBTexture;
+            set
+            {
+                m_TextureImporterSettings.sRGBTexture = value;
+                SetDirty();
+            }
+        }  
+#endif
+        
+        /// <summary>
+        /// Mip map bias of the texture.
+        /// </summary>
+        public float mipMapBias
+        {
+            get => m_TextureImporterSettings.mipmapBias;
+            set
+            {
+                m_TextureImporterSettings.mipmapBias = value;
+                SetDirty();
+            }
+        }
+        
+        /// <summary>
+        /// Generate Mip Maps.
+        /// <br/><br/>Select this to enable mip-map generation. Mipmaps are smaller versions of the Texture that get used when the Texture is very small on screen.
+        /// </summary>
+        public bool mipmapEnabled
+        {
+            get => m_TextureImporterSettings.mipmapEnabled;
+            set
+            {
+                m_TextureImporterSettings.mipmapEnabled = value;
+                SetDirty();
+            }
+        }
+        
+        /// <summary>
+        /// Mip level where texture is faded out completely.
+        /// </summary>
+        public int mipmapFadeDistanceEnd
+        {
+            get => m_TextureImporterSettings.mipmapFadeDistanceEnd;
+            set
+            {
+                m_TextureImporterSettings.mipmapFadeDistanceEnd = value;
+                SetDirty();
+            }
+        }
+        
+        /// <summary>
+        /// Mip level where texture begins to fade out.
+        /// </summary>
+        public int mipmapFadeDistanceStart
+        {
+            get => m_TextureImporterSettings.mipmapFadeDistanceStart;
+            set
+            {
+                m_TextureImporterSettings.mipmapFadeDistanceEnd = value;
+                SetDirty();
+            }
+        }
+        
+        /// <summary>
+        /// Enable mipmap streaming for the texture.
+        /// <br/><br/>Only load larger mipmaps as needed to render the current game cameras. Requires texture streaming to be enabled in quality settings.
+        /// </summary>
+        public bool streamingMipmaps
+        {
+            get => m_TextureImporterSettings.streamingMipmaps;
+            set
+            {
+                m_TextureImporterSettings.streamingMipmaps = value;
+                SetDirty();
+            }
+        }
+
+        /// <summary>
+        /// Mipmap streaming priority when there's contention for resources. Positive numbers represent higher priority. Valid range is -128 to 127.
+        /// </summary>
+        public int streamingMipmapsPriority
+        {
+            get => m_TextureImporterSettings.streamingMipmapsPriority;
+            set
+            {
+                m_TextureImporterSettings.streamingMipmapsPriority = Mathf.Clamp(value, -128, 127);
+                SetDirty();
+            }
+        }
+
+        /// <summary>
+        /// Mip level where texture is faded out completely.
+        /// </summary>
+        public TextureImporterMipFilter mipmapFilter
+        {
+            get => m_TextureImporterSettings.mipmapFilter;
+            set
+            {
+                m_TextureImporterSettings.mipmapFilter = value;
+                SetDirty();
+            }
+        }
+        
+        /// <summary>
+        /// Enables or disables coverage-preserving alpha mipmapping.
+        /// <br/><br/>Enable this to rescale the alpha values of computed mipmaps so coverage is preserved. This means a higher percentage of pixels passes the alpha test and lower mipmap levels do not become more transparent. This is disabled by default (set to false).
+        /// </summary>
+        public bool mipMapsPreserveCoverage
+        {
+            get => m_TextureImporterSettings.mipMapsPreserveCoverage;
+            set
+            {
+                m_TextureImporterSettings.mipMapsPreserveCoverage = value;
+                SetDirty();
+            }
+        }        
+    }
+}

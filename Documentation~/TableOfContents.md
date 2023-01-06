@@ -1,0 +1,4 @@
+* [Introduction to Aseprite Importer](index)
+    * [What's new](whats-new)
+* [Aseprite features](AsepriteFeatures)
+* [Importer features](ImporterFeatures)

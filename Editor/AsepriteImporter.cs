@@ -1,0 +1,743 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Unity.Collections;
+using UnityEngine;
+using UnityEditor.AssetImporters;
+using UnityEditor.U2D.Aseprite.Common;
+using UnityEditor.U2D.Sprites;
+
+namespace UnityEditor.U2D.Aseprite
+{
+    /// <summary>
+    /// ScriptedImporter to import Aseprite files
+    /// </summary>
+    // Version using unity release + 5 digit padding for future upgrade. Eg 2021.2 -> 21200000
+    [ScriptedImporter(21300000, new string[] {"aseprite", "ase"}, AllowCaching = true)]
+    public partial class AsepriteImporter : ScriptedImporter, ISpriteEditorDataProvider
+    {
+        [SerializeField] TextureImporterSettings m_TextureImporterSettings = new TextureImporterSettings()
+        {
+            mipmapEnabled = false,
+            mipmapFilter = TextureImporterMipFilter.BoxFilter,
+            sRGBTexture = true,
+            borderMipmap = false,
+            mipMapsPreserveCoverage = false,
+            alphaTestReferenceValue = 0.5f,
+            readable = false,
+
+#if ENABLE_TEXTURE_STREAMING
+            streamingMipmaps = false,
+            streamingMipmapsPriority = 0,
+#endif
+
+            fadeOut = false,
+            mipmapFadeDistanceStart = 1,
+            mipmapFadeDistanceEnd = 3,
+
+            convertToNormalMap = false,
+            heightmapScale = 0.25F,
+            normalMapFilter = 0,
+
+            generateCubemap = TextureImporterGenerateCubemap.AutoCubemap,
+            cubemapConvolution = 0,
+
+            seamlessCubemap = false,
+
+            npotScale = TextureImporterNPOTScale.ToNearest,
+
+            spriteMode = (int) SpriteImportMode.Multiple,
+            spriteExtrude = 1,
+            spriteMeshType = SpriteMeshType.Tight,
+            spriteAlignment = (int) SpriteAlignment.Center,
+            spritePivot = new Vector2(0.5f, 0.5f),
+            spritePixelsPerUnit = 100.0f,
+            spriteBorder = new Vector4(0.0f, 0.0f, 0.0f, 0.0f),
+
+            alphaSource = TextureImporterAlphaSource.FromInput,
+            alphaIsTransparency = true,
+            spriteTessellationDetail = -1.0f,
+
+            textureType = TextureImporterType.Sprite,
+            textureShape = TextureImporterShape.Texture2D,
+
+            filterMode = FilterMode.Point,
+            aniso = 1,
+            mipmapBias = 0.0f,
+            wrapModeU = TextureWrapMode.Clamp,
+            wrapModeV = TextureWrapMode.Clamp,
+            wrapModeW = TextureWrapMode.Clamp
+        };
+
+
+        [SerializeField] AsepriteImporterSettings m_PreviousAsepriteImporterSettings;
+        [SerializeField] AsepriteImporterSettings m_AsepriteImporterSettings = new AsepriteImporterSettings()
+        {
+            importHiddenLayers = false,
+            layerImportMode = LayerImportModes.Merged,
+            defaultPivotAlignment = SpriteAlignment.BottomCenter,
+            defaultPivotSpace = PivotSpaces.Canvas,
+            customPivotPosition = new Vector2(0.5f, 0.5f),
+            generateAnimationClips = true,
+            generateModelPrefab = true,
+            addShadowCasters = false
+        };
+        
+        // Use for inspector to check if the file node is checked
+        [SerializeField]
+#pragma warning disable 169, 414
+        bool m_ImportFileNodeState = true;
+        
+        // Used by platform settings to mark it dirty so that it will trigger a reimport
+        [SerializeField]
+#pragma warning disable 169, 414
+        long m_PlatformSettingsDirtyTick;        
+        
+        [SerializeField] string m_TextureAssetName = null;
+        
+        [SerializeField] List<SpriteMetaData> m_SingleSpriteImportData = new List<SpriteMetaData>(1) { new SpriteMetaData() };
+        [SerializeField] List<SpriteMetaData> m_MultiSpriteImportData = new List<SpriteMetaData>();
+        [SerializeField] List<Layer> m_AsepriteLayers = new List<Layer>();
+
+        [SerializeField] List<TextureImporterPlatformSettings> m_PlatformSettings = new List<TextureImporterPlatformSettings>();
+        
+        [SerializeField] SecondarySpriteTexture[] m_SecondarySpriteTextures;        
+        
+        SpriteImportMode spriteImportModeToUse => m_TextureImporterSettings.textureType != TextureImporterType.Sprite ? 
+            SpriteImportMode.None : (SpriteImportMode)m_TextureImporterSettings.spriteMode;    
+        
+        AsepriteImportData m_ImportData;
+        AsepriteFile m_AsepriteFile;
+        Vector2Int m_CanvasSize;
+        List<Tag> m_Tags = new List<Tag>();
+
+        GameObject m_RootGameObject;
+        readonly Dictionary<int, GameObject> m_LayerIdToGameObject = new Dictionary<int, GameObject>(); 
+
+        AsepriteImportData importData
+        {
+            get
+            {
+                var returnValue = m_ImportData;
+                if (returnValue == null)
+                    // Using LoadAllAssetsAtPath because AsepriteImportData is hidden
+                    returnValue = AssetDatabase.LoadAllAssetsAtPath(assetPath).FirstOrDefault(x => x is AsepriteImportData) as AsepriteImportData;
+                    
+                if (returnValue == null)
+                    returnValue = ScriptableObject.CreateInstance<AsepriteImportData>();
+                    
+                m_ImportData = returnValue;
+                return returnValue;
+            }
+        }
+        
+        internal bool isNPOT => Mathf.IsPowerOfTwo(importData.textureActualWidth) && Mathf.IsPowerOfTwo(importData.textureActualHeight);
+        
+        internal int textureActualWidth
+        {
+            get => importData.textureActualWidth;
+            private set => importData.textureActualWidth = value; 
+        }
+
+        internal int textureActualHeight
+        {
+            get => importData.textureActualHeight;
+            private set => importData.textureActualHeight = value;
+        }     
+        
+        [SerializeField] string m_SpritePackingTag = "";        
+        
+        internal SecondarySpriteTexture[] secondaryTextures
+        {
+            get => m_SecondarySpriteTextures;
+            set => m_SecondarySpriteTextures = value;
+        }
+
+        public override void OnImportAsset(AssetImportContext ctx)
+        {
+            if(m_ImportData == null)
+                m_ImportData = ScriptableObject.CreateInstance<AsepriteImportData>();
+            m_ImportData.hideFlags = HideFlags.HideInHierarchy;
+            
+            try
+            {
+                m_AsepriteFile = AsepriteReader.ReadFile(ctx.assetPath);
+                if (m_AsepriteFile == null)
+                    return;
+                
+                m_CanvasSize = new Vector2Int(m_AsepriteFile.width, m_AsepriteFile.height);
+                
+                var newLayers = RestructureImportData(in m_AsepriteFile);
+                FilterOutLayers(ref newLayers);
+                UpdateCellNames(ref newLayers);
+                m_Tags = ExtractTagsData(in m_AsepriteFile);
+
+                if (newLayers.Count == 0)
+                    return;
+
+                var assetName = System.IO.Path.GetFileNameWithoutExtension(ctx.assetPath);
+
+                List<Cell> cellLookup;
+                List<NativeArray<Color32>> cellBuffers;
+                List<int> cellWidth;
+                List<int> cellHeight;
+                if (layerImportMode == LayerImportModes.Individual)
+                {
+                    m_AsepriteLayers = UpdateLayers(in newLayers, in m_AsepriteLayers);
+                    ImportLayers.Import(m_AsepriteLayers, out cellLookup, out cellBuffers, out cellWidth, out cellHeight);
+                }
+                else
+                {
+                    ImportMergedLayers.Import(assetName, ref newLayers, out cellLookup, out cellBuffers, out cellWidth, out cellHeight);
+                    // Update layers after merged, since merged import creates new layers.
+                    // The new layers should be compared and merged together with the ones existing in the meta file. 
+                    m_AsepriteLayers = UpdateLayers(in newLayers, in m_AsepriteLayers);
+                }
+
+                var padding = 4;
+                ImagePacker.Pack(cellBuffers.ToArray(), cellWidth.ToArray(), cellHeight.ToArray(), padding, out var outputImageBuffer, out var packedTextureWidth, out var packedTextureHeight, out var spriteRects, out var uvTransforms);
+                
+                var packOffsets = new Vector2Int[spriteRects.Length];
+                for (var i = 0; i < packOffsets.Length; ++i)
+                {
+                    packOffsets[i] = new Vector2Int(uvTransforms[i].x - spriteRects[i].position.x, uvTransforms[i].y - spriteRects[i].position.y);
+                    packOffsets[i] *= -1;
+                }
+
+                var spriteImportData = UpdateSpriteImportData(cellLookup, spriteRects, packOffsets, uvTransforms);
+
+                importData.importedTextureHeight = textureActualHeight = packedTextureHeight;
+                importData.importedTextureWidth = textureActualWidth = packedTextureWidth;
+                
+                var output = TextureGeneration.Generate(
+                    ctx, 
+                    outputImageBuffer, 
+                    packedTextureWidth, 
+                    packedTextureHeight, 
+                    spriteImportData.ToArray(),
+                    in m_PlatformSettings,
+                    in m_TextureImporterSettings,
+                    m_SpritePackingTag,
+                    secondaryTextures);
+                
+                if (output.texture)
+                {
+                    importData.importedTextureHeight = output.texture.height;
+                    importData.importedTextureWidth = output.texture.width;
+                }
+                
+                outputImageBuffer.DisposeIfCreated();
+                foreach (var cellBuffer in cellBuffers)
+                    cellBuffer.DisposeIfCreated();
+
+                RegisterAssets(ctx, output);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Failed to import file {assetPath}. Error: {e.Message} \n{e.StackTrace}");
+            }
+            finally
+            {
+                m_PreviousAsepriteImporterSettings = m_AsepriteImporterSettings;
+                EditorUtility.SetDirty(this);
+            }
+        }
+
+        List<Layer> RestructureImportData(in AsepriteFile file)
+        {
+            var frameData = file.frameData;
+
+            var nameGenerator = new UniqueNameGenerator();
+            var layers = new List<Layer>();
+            var parentTable = new Dictionary<int, Layer>();
+            for (var i = 0; i < frameData.Length; ++i)
+            {
+                var chunks = frameData[i].chunks;
+                for (var m = 0; m < chunks.Length; ++m)
+                {
+                    if (chunks[m].chunkType == ChunkTypes.Layer)
+                    {
+                        var layerChunk = chunks[m] as LayerChunk;
+
+                        var layer = new Layer();
+                        layer.name = nameGenerator.GetUniqueName(layerChunk.name);
+                        layer.layerFlags = layerChunk.flags;
+                        layer.layerType = layerChunk.layerType;
+                        layer.index = layers.Count;
+
+                        var childLevel = layerChunk.childLevel;
+                        parentTable[childLevel] = layer;
+                        
+                        layer.parentLayer = childLevel == 0 ? null : parentTable[childLevel - 1];
+                        
+                        layers.Add(layer);
+                    }
+                }
+            }
+            
+            for (var i = 0; i < frameData.Length; ++i)
+            {
+                var chunks = frameData[i].chunks;
+                for (var m = 0; m < chunks.Length; ++m)
+                {
+                    if (chunks[m].chunkType == ChunkTypes.Cell)
+                    {
+                        var cellChunk = chunks[m] as CellChunk;
+                        var layer = layers.Find(x => x.index == cellChunk.layerIndex);
+                        if (layer == null)
+                        {
+                            Debug.LogWarning($"Could not find the layer for one of the cells. Frame Index={i}, Chunk Index={m}.");
+                            continue;
+                        }
+
+                        var cellType = cellChunk.cellType;
+                        if (cellType == CellTypes.LinkedCel)
+                        {
+                            var cell = new LinkedCell();
+                            cell.frameIndex = i;
+                            cell.linkedToFrame = cellChunk.linkedToFrame;
+                            layer.linkedCells.Add(cell);   
+                        }
+                        else
+                        {
+                            var cell = new Cell();
+                            cell.frameIndex = i;
+
+                            // Flip Y. Aseprite 0,0 is at Top Left. Unity 0,0 is at Bottom Left. 
+                            var cellY = (m_CanvasSize.y - cellChunk.posY) - cellChunk.height;
+                            cell.cellRect = new RectInt(cellChunk.posX, cellY, cellChunk.width, cellChunk.height);
+                            cell.image = cellChunk.image;
+                            cell.name = layer.name;
+                            cell.spriteId = GUID.Generate();
+
+                            layer.cells.Add(cell);   
+                        }
+                    }
+                }
+            }
+
+            return layers;
+        }
+
+        void FilterOutLayers(ref List<Layer> layers)
+        {
+            for (var i = layers.Count - 1; i >= 0; --i)
+            {
+                var layer = layers[i];
+                if (!includeHiddenLayers && !ImportUtilities.IsLayerVisible(layer))
+                {
+                    DisposeCellsInLayer(layer);
+                    layers.RemoveAt(i);
+                    continue;
+                }
+                
+                var cells = layer.cells;
+                for (var m = cells.Count - 1; m >= 0; --m)
+                {
+                    var width = cells[m].cellRect.width;
+                    var height = cells[m].cellRect.width;
+                    if (width == 0 || height == 0)
+                        cells.RemoveAt(m);
+                    else if (cells[m].image == default || !cells[m].image.IsCreated)
+                        cells.RemoveAt(m);
+                }
+
+                if (cells.Count == 0)
+                    layers.RemoveAt(i);
+            }
+        }
+
+        static void DisposeCellsInLayer(Layer layer)
+        {
+            foreach (var cell in layer.cells)
+            {
+                var image = cell.image;
+                image.DisposeIfCreated();
+            }
+        }
+
+        static void UpdateCellNames(ref List<Layer> layers)
+        {
+            for (var i = 0; i < layers.Count; ++i)
+            {
+                var layer = layers[i];
+                for (var m = 0; m < layer.cells.Count; ++m)
+                {
+                    if (layer.cells.Count > 1)
+                        layer.cells[m].name += "_" + layer.cells[m].frameIndex;
+                }
+            }
+        }
+
+        static List<Layer> UpdateLayers(in List<Layer> newLayers, in List<Layer> oldLayers)
+        {
+            if (oldLayers.Count == 0)
+                return new List<Layer>(newLayers);
+
+            var finalLayers = new List<Layer>(oldLayers);
+            
+            // Remove old layers
+            for (var i = 0; i < oldLayers.Count; ++i)
+            {
+                var oldLayer = oldLayers[i];
+                if (newLayers.FindIndex(x => x.name == oldLayer.name) == -1)
+                    finalLayers.Remove(oldLayer);
+            }
+            
+            // Add new layers
+            for (var i = 0; i < newLayers.Count; ++i)
+            {
+                var newLayer = newLayers[i];
+                var layerIndex = finalLayers.FindIndex(x => x.name == newLayer.name);
+                if (layerIndex == -1)
+                    finalLayers.Add(newLayer);
+            }
+            
+            // Update layer data
+            for (var i = 0; i < finalLayers.Count; ++i)
+            {
+                var finalLayer = finalLayers[i];
+                var layerIndex = newLayers.FindIndex(x => x.name == finalLayer.name);
+                if (layerIndex != -1)
+                {
+                    var oldCells = finalLayer.cells;
+                    var newCells = newLayers[layerIndex].cells;
+                    for (var m = 0; m < newCells.Count; ++m)
+                    {
+                        if (m < oldCells.Count)
+                        {
+                            newCells[m].spriteId = oldCells[m].spriteId;
+#if UNITY_2023_1_OR_NEWER                            
+                            newCells[m].updatedCellRect = newCells[m].cellRect != oldCells[m].cellRect;
+#else
+                            newCells[m].updatedCellRect = !newCells[m].cellRect.IsEqual(oldCells[m].cellRect);
+#endif
+                        }
+                    }
+                    finalLayer.cells = new List<Cell>(newCells);
+                    finalLayer.index = newLayers[layerIndex].index;
+                }
+            }
+
+            return finalLayers;
+        }
+
+        static List<Tag> ExtractTagsData(in AsepriteFile file)
+        {
+            var tags = new List<Tag>();
+            
+            var noOfFrames = file.noOfFrames;
+            for (var i = 0; i < noOfFrames; ++i)
+            {
+                var frame = file.frameData[i];
+                var noOfChunks = frame.chunkCount;
+                for (var m = 0; m < noOfChunks; ++m)
+                {
+                    var chunk = frame.chunks[m];
+                    if (chunk.chunkType != ChunkTypes.Tags)
+                        continue;
+                    
+                    var tagChunk = chunk as TagsChunk;
+                    var noOfTags = tagChunk.noOfTags;
+                    for (var n = 0; n < noOfTags; ++n)
+                    {
+                        var data = tagChunk.tagData[n];
+                        var tag = new Tag();
+                        tag.name = data.name;
+                        tag.fromFrame = data.fromFrame;
+                        // Adding one more frame as Aseprite's tags seems to always be 1 short.
+                        tag.toFrame = data.toFrame + 1;
+                        
+                        tags.Add(tag);
+                    }
+                }
+            }
+
+            return tags;
+        }
+
+        List<SpriteMetaData> UpdateSpriteImportData(List<Cell> cellLookup, RectInt[] spriteRects, Vector2Int[] packOffsets, Vector2Int[] uvTransforms)
+        {
+            var spriteImportData = GetSpriteImportData();
+            if (spriteImportData.Count <= 0)
+            {
+                var newSpriteMeta = new List<SpriteMetaData>();
+
+                for (var i = 0; i < spriteRects.Length; ++i)
+                {
+                    var cell = cellLookup[i];
+                    var spriteData = CreateNewSpriteMetaData(in cell, in spriteRects[i], packOffsets[i], in uvTransforms[i]);
+                    newSpriteMeta.Add(spriteData);
+                }
+                spriteImportData.Clear();
+                spriteImportData.AddRange(newSpriteMeta);
+            }
+            else
+            {
+                // Remove old cells
+                for (var i = spriteImportData.Count - 1; i >= 0; --i)
+                {
+                    var spriteData = spriteImportData[i];
+                    if (cellLookup.FindIndex(x => x.spriteId == spriteData.spriteID) == -1)
+                        spriteImportData.Remove(spriteData);
+                }                
+                
+                // Add new cells
+                for (var i = 0; i < cellLookup.Count; ++i)
+                {
+                    var cell = cellLookup[i];
+                    if (spriteImportData.FindIndex(x => x.spriteID == cell.spriteId) == -1)
+                    {
+                        var spriteData = CreateNewSpriteMetaData(in cell, spriteRects[i], packOffsets[i], uvTransforms[i]);
+                        spriteImportData.Add(spriteData);
+                    }
+                }
+                
+                // Update with new pack data
+                for (var i = 0; i < cellLookup.Count; ++i)
+                {
+                    var cell = cellLookup[i];
+                    var spriteData = spriteImportData.Find(x => x.spriteID == cell.spriteId);
+                    if (spriteData != null)
+                    {
+                        var areSettingsUpdated = !m_PreviousAsepriteImporterSettings.IsDefault() &&
+                                                 (pivotAlignment != m_PreviousAsepriteImporterSettings.defaultPivotAlignment ||
+                                                  pivotSpace != m_PreviousAsepriteImporterSettings.defaultPivotSpace ||
+                                                  customPivotPosition != m_PreviousAsepriteImporterSettings.customPivotPosition);
+                        
+                        // Update pivot if either the importer settings are updated
+                        // or the source files rect has been changed (Only for Canvas, as rect position doesn't matter in local). 
+                        if (pivotSpace == PivotSpaces.Canvas && 
+                            (areSettingsUpdated || cell.updatedCellRect))
+                        {
+                            spriteData.alignment = SpriteAlignment.Custom;
+
+                            var cellRect = cell.cellRect;
+                            cellRect.x += packOffsets[i].x;
+                            cellRect.y += packOffsets[i].y;
+                            cellRect.width = spriteRects[i].width;
+                            cellRect.height = spriteRects[i].height;
+                            
+                            spriteData.pivot = ImportUtilities.CalculateCellPivot(cellRect, m_CanvasSize, pivotAlignment, customPivotPosition);
+                        }
+                        else if (pivotSpace == PivotSpaces.Local && areSettingsUpdated)
+                        {
+                            spriteData.alignment = pivotAlignment;
+                            spriteData.pivot = customPivotPosition;
+                        }
+
+                        spriteData.rect = new Rect(spriteRects[i].x, spriteRects[i].y, spriteRects[i].width, spriteRects[i].height);
+                        spriteData.uvTransform = uvTransforms[i];
+                    }
+                }                
+            }
+
+            return spriteImportData;
+        }
+
+        SpriteMetaData CreateNewSpriteMetaData(in Cell cell, in RectInt spriteRect, in Vector2Int packOffset, in Vector2Int uvTransform)
+        {
+            var spriteData = new SpriteMetaData();
+            spriteData.border = Vector4.zero;
+
+            if (pivotSpace == PivotSpaces.Canvas)
+            {
+                spriteData.alignment = SpriteAlignment.Custom;
+                
+                var cellRect = cell.cellRect;
+                cellRect.x += packOffset.x;
+                cellRect.y += packOffset.y;
+                cellRect.width = spriteRect.width;
+                cellRect.height = spriteRect.height;
+
+                spriteData.pivot = ImportUtilities.CalculateCellPivot(cellRect, m_CanvasSize, pivotAlignment, customPivotPosition);
+            }
+            else
+            {
+                spriteData.alignment = pivotAlignment;
+                spriteData.pivot = customPivotPosition;
+            }
+
+            spriteData.rect = new Rect(spriteRect.x, spriteRect.y, spriteRect.width, spriteRect.height);
+            spriteData.spriteID = cell.spriteId;
+            spriteData.name = cell.name;
+            spriteData.uvTransform = uvTransform;
+            return spriteData;
+        }
+
+        void RegisterAssets(AssetImportContext ctx, TextureGenerationOutput output)
+        {
+            if ((output.sprites == null || output.sprites.Length == 0) && output.texture == null)
+            {
+                Debug.LogWarning(TextContent.noSpriteOrTextureImportWarning, this);
+                return;
+            }
+
+            var assetNameGenerator = new UniqueNameGenerator();
+            if (!string.IsNullOrEmpty(output.importInspectorWarnings))
+            {
+                Debug.LogWarning(output.importInspectorWarnings);
+            }
+            if (output.importWarnings != null && output.importWarnings.Length != 0)
+            {
+                foreach (var warning in output.importWarnings)
+                    Debug.LogWarning(warning);
+            }
+            if (output.thumbNail == null)
+                Debug.LogWarning("Thumbnail generation fail");
+            if (output.texture == null)
+            {
+                throw new Exception("Texture import fail");
+            }
+
+            var assetName = assetNameGenerator.GetUniqueName(System.IO.Path.GetFileNameWithoutExtension(ctx.assetPath),  true, this);
+            UnityEngine.Object mainAsset = null;
+
+            RegisterTextureAsset(ctx, output, assetName, ref mainAsset);
+            RegisterSprites(ctx, output, assetNameGenerator);
+            RegisterGameObjects(ctx, output, ref mainAsset);
+            RegisterAnimationClip(ctx, assetName, output);
+            RegisterAnimatorController(ctx, assetName);
+
+            ctx.AddObjectToAsset("AsepriteImportData", m_ImportData);
+            ctx.SetMainObject(mainAsset);
+        }
+        
+        void RegisterTextureAsset(AssetImportContext ctx, TextureGenerationOutput output, string assetName, ref UnityEngine.Object mainAsset)
+        {
+            var registerTextureNameId = string.IsNullOrEmpty(m_TextureAssetName) ? "Texture" : m_TextureAssetName;
+
+            output.texture.name = assetName;
+            ctx.AddObjectToAsset(registerTextureNameId, output.texture, output.thumbNail);
+            mainAsset = output.texture;
+        }
+
+        static void RegisterSprites(AssetImportContext ctx, TextureGenerationOutput output, UniqueNameGenerator assetNameGenerator)
+        {
+            if (output.sprites == null)
+                return;
+            
+            foreach (var s in output.sprites)
+            {
+                var spriteAssetName = assetNameGenerator.GetUniqueName(s.GetSpriteID().ToString(),  false, s);
+                ctx.AddObjectToAsset(spriteAssetName, s);
+            }            
+        }
+
+        void RegisterGameObjects(AssetImportContext ctx, TextureGenerationOutput output, ref UnityEngine.Object mainAsset)
+        {
+            if (output.sprites.Length == 0)
+                return;
+            
+            PrefabGeneration.Generate(
+                ctx, 
+                output, 
+                m_AsepriteLayers, 
+                m_LayerIdToGameObject,
+                m_CanvasSize,
+                m_AsepriteImporterSettings,
+                ref mainAsset, 
+                out m_RootGameObject);
+        }
+
+        void RegisterAnimationClip(AssetImportContext ctx, string assetName, TextureGenerationOutput output)
+        {
+            if (output.sprites.Length == 0)
+                return;
+            if (!generateAnimationClips)
+                return;
+            var noOfFrames = m_AsepriteFile.noOfFrames;
+            if (noOfFrames == 1)
+                return;
+
+            var sprites = output.sprites;
+            var clips = AnimationClipGeneration.Generate(
+                assetName, 
+                sprites, 
+                m_AsepriteFile, 
+                m_AsepriteLayers, 
+                m_Tags, 
+                m_LayerIdToGameObject);
+            
+            for (var i = 0; i < clips.Length; ++i)
+                ctx.AddObjectToAsset(clips[i].name, clips[i]);
+            
+            // Refresh animation window
+            if (EditorWindow.HasOpenInstances<AnimationWindow>())
+            {
+                var window = EditorWindow.GetWindow<AnimationWindow>();
+                if (window != null)
+                    window.animationClip = null;
+            }
+        }
+
+        void RegisterAnimatorController(AssetImportContext ctx, string assetName)
+        {
+            AnimatorControllerGeneration.Generate(ctx, assetName, m_RootGameObject, generateModelPrefab);
+        }
+
+        void Apply()
+        {
+            // Do this so that asset change save dialog will not show
+            var originalValue = EditorPrefs.GetBool("VerifySavingAssets", false);
+            EditorPrefs.SetBool("VerifySavingAssets", false);
+            AssetDatabase.ForceReserializeAssets(new string[] { assetPath }, ForceReserializeAssetsOptions.ReserializeMetadata);
+            EditorPrefs.SetBool("VerifySavingAssets", originalValue);
+        }
+
+        public override bool SupportsRemappedAssetType(Type type)
+        {
+            if (type == typeof(AnimationClip))
+                return true;
+            return base.SupportsRemappedAssetType(type);
+        }
+
+        /// <summary>
+        /// Sets the platform settings used by the importer for a given build target.
+        /// </summary>
+        /// <param name="setting">TextureImporterPlatformSettings to be used by the importer for the build target indicated by TextureImporterPlatformSettings.</param>
+        public void SetImporterPlatformSettings(TextureImporterPlatformSettings setting)
+        {
+            SetPlatformTextureSettings(setting);
+            SetDirty();
+        }
+        
+        void SetPlatformTextureSettings(TextureImporterPlatformSettings platformSettings)
+        {
+            var index = m_PlatformSettings.FindIndex(x => x.name == platformSettings.name);
+            if(index < 0)
+                m_PlatformSettings.Add(platformSettings);
+            else
+                m_PlatformSettings[index] = platformSettings;
+        }
+        
+        void SetDirty()
+        {
+            EditorUtility.SetDirty(this);
+        }
+
+        List<SpriteMetaData> GetSpriteImportData()
+        {
+            if (spriteImportModeToUse == SpriteImportMode.Multiple)
+                return m_MultiSpriteImportData;
+            return m_SingleSpriteImportData;
+        }
+
+        internal SpriteRect GetSpriteData(GUID guid)
+        {
+            if (spriteImportModeToUse == SpriteImportMode.Multiple)
+                return m_MultiSpriteImportData.FirstOrDefault(x => x.spriteID == guid);
+            return m_SingleSpriteImportData[0];
+        }
+        
+        internal TextureImporterPlatformSettings[] GetAllPlatformSettings()
+        {
+            return m_PlatformSettings.ToArray();
+        }
+        
+        internal void ReadTextureSettings(TextureImporterSettings dest)
+        {
+            m_TextureImporterSettings.CopyTo(dest);
+        }        
+    }
+}
