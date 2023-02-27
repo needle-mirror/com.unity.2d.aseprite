@@ -29,7 +29,7 @@ The Aseprite Importer is available after you import a .ase/.aseprite file into y
   <tbody>
     <tr>
       <td rowspan="1"><strong>Pixels Per Unit</strong></td>
-      <td colspan="2">Sets the number of pixels that equal to one Unity unit.</td>
+      <td colspan="2">Sets the number of pixels that equals one Unity unit.</td>
     </tr>
     <tr>
       <td rowspan="3"><strong>Mesh Type</strong></td>
@@ -62,19 +62,19 @@ The Aseprite Importer is available after you import a .ase/.aseprite file into y
     </tr>
     <tr>
       <td rowspan="3"><strong>Import Mode</strong></td>
-      <td colspan="2">Use this property to specify how the layers from the source file are imported. This property is set <b>Merged Layers</b> by default.</td>
+      <td colspan="2">Use this property to specify how the layers from the source file are imported. This property is set to <b>Merge Frame</b> by default.</td>
     </tr>
     <tr>
       <td><strong>Individual Layers</strong></td>
       <td>Every layer per frame generates a Sprite.</td>
     </tr>
     <tr>
-      <td><strong>Merged Layers</strong></td>
+      <td><strong>Merge Frame</strong></td>
       <td>This is the default option. All layers per frame are merged into one Sprite.</td>
     </tr>
     <tr>
       <td rowspan="3"><strong>Pivot Space</strong></td>
-      <td colspan="2">Select the space pivots should be calculated in. This property is set <b>Canvas</b> by default.</td>
+      <td colspan="2">Select the space pivots should be calculated in. This property is set to <b>Canvas</b> by default.</td>
     </tr>
     <tr>
       <td><strong>Canvas</strong></td>
@@ -105,6 +105,10 @@ The Aseprite Importer is available after you import a .ase/.aseprite file into y
       <td rowspan="1"><strong>Model Prefab</strong></td>
       <td colspan="2">Enable this property to generate a model prefab setup to look like the first frame in Aseprite. This property is set to <b>True</b> by default.</td>
     </tr>
+    <tr>
+      <td rowspan="1"><strong>Sorting Group</strong></td>
+      <td colspan="2">Add a Sorting Group component to the root of the generated model prefab if it has more than one Sprite Renderer. This property is set to <b>True</b> by default.</td>
+    </tr>    
     <tr>
       <td rowspan="1"><strong>Shadow Casters</strong></td>
       <td colspan="2">Enable this property to add Shadow Casters to all GameObjects with a SpriteRenderer. This property is set to <b>False</b> by default. Note that this checkbox is only available in Unity 2023.1 and newer.</td>

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Globalization;
 using UnityEngine;
 
 namespace UnityEditor.U2D.Aseprite.Common
@@ -7,8 +6,7 @@ namespace UnityEditor.U2D.Aseprite.Common
     internal class ModelPreviewer : System.IDisposable
     {
         const float k_TimeControlRectHeight = 20;
-        const string k_SpeedPref = "Aseprite.PreviewSpeed";
-        
+
         readonly PreviewRenderUtility m_RenderUtility;
 
         bool m_Disposed = false;
@@ -21,6 +19,7 @@ namespace UnityEditor.U2D.Aseprite.Common
         Animator m_Animator;
         AnimationClip[] m_Clips;
         AnimationClip m_SelectedClip;
+        List<float> m_FrameTimings;
         int m_ClipIndex = 0;
         SpriteRenderer[] m_Renderers;
         
@@ -69,6 +68,23 @@ namespace UnityEditor.U2D.Aseprite.Common
             m_Fps = Mathf.RoundToInt(m_SelectedClip.frameRate);
             m_TimeControl.playbackSpeed = 1f / m_SelectedClip.length;
             m_TimeControl.currentTime = 0f;
+
+            var timeSet = new HashSet<float>();
+            var curveBindings = AnimationUtility.GetObjectReferenceCurveBindings(m_SelectedClip);
+
+            for (var i = 0; i < curveBindings.Length; ++i)
+            {
+                var keyFrames = AnimationUtility.GetObjectReferenceCurve(m_SelectedClip, curveBindings[i]);
+                for (var m = 0; m < keyFrames.Length; ++m)
+                    timeSet.Add(keyFrames[m].time);
+            }
+
+            m_FrameTimings = new List<float>(timeSet.Count);
+            foreach(var time in timeSet)
+                m_FrameTimings.Add(time);
+            m_FrameTimings.Sort();
+            // Remove the final frame time, as we add it on generation
+            m_FrameTimings.RemoveAt(m_FrameTimings.Count - 1);
         }
 
         public void DrawPreview(Rect r, GUIStyle background)
@@ -166,12 +182,27 @@ namespace UnityEditor.U2D.Aseprite.Common
             if (m_TimeControl != null)
             {
                 var currentTime = m_TimeControl.normalizedTime * m_SelectedClip.length;
-                text += $"Frame {Mathf.FloorToInt(currentTime * m_Fps)} | ";
+                var currentFrame = GetFrameFromTime(currentTime);
+                text += $"Frame {currentFrame} | ";
             }
 
             text += $"{m_ActorSize.x}x{m_ActorSize.y}";
             
             EditorGUI.DropShadowLabel(rect, text);
+        }
+
+        int GetFrameFromTime(float currentTime)
+        {
+            var frame = 0;
+            for (var i = 0; i < m_FrameTimings.Count; ++i)
+            {
+                if (currentTime < m_FrameTimings[i])
+                    break;
+                frame++;
+            }
+            
+            // Remove one to get the frame number start from 0
+            return frame - 1;
         }
 
         void DoRenderPreview()

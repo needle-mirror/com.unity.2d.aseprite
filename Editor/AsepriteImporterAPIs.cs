@@ -53,7 +53,8 @@ namespace UnityEditor.U2D.Aseprite
             get => m_TextureImporterSettings.spritePixelsPerUnit;
             set
             {
-                m_TextureImporterSettings.spritePixelsPerUnit = value;
+                var newPpu = Mathf.Max(1f, value);
+                m_TextureImporterSettings.spritePixelsPerUnit = newPpu;
                 SetDirty();
             }
         }        
@@ -138,6 +139,19 @@ namespace UnityEditor.U2D.Aseprite
             get => m_AsepriteImporterSettings.generateModelPrefab;
             set => m_AsepriteImporterSettings.generateModelPrefab = value;
         }
+        
+        /// <summary>
+        /// Add a Sorting Group component to the root of the generated model prefab if it has more than one Sprite Renderer. 
+        /// </summary>
+        public bool addSortingGroup
+        {
+            get => m_AsepriteImporterSettings.addSortingGroup;
+            set
+            {
+                m_AsepriteImporterSettings.addSortingGroup = value;
+                SetDirty();
+            }
+        }          
         
 #if UNITY_2023_1_OR_NEWER        
         /// <summary>

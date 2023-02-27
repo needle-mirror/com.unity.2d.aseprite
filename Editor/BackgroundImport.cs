@@ -1,5 +1,6 @@
 using System.IO;
 using System.Threading;
+using UnityEngine;
 
 namespace UnityEditor.U2D.Aseprite
 {
@@ -47,6 +48,9 @@ namespace UnityEditor.U2D.Aseprite
         
         static void SetupWatcher()
         {
+            if (Application.isBatchMode)
+                return;
+            
             ThreadPool.QueueUserWorkItem(MonitorDirectory, k_AssetsPath);
         }
 
@@ -64,21 +68,50 @@ namespace UnityEditor.U2D.Aseprite
             s_Watcher.EnableRaisingEvents = true;
         }
 
-        static void OnChangeDetected(object sender, FileSystemEventArgs e) => s_HasChange = true;
+        static void OnChangeDetected(object sender, FileSystemEventArgs e)
+        {
+            var extension = Path.GetExtension(e.FullPath);
+            if (extension == ".meta" ||
+                extension == ".cs")
+                return;
+            
+            s_HasChange = true;
+        }
 
         static void StopWatcher()
         {
-            s_Watcher.Dispose();
-            s_Watcher = null;
+            if (s_Watcher != null)
+            {
+                s_Watcher.Dispose();
+                s_Watcher = null;
+            }
         }
 
         static void CheckForChange()
         {
             if (!s_HasChange) 
                 return;
+            // If the editor is already focused, skip forced import.
+            if (UnityEditorInternal.InternalEditorUtility.isApplicationActive)
+            {
+                s_HasChange = false;
+                return;
+            }
+            if (Application.isPlaying)
+                return;
             
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport & ImportAssetOptions.ForceUpdate);
-            AssetDatabase.ImportAsset(k_AssetsPath, ImportAssetOptions.ForceSynchronousImport & ImportAssetOptions.ForceUpdate);
+            
+            var assetGuids = AssetDatabase.FindAssets("", new[] { k_AssetsPath });
+            var assetPaths = new string[assetGuids.Length];
+            for (var i = 0; i < assetGuids.Length; ++i)
+            {
+                var path = AssetDatabase.GUIDToAssetPath(assetGuids[i]);
+                assetPaths[i] = path;
+            }
+            
+            AssetDatabase.ForceReserializeAssets(assetPaths, ForceReserializeAssetsOptions.ReserializeAssets);
+            
             s_HasChange = false;
         }
     }

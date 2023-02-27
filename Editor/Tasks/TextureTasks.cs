@@ -5,6 +5,16 @@ namespace UnityEditor.U2D.Aseprite
 {
     internal static class TextureTasks
     {
+        public static void AddOpacity(ref NativeArray<Color32> texture, float opacity)
+        {
+            for (var i = 0; i < texture.Length; ++i)
+            {
+                var color = texture[i];
+                color.a = (byte)(color.a * opacity);
+                texture[i] = color;
+            }
+        }
+        
         public static void FlipTextureY(ref NativeArray<Color32> texture, int width, int height)
         {
             if (width == 0 || height == 0)

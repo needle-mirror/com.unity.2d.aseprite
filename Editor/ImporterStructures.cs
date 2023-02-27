@@ -9,17 +9,26 @@ namespace UnityEditor.U2D.Aseprite
     internal class Layer
     {
         [SerializeField] int m_LayerIndex;
+        [SerializeField] int m_Guid;
         [SerializeField] string m_Name;
         [SerializeField] LayerFlags m_LayerFlags;
         [SerializeField] LayerTypes m_LayerType;
         [SerializeField] List<Cell> m_Cells = new List<Cell>();
         [SerializeField] List<LinkedCell> m_LinkedCells = new List<LinkedCell>();
-        [SerializeField] Layer m_ParentLayer;
+        [SerializeField] int m_ParentIndex = -1;
+
+        [NonSerialized] public float opacity;
 
         public int index
         {
             get => m_LayerIndex;
             set => m_LayerIndex = value;
+        }
+
+        public int guid
+        {
+            get => m_Guid;
+            set => m_Guid = value;
         }
         public string name
         {
@@ -46,10 +55,17 @@ namespace UnityEditor.U2D.Aseprite
             get => m_LinkedCells;
             set => m_LinkedCells = value;
         }
-        public Layer parentLayer
+        public int parentIndex
         {
-            get => m_ParentLayer;
-            set => m_ParentLayer = value;
+            get => m_ParentIndex;
+            set => m_ParentIndex = value;
+        }
+
+        public static int GenerateGuid(Layer layer)
+        {
+            var hash = layer.name.GetHashCode();
+            hash = (hash * 397) ^ layer.index.GetHashCode();
+            return hash;
         }
     }
 
@@ -62,6 +78,7 @@ namespace UnityEditor.U2D.Aseprite
         [SerializeField] string m_SpriteId;
 
         [NonSerialized] public bool updatedCellRect = false;
+        [NonSerialized] public float opacity;
         [NonSerialized] public NativeArray<Color32> image;
 
         public string name
@@ -104,30 +121,26 @@ namespace UnityEditor.U2D.Aseprite
         }
     }
 
+    internal class Frame
+    {
+        int m_Duration;
+
+        public int duration
+        {
+            get => m_Duration;
+            set => m_Duration = value;
+        }
+    }
+
     internal class Tag
     {
-        string m_Name;
-        int m_FromFrame;
-        int m_ToFrame;
-
-        public string name
-        {
-            get => m_Name;
-            set => m_Name = value;
-        }
-        
-        public int fromFrame
-        {
-            get => m_FromFrame;
-            set => m_FromFrame = value;
-        }
-        public int toFrame
-        {
-            get => m_ToFrame;
-            set => m_ToFrame = value;
-        }
+        public string name { get; set; }
+        public int fromFrame { get; set; }
+        public int toFrame { get; set; }
+        public int noOfRepeats { get; set; }
 
         public int noOfFrames => toFrame - fromFrame;
+        public bool isRepeating => noOfRepeats == 0;
     }
 
     /// <summary>
@@ -138,11 +151,11 @@ namespace UnityEditor.U2D.Aseprite
         /// <summary>
         /// Every layer per frame generates a Sprite.
         /// </summary>
-        Individual,
+        IndividualLayers,
         /// <summary>
         /// All layers per frame are merged into one Sprite.
         /// </summary>
-        Merged
+        MergeFrame
     }
 
     /// <summary>

@@ -12,7 +12,7 @@ namespace UnityEditor.U2D.Aseprite
             cellWidth = new List<int>();
             cellHeight = new List<int>();
             cellLookup = new List<Cell>();
-            
+
             for (var i = 0; i < layers.Count; ++i)
             {
                 var cells = layers[i].cells;

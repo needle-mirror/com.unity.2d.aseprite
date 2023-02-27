@@ -96,7 +96,7 @@ namespace UnityEditor.U2D.Aseprite
 
                 var mergedCell = TextureTasks.MergeTextures(textures, cellRects);
                 mergedCell.frameIndex = frameIndex;
-                mergedCell.name = $"{assetName}_{frameIndex}";
+                mergedCell.name = ImportUtilities.GetCellName(assetName, frameIndex, cellsPerFrame.Count);
                 mergedCell.spriteId = GUID.Generate();
                 mergedCells.Add(mergedCell);
             }
@@ -125,6 +125,7 @@ namespace UnityEditor.U2D.Aseprite
                 index = 0,
                 name = assetName
             };
+            flattenLayer.guid = Layer.GenerateGuid(flattenLayer);
             layers.Add(flattenLayer);
         }
     }

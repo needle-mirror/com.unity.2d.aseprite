@@ -2,3 +2,4 @@
     * [What's new](whats-new)
 * [Aseprite features](AsepriteFeatures)
 * [Importer features](ImporterFeatures)
+* [FAQ](ImporterFAQ)

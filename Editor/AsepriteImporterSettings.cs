@@ -54,6 +54,13 @@ namespace UnityEditor.U2D.Aseprite
             get => m_GenerateAnimationClips;
             set => m_GenerateAnimationClips = value;
         }
+        
+        [SerializeField] bool m_AddSortingGroup;
+        public bool addSortingGroup
+        {
+            get => m_AddSortingGroup;
+            set => m_AddSortingGroup = value;
+        }        
 
         [SerializeField] bool m_AddShadowCasters;
         public bool addShadowCasters
@@ -70,6 +77,7 @@ namespace UnityEditor.U2D.Aseprite
                    m_DefaultPivotAlignment == 0 &&
                    !m_GenerateModelPrefab &&
                    !m_GenerateAnimationClips &&
+                   !m_AddSortingGroup &&
                    !m_AddShadowCasters;
         }
     }

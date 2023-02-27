@@ -545,7 +545,7 @@ namespace UnityEditor.U2D.Aseprite.Common
             return TextureGenerator.GenerateTexture(textureGenerationSettings, imageBuffer);
         }
 
-        static public TextureSettings ExtractTextureSettings(this TextureImporterSettings tis)
+        public static TextureSettings ExtractTextureSettings(this TextureImporterSettings tis)
         {
             var ts = new TextureSettings();
             ts.colorTexture = tis.sRGBTexture;
@@ -556,7 +556,7 @@ namespace UnityEditor.U2D.Aseprite.Common
             return ts;
         }
 
-        static public TextureSpriteSettings ExtractTextureSpriteSettings(this TextureImporterSettings tis)
+        public static TextureSpriteSettings ExtractTextureSpriteSettings(this TextureImporterSettings tis)
         {
             var ts = new TextureSpriteSettings();
             ts.pixelsPerUnit = tis.spritePixelsPerUnit;
@@ -565,7 +565,7 @@ namespace UnityEditor.U2D.Aseprite.Common
             return ts;
         }
 
-        static public TextureWrapSettings ExtractTextureWrapSettings(this TextureImporterSettings tis)
+        public static TextureWrapSettings ExtractTextureWrapSettings(this TextureImporterSettings tis)
         {
             var ts = new TextureWrapSettings();
             ts.wrapMode = tis.wrapMode;
@@ -575,7 +575,7 @@ namespace UnityEditor.U2D.Aseprite.Common
             return ts;
         }
 
-        static public TextureAlphaSettings ExtractTextureAlphaSettings(this TextureImporterSettings settings)
+        public static TextureAlphaSettings ExtractTextureAlphaSettings(this TextureImporterSettings settings)
         {
             if (settings.alphaIsTransparency == false)
                 return null;
@@ -586,7 +586,7 @@ namespace UnityEditor.U2D.Aseprite.Common
             return ts;
         }
 
-        static public TextureMipmapSettings ExtractTextureMipmapSettings(this TextureImporterSettings settings)
+        public static TextureMipmapSettings ExtractTextureMipmapSettings(this TextureImporterSettings settings)
         {
             if (!settings.mipmapEnabled)
                 return null;
@@ -604,7 +604,7 @@ namespace UnityEditor.U2D.Aseprite.Common
             return ts;
         }
 
-        static public TextureNormalSettings ExtractTextureNormalSettings(this TextureImporterSettings settings)
+        public static TextureNormalSettings ExtractTextureNormalSettings(this TextureImporterSettings settings)
         {
             var ts = new TextureNormalSettings();
             ts.filter = settings.normalMapFilter;
@@ -613,7 +613,7 @@ namespace UnityEditor.U2D.Aseprite.Common
             return ts;
         }
 
-        static public TextureCubemapSettings ExtractTextureCubemapSettings(this TextureImporterSettings settings)
+        public static TextureCubemapSettings ExtractTextureCubemapSettings(this TextureImporterSettings settings)
         {
             if (settings.textureShape != TextureImporterShape.TextureCube)
                 return null;

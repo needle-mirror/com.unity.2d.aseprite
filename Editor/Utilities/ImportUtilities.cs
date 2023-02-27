@@ -11,13 +11,16 @@ namespace UnityEditor.U2D.Aseprite
 {
     internal class UniqueNameGenerator
     {
-        readonly HashSet<int> m_NameHash = new HashSet<int>();
+        readonly Dictionary<int, HashSet<int>> m_NameHashes = new();
 
-        public string GetUniqueName(string name, bool logNewNameGenerated = false, UnityEngine.Object context = null)
+        public string GetUniqueName(string name, int parentIndex = -1, bool logNewNameGenerated = false, UnityEngine.Object context = null)
         {
-            return GetUniqueName(name, m_NameHash);
+            if (!m_NameHashes.ContainsKey(parentIndex))
+                m_NameHashes.Add(parentIndex, new HashSet<int>());
+            var nameHashes = m_NameHashes[parentIndex];
+            return GetUniqueName(name, nameHashes, logNewNameGenerated, context);
         }
-        
+
         static string GetUniqueName(string name, HashSet<int> stringHash, bool logNewNameGenerated = false, UnityEngine.Object context = null)
         {
             var sanitizedName = string.Copy(SanitizeName(name));
@@ -33,7 +36,7 @@ namespace UnityEditor.U2D.Aseprite
                         Debug.Log($"Asset name {name} is changed to {uniqueName} to ensure uniqueness", context);
                     return uniqueName;
                 }
-                uniqueName = string.Format("{0}_{1}", sanitizedName, index);
+                uniqueName = $"{sanitizedName}_{index}";
                 ++index;
             }
         }
@@ -137,7 +140,6 @@ namespace UnityEditor.U2D.Aseprite
             if (string.IsNullOrEmpty(path))
                 return;
             
-            var relativePath = FileUtil.GetProjectRelativePath(path);
             for (var i = 0; i < importers.Length; ++i)
             {
                 var clips = ExportAnimationClips(importers[i], path);
@@ -235,6 +237,13 @@ namespace UnityEditor.U2D.Aseprite
                         return new Vector2(0f, 0f);
             }
         }
+        
+        public static string GetCellName(string baseName, int frameIndex, int noOfFrames)
+        {
+            if (noOfFrames == 1)
+                return baseName;
+            return $"{baseName}_Frame_{frameIndex}";
+        }
 
         public static void DisposeIfCreated<T>(this NativeArray<T> arr) where T : struct
         {
@@ -247,14 +256,15 @@ namespace UnityEditor.U2D.Aseprite
             arr.Dispose();
         }
 
-        public static bool IsLayerVisible(Layer layer)
+        public static bool IsLayerVisible(int layerIndex, in List<Layer> layers)
         {
+            var layer = layers[layerIndex];
             var isVisible = (layer.layerFlags & LayerFlags.Visible) != 0;
             if (!isVisible)
                 return false;
             
-            if (layer.parentLayer != null)
-                isVisible = IsLayerVisible(layer.parentLayer);
+            if (layer.parentIndex != -1)
+                isVisible = IsLayerVisible(layer.parentIndex, in layers);
             return isVisible;
         }
 

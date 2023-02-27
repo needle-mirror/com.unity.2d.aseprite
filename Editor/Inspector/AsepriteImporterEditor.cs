@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using UnityEditor.AssetImporters;
 using UnityEditor.U2D.Aseprite.Common;
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -13,13 +14,10 @@ namespace UnityEditor.U2D.Aseprite
     [CanEditMultipleObjects]
     internal class AsepriteImporterEditor : ScriptedImporterEditor, ITexturePlatformSettingsDataProvider
     {
-        struct InspectorGUI
-        {
-            public VisualElement container;
-            public bool needsRepaint;
-            public Action onUpdate;
-            public Action onUIActivated;
-        }
+        const string k_BaseFieldAlignedUssClass = "unity-base-field__aligned";
+        const string k_HiddenElementUssClass = "HiddenElement";
+        const string k_PaddingElementUssClass = "PaddingElement";
+        const string k_SubElementUssClass = "SubElement";
 
         SerializedProperty m_TextureType;
         SerializedProperty m_TextureShape;
@@ -62,37 +60,41 @@ namespace UnityEditor.U2D.Aseprite
         SerializedProperty m_CustomPivotPosition;
 
         SerializedProperty m_GenerateModelPrefab;
+        SerializedProperty m_AddSortingGroup;
         SerializedProperty m_AddShadowCasters;
         SerializedProperty m_GenerateAnimationClips;
         SerializedProperty m_PrevGenerateAnimationClips;
 
         VisualElement m_RootVisualElement;
         VisualElement m_InspectorSettingsView;
-        IMGUIContainer m_ToolbarContainer;
-        
-        readonly Dictionary<TextureImporterType, Action[]> m_AdvancedInspectorGUI = new Dictionary<TextureImporterType, Action[]>();
-        bool m_IsPOT = false;
-        readonly AsepriteImporterEditorFoldOutState m_EditorFoldOutState = new AsepriteImporterEditorFoldOutState();
+
+        readonly Dictionary<TextureImporterType, Action[]> m_AdvancedInspectorGUI = new();
+        bool m_IsPowerOfTwo = false;
+        readonly AsepriteImporterEditorFoldOutState m_EditorFoldOutState = new();
         bool m_ShowPerAxisWrapModes = false;
         readonly int[] m_FilterModeOptions = (int[])(Enum.GetValues(typeof(FilterMode)));
         TexturePlatformSettingsHelper m_TexturePlatformSettingsHelper;
-        InspectorGUI[] m_InspectorUI;
+        VisualElement[] m_InspectorUI;
         int m_ActiveEditorIndex = 0;
         
         bool ITexturePlatformSettingsDataProvider.textureTypeHasMultipleDifferentValues => m_TextureType.hasMultipleDifferentValues;
         TextureImporterType ITexturePlatformSettingsDataProvider.textureType => (TextureImporterType)m_TextureType.intValue;
-
         SpriteImportMode ITexturePlatformSettingsDataProvider.spriteImportMode => spriteImportMode;
+        
         SpriteImportMode spriteImportMode => (SpriteImportMode)m_SpriteMode.intValue;
 
         AnimationClip m_DefaultClip;
         ModelPreviewer m_ModelPreviewer;
         AsepriteImporter[] m_ImporterTargets;
+        string[] m_AssetPaths;
 
         /// <summary>
         /// The SerializedProperty of an array of TextureImporterPlatformSettings. 
         /// </summary>
         public SerializedProperty platformSettingsArray => m_PlatformSettingsArrProp;
+
+        public override bool showImportedObject => false;
+        public override bool UseDefaultMargins() => false;
 
         /// <summary>
         /// Implementation of AssetImporterEditor.OnEnable
@@ -101,11 +103,28 @@ namespace UnityEditor.U2D.Aseprite
         {
             base.OnEnable();
 
+            CacheImporterData();
+            CacheSerializedProperties();
+            SetupInspectorUI();
+            InitPreview();
+        }
+
+        void CacheImporterData()
+        {
             m_ImporterTargets = new AsepriteImporter[targets.Length];
+            m_AssetPaths = new string[targets.Length];
             for (var i = 0; i < targets.Length; ++i)
-                m_ImporterTargets[i] = (AsepriteImporter)targets[i];
-            
-            var textureImporterSettingsSP = serializedObject.FindProperty("m_TextureImporterSettings");
+            {
+                var importer = (AsepriteImporter)targets[i];
+                m_ImporterTargets[i] = importer;
+                m_AssetPaths[i] = importer.assetPath;
+                m_IsPowerOfTwo &= importer.isNPOT;
+            }
+        }
+
+        void CacheSerializedProperties()
+        {
+           var textureImporterSettingsSP = serializedObject.FindProperty("m_TextureImporterSettings");
             m_TextureType = textureImporterSettingsSP.FindPropertyRelative("m_TextureType");
             m_TextureShape = textureImporterSettingsSP.FindPropertyRelative("m_TextureShape");
             m_ConvertToNormalMap = textureImporterSettingsSP.FindPropertyRelative("m_ConvertToNormalMap");
@@ -147,19 +166,18 @@ namespace UnityEditor.U2D.Aseprite
             m_CustomPivotPosition = asepriteImporterSettings.FindPropertyRelative("m_CustomPivotPosition");
 
             m_GenerateModelPrefab = asepriteImporterSettings.FindPropertyRelative("m_GenerateModelPrefab");
+            m_AddSortingGroup = asepriteImporterSettings.FindPropertyRelative("m_AddSortingGroup");
             m_AddShadowCasters = asepriteImporterSettings.FindPropertyRelative("m_AddShadowCasters");
             m_GenerateAnimationClips = asepriteImporterSettings.FindPropertyRelative("m_GenerateAnimationClips");
             
             var prevAsepriteImporterSettings = serializedObject.FindProperty("m_PreviousAsepriteImporterSettings");
             m_PrevGenerateAnimationClips = prevAsepriteImporterSettings.FindPropertyRelative("m_GenerateAnimationClips");
 
-            foreach (var t in targets)
-            {
-                m_IsPOT &= ((AsepriteImporter)t).isNPOT;
-            }            
-            
-            m_TexturePlatformSettingsHelper = new TexturePlatformSettingsHelper(this);
-            
+            m_TexturePlatformSettingsHelper = new TexturePlatformSettingsHelper(this);            
+        }
+
+        void SetupInspectorUI()
+        {
             var advancedGUIAction = new Action[]
             {
                 ColorSpaceGUI,
@@ -180,355 +198,323 @@ namespace UnityEditor.U2D.Aseprite
             
             m_InspectorUI = new []
             {
-                new InspectorGUI()
-                {
-                    container = new IMGUIContainer(DoInspectorSettings)
-                    {
-                        name = "DoSettingsUI"  
-                    },
-                    needsRepaint = false
-                }
+                SetupSpriteActorContainer()
             };     
             m_ActiveEditorIndex = Mathf.Max(EditorPrefs.GetInt(this.GetType().Name + "ActiveEditorIndex", 0), 0);
-            m_ActiveEditorIndex %= m_InspectorUI.Length;
-
-            InitPreview();
-        }
-        
-        void InitPreview()
-        {
-            var t = (AsepriteImporter)target;
-            var gameObject = AssetDatabase.LoadAssetAtPath<GameObject>(t.assetPath);
-
-            if (m_ModelPreviewer != null)
-            {
-                m_ModelPreviewer.Dispose();
-                m_ModelPreviewer = null;
-            }
-
-            if (gameObject != null)
-            {
-                var clips = GetAllAnimationClips(t.assetPath);
-                m_ModelPreviewer = new ModelPreviewer(gameObject, clips);
-                m_DefaultClip = clips != null && clips.Length > 0 ? clips[0] : null;
-            }
+            m_ActiveEditorIndex %= m_InspectorUI.Length;            
         }
 
-        static AnimationClip[] GetAllAnimationClips(string assetPath)
+        VisualElement SetupSpriteActorContainer()
         {
-            var assets = AssetDatabase.LoadAllAssetsAtPath(assetPath);
-            var clips = new List<AnimationClip>();
-            for (var i = 0; i < assets.Length; ++i)
+            var spriteActorContainer = new VisualElement()
             {
-                if (assets[i] is AnimationClip clip)
-                    clips.Add(clip);
-            }
-
-            return clips.ToArray();
-        }
-        
-        /// <summary>
-        /// Override for AssetImporter.extraDataType
-        /// </summary>
-        protected override Type extraDataType => typeof(AsepriteImporterEditorExternalData);
-        
-        /// <summary>
-        /// Override for AssetImporter.InitializeExtraDataInstance
-        /// </summary>
-        /// <param name="extraTarget">Target object</param>
-        /// <param name="targetIndex">Target index</param>
-        protected override void InitializeExtraDataInstance(UnityEngine.Object extraTarget, int targetIndex)
-        {
-            var importer = targets[targetIndex] as AsepriteImporter;
-            var extraData = extraTarget as AsepriteImporterEditorExternalData;
-            var platformSettingsNeeded = TexturePlatformSettingsHelper.PlatformSettingsNeeded(this);
-            if (importer != null)
-            {
-                extraData.Init(importer, platformSettingsNeeded);
-            }
-        }
-        
-        /// <summary>
-        /// Implementation of virtual method CreateInspectorGUI.
-        /// </summary>
-        /// <returns>VisualElement container for Inspector visual.</returns>
-        public override VisualElement CreateInspectorGUI()
-        {
-            var styleSheet = EditorGUIUtility.Load("packages/com.unity.2d.aseprite/Editor/Assets/UI/AsepriteImporterStyleSheet.uss") as StyleSheet;
-            m_RootVisualElement = new VisualElement()
-            {
-                name = "Root"
+                name = "SpriteActorContainer"
             };
-            if(EditorGUIUtility.isProSkin)
-                m_RootVisualElement.AddToClassList("asepriteImporter-editor-dark");
-            else
-                m_RootVisualElement.AddToClassList("asepriteImporter-editor-light");
-            m_RootVisualElement.styleSheets.Add(styleSheet);
-            
-            m_InspectorSettingsView = new VisualElement()
+
+            SetupGeneralContainer(spriteActorContainer);
+            SetupLayerImportContainer(spriteActorContainer);
+            SetupGenerateAssetContainer(spriteActorContainer);
+            SetupCommonTextureSettingsContainer(spriteActorContainer);
+            SetupPlatformSettingsContainer(spriteActorContainer);
+            SetupAdvancedContainer(spriteActorContainer);
+
+            var applyRevertContainer = new IMGUIContainer(ApplyRevertGUI);
+            spriteActorContainer.Add(applyRevertContainer);
+
+            return spriteActorContainer;
+        }
+
+        void SetupGeneralContainer(VisualElement root)
+        {
+            var foldOut = new Foldout()
             {
-                name = "InspectorSettings"
+                text = styles.generalHeaderText.text,
+                tooltip = styles.generalHeaderText.tooltip,
+                value = m_EditorFoldOutState.generalFoldout
             };
-            m_RootVisualElement.Add(m_InspectorSettingsView);
-            m_RootVisualElement.schedule.Execute(VisualElementUpdate);
+            ImporterEditorUtils.AddSkinUssClass(foldOut.Q<Toggle>());
+            foldOut.RegisterValueChangedCallback(_ => { m_EditorFoldOutState.generalFoldout = foldOut.value; });
+            root.Add(foldOut);
+
+            var ppuField = new PropertyField(m_SpritePixelsToUnits, styles.spritePixelsPerUnit.text)
+            {
+                tooltip = styles.spritePixelsPerUnit.tooltip
+            };
+            ppuField.RegisterValueChangeCallback(x =>
+            {
+                m_SpritePixelsToUnits.floatValue = Mathf.Max(m_SpritePixelsToUnits.floatValue, 1f);
+                serializedObject.ApplyModifiedProperties();
+            });
+            foldOut.Add(ppuField);
+
+            var meshField = new PopupField<string>(styles.spriteMeshTypeOptions, m_SpriteMeshType.intValue)
+            {
+                label = styles.spriteMeshType.text,
+                tooltip = styles.spriteMeshType.tooltip
+            };
+            meshField.AddToClassList(k_BaseFieldAlignedUssClass);
+            meshField.RegisterValueChangedCallback(x =>
+            {
+                m_SpriteMeshType.intValue = meshField.index;
+                serializedObject.ApplyModifiedProperties();
+            });
+            foldOut.Add(meshField);
+
+            SetupSpriteEditorButton(foldOut);
             
-            ShowInspectorTab(m_ActiveEditorIndex);
-            return m_RootVisualElement;
-        }   
+            var paddingElement = new VisualElement()
+            {
+                name = "PaddingElement"
+            };
+            paddingElement.AddToClassList(k_PaddingElementUssClass);
+            foldOut.Add(paddingElement);            
+        }
         
-        /// <summary>
-        /// Implementation of AssetImporterEditor.OnDisable
-        /// </summary>
-        public override void OnDisable()
+        void SetupSpriteEditorButton(VisualElement root)
         {
-            base.OnDisable();
-
-            if (m_ModelPreviewer != null)
+            var spriteEditorBtn = new Button()
             {
-                m_ModelPreviewer.Dispose();
-                m_ModelPreviewer = null;
-            }
-            
-            if(m_RootVisualElement != null)
-                m_RootVisualElement.Clear();
-        }
+                text = styles.spriteEditorButtonLabel.text
+            };
+            root.Add(spriteEditorBtn);
 
-        void ShowInspectorTab(int tab)
-        {
-            m_InspectorSettingsView.Clear();
-            m_InspectorSettingsView.Add(m_InspectorUI[tab].container);
-            m_InspectorUI[tab].onUIActivated?.Invoke();
-        }        
-
-        /// <summary>
-        /// Override from AssetImporterEditor.RequiresConstantRepaint
-        /// </summary>
-        /// <returns>Returns true when in Layer Management tab for UI feedback update, false otherwise.</returns>
-        public override bool RequiresConstantRepaint()
-        {
-            return m_InspectorUI[m_ActiveEditorIndex].needsRepaint;
-        }
-
-        void VisualElementUpdate()
-        {
-            serializedObject.Update();
-            extraDataSerializedObject.Update();
-            try
+            spriteEditorBtn.SetEnabled(m_ImporterTargets.Length == 1);
+            spriteEditorBtn.clicked += () =>
             {
-                if(m_InspectorUI[m_ActiveEditorIndex].onUpdate != null)
-                    m_InspectorUI[m_ActiveEditorIndex].onUpdate.Invoke();
-            }
-            catch (Exception e)
-            {
-                Debug.Log("Update:"+e);
-            }
-
-            serializedObject.ApplyModifiedProperties();
-            extraDataSerializedObject.ApplyModifiedProperties();
-            m_RootVisualElement.schedule.Execute(VisualElementUpdate);
-        }
-
-        void DoInspectorSettings()
-        {
-            serializedObject.Update();
-            extraDataSerializedObject.Update();
-            DoSettingsUI();
-            ApplyRevertGUIVisualElement();
-        }        
-
-        void DoSettingsUI()
-        {
-            if (m_EditorFoldOutState.DoGeneralUI(styles.generalHeaderText))
-            {
-                DoSpriteTextureTypeInspector();
-                GUILayout.Space(5);
-            }
-            
-            DoLayerImportInspector();
-            DoGenerateAssetInspector();
-            CommonTextureSettingsGUI();
-            DoPlatformSettings();
-            DoAdvancedInspector();
-        }  
-        
-        void DoSpriteTextureTypeInspector()
-        {
-            using (new EditorGUI.DisabledScope(m_SpriteMode.intValue == 0))
-            {
-                EditorGUI.indentLevel++;
-                
-                EditorGUILayout.PropertyField(m_SpritePixelsToUnits, styles.spritePixelsPerUnit);
-
-                if (m_SpriteMode.intValue != (int)SpriteImportMode.Polygon && !m_SpriteMode.hasMultipleDifferentValues)
+                if (HasModified())
                 {
-                    EditorGUILayout.IntPopup(m_SpriteMeshType, styles.spriteMeshTypeOptions, new[] { 0, 1 }, styles.spriteMeshType);
-                }
-                
-                EditorGUI.indentLevel--;
-            }
-            DoOpenSpriteEditorButton();
-        }  
-        
-        void DoOpenSpriteEditorButton()
-        {
-            using (new EditorGUI.DisabledScope(targets.Length != 1))
-            {
-                GUILayout.BeginHorizontal();
-                GUILayout.FlexibleSpace();
-                if (GUILayout.Button(styles.spriteEditorButtonLabel))
-                {
-                    if (HasModified())
+                    // To ensure Sprite Editor Window to have the latest texture import setting,
+                    // We must applied those modified values first.
+                    var dialogText = string.Format(s_Styles.unappliedSettingsDialogContent.text, ((AssetImporter)target).assetPath);
+                    if (EditorUtility.DisplayDialog(s_Styles.unappliedSettingsDialogTitle.text,
+                            dialogText, s_Styles.applyButtonLabel.text, s_Styles.cancelButtonLabel.text))
                     {
-                        // To ensure Sprite Editor Window to have the latest texture import setting,
-                        // We must applied those modified values first.
-                        var dialogText = string.Format(s_Styles.unappliedSettingsDialogContent.text, ((AssetImporter)target).assetPath);
-                        if (EditorUtility.DisplayDialog(s_Styles.unappliedSettingsDialogTitle.text,
-                                dialogText, s_Styles.applyButtonLabel.text, s_Styles.cancelButtonLabel.text))
-                        {
 #if UNITY_2022_2_OR_NEWER
-                            SaveChanges();
+                        SaveChanges();
 #else
-                            ApplyAndImport();
+                        ApplyAndImport();
 #endif
-                            InternalEditorBridge.ShowSpriteEditorWindow(this.assetTarget);
-
-                            // We re-imported the asset which destroyed the editor, so we can't keep running the UI here.
-                            GUIUtility.ExitGUI();
-                        }
-                    }
-                    else
-                    {
                         InternalEditorBridge.ShowSpriteEditorWindow(this.assetTarget);
+
+                        // We re-imported the asset which destroyed the editor, so we can't keep running the UI here.
+                        GUIUtility.ExitGUI();
                     }
                 }
-                GUILayout.EndHorizontal();
-            }    
-        }
-
-#if UNITY_2022_2_OR_NEWER
-        /// <summary>
-        /// Implementation of AssetImporterEditor.SaveChanges.
-        /// </summary>
-        public override void SaveChanges()
-        {
-            ApplyTexturePlatformSettings();
-            
-            serializedObject.ApplyModifiedProperties();
-            extraDataSerializedObject.ApplyModifiedProperties();
-            base.SaveChanges();
-        }        
-#endif        
-
-        void DoLayerImportInspector()
-        {
-            if ((TextureImporterType) m_TextureType.intValue != TextureImporterType.Sprite)
-                return;
-            
-            if (m_EditorFoldOutState.DoLayerImportUI(styles.layerImportHeaderText))
-            {
-                EditorGUI.indentLevel++;
-                
-                EditorGUILayout.PropertyField(m_ImportHiddenLayers, styles.importHiddenLayer);
-                DrawLayerImportModes();
-                EditorGUILayout.PropertyField(m_DefaultPivotSpace, styles.defaultPivotSpace);
-                DrawPivotAlignment();
-
-                if ((SpriteAlignment) m_DefaultPivotAlignment.intValue == SpriteAlignment.Custom)
+                else
                 {
-                    GUILayout.BeginHorizontal();
-                    GUILayout.Space(EditorGUIUtility.labelWidth);
-                    EditorGUILayout.PropertyField(m_CustomPivotPosition, new GUIContent());
-                    GUILayout.EndHorizontal();
+                    InternalEditorBridge.ShowSpriteEditorWindow(this.assetTarget);
                 }
-                
-                GUILayout.Space(5);
-                
-                EditorGUI.indentLevel--;
-            }
+            };
         }
 
-        void DrawLayerImportModes()
+        void SetupLayerImportContainer(VisualElement root)
         {
-            EditorGUI.showMixedValue = m_LayerImportMode.hasMultipleDifferentValues;
-            m_LayerImportMode.intValue = EditorGUILayout.IntPopup(s_Styles.layerImportMode, m_LayerImportMode.intValue, s_Styles.layerImportOptions, s_Styles.layerImportValues);
-            EditorGUI.showMixedValue = false;
-        }      
-        
-        void DrawPivotAlignment()
-        {
-            EditorGUI.showMixedValue = m_LayerImportMode.hasMultipleDifferentValues;
-            m_DefaultPivotAlignment.intValue = EditorGUILayout.IntPopup(s_Styles.defaultPivotAlignment, m_DefaultPivotAlignment.intValue, s_Styles.spriteAlignmentOptions, new[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 });
-            EditorGUI.showMixedValue = false;
-        }
-        
-        void DoGenerateAssetInspector()
-        {
-            if ((TextureImporterType) m_TextureType.intValue != TextureImporterType.Sprite)
-                return;
+            var foldOut = new Foldout()
+            {
+                text = styles.layerImportHeaderText.text,
+                tooltip = styles.layerImportHeaderText.tooltip,
+                value = m_EditorFoldOutState.layerImportFoldout
+            };
+            ImporterEditorUtils.AddSkinUssClass(foldOut.Q<Toggle>());
+            foldOut.RegisterValueChangedCallback(_ => { m_EditorFoldOutState.layerImportFoldout = foldOut.value; });
+            root.Add(foldOut);
 
+            var hiddenLayersField = new PropertyField(m_ImportHiddenLayers, styles.importHiddenLayer.text)
+            {
+                tooltip = styles.importHiddenLayer.tooltip
+            };
+            foldOut.Add(hiddenLayersField);
+
+            var layerModePopup = new PopupField<string>(s_Styles.layerImportOptions, m_LayerImportMode.intValue)
+            {
+                label = s_Styles.layerImportMode.text,
+                tooltip = s_Styles.layerImportMode.tooltip
+            };
+            layerModePopup.RegisterValueChangedCallback(_ =>
+            {
+                m_LayerImportMode.intValue = layerModePopup.index;
+                serializedObject.ApplyModifiedProperties();
+            });
+            layerModePopup.AddToClassList(k_BaseFieldAlignedUssClass);
+            foldOut.Add(layerModePopup);
+
+            var pivotSpaceField = new PropertyField(m_DefaultPivotSpace, styles.defaultPivotSpace.text)
+            {
+                tooltip = styles.defaultPivotSpace.tooltip
+            };
+            foldOut.Add(pivotSpaceField);
+            
+            var pivotAlignmentPopup = new PopupField<string>(s_Styles.spriteAlignmentOptions, m_DefaultPivotAlignment.intValue)
+            {
+                label = s_Styles.defaultPivotAlignment.text,
+                tooltip = s_Styles.defaultPivotAlignment.tooltip
+            };
+            pivotAlignmentPopup.RegisterValueChangedCallback(x =>
+            {
+                m_DefaultPivotAlignment.intValue = pivotAlignmentPopup.index;
+                serializedObject.ApplyModifiedProperties();
+            });
+            pivotAlignmentPopup.AddToClassList(k_BaseFieldAlignedUssClass);
+            foldOut.Add(pivotAlignmentPopup);
+
+            var shouldShow = (SpriteAlignment)pivotAlignmentPopup.index == SpriteAlignment.Custom;
+            var customPivotField = new PropertyField(m_CustomPivotPosition, styles.customPivotPosition.text)
+            {
+                tooltip = styles.customPivotPosition.tooltip,
+                visible = shouldShow
+            };
+            customPivotField.EnableInClassList(k_HiddenElementUssClass, !shouldShow);
+            
+            customPivotField.schedule.Execute(x =>
+            {
+                var shouldShow = (SpriteAlignment)pivotAlignmentPopup.index == SpriteAlignment.Custom;
+                if (customPivotField.visible != shouldShow)
+                {
+                    customPivotField.visible = shouldShow;
+                    customPivotField.EnableInClassList(k_HiddenElementUssClass, !shouldShow);
+                }
+            }).Every(100);
+            foldOut.Add(customPivotField);
+
+            var paddingElement = new VisualElement()
+            {
+                name = "PaddingElement"
+            };
+            paddingElement.AddToClassList(k_PaddingElementUssClass);
+            foldOut.Add(paddingElement);
+        }
+
+        void SetupGenerateAssetContainer(VisualElement root)
+        {
 #if ENABLE_URP
             var isUrpEnabled = true;
 #else
             var isUrpEnabled = false;
 #endif             
             
-            if (m_EditorFoldOutState.DoGenerateAssetUI(styles.generateAssetsHeaderText))
+            var foldOut = new Foldout()
             {
-                EditorGUI.indentLevel++;
-                
-                EditorGUILayout.PropertyField(m_GenerateModelPrefab, styles.generateModelPrefab);
-                EditorGUI.indentLevel++;
+                text = styles.generateAssetsHeaderText.text,
+                tooltip = styles.generateAssetsHeaderText.tooltip,
+                value = m_EditorFoldOutState.generateAssetFoldout
+            };
+            ImporterEditorUtils.AddSkinUssClass(foldOut.Q<Toggle>());
+            foldOut.RegisterValueChangedCallback(_ => { m_EditorFoldOutState.generateAssetFoldout = foldOut.value; });
+            root.Add(foldOut);
+
+            var generateModelField = new PropertyField(m_GenerateModelPrefab, styles.generateModelPrefab.text)
+            {
+                tooltip = styles.generateModelPrefab.tooltip
+            };
+            foldOut.Add(generateModelField);
+
+            var isSortingEnabled = m_GenerateModelPrefab.boolValue;
+            var sortingGroupField = new PropertyField(m_AddSortingGroup, styles.addSortingGroup.text)
+            {
+                tooltip = styles.addSortingGroup.tooltip
+            };
+            sortingGroupField.AddToClassList(k_SubElementUssClass);
+            sortingGroupField.SetEnabled(isSortingEnabled);
+            sortingGroupField.schedule.Execute(() =>
+            {
+                isSortingEnabled = m_GenerateModelPrefab.boolValue;
+                if (sortingGroupField.enabledSelf != isSortingEnabled)
+                    sortingGroupField.SetEnabled(isSortingEnabled);  
+            }).Every(100);
+            foldOut.Add(sortingGroupField);
 
 #if UNITY_2023_1_OR_NEWER
-                var isDisabled = !(isUrpEnabled && m_GenerateModelPrefab.boolValue);
-                using (new EditorGUI.DisabledScope(isDisabled))
-                {
-                    EditorGUILayout.PropertyField(m_AddShadowCasters, styles.addShadowCasters);    
-                }
+            var areShadowsEnabled = isUrpEnabled && m_GenerateModelPrefab.boolValue;
+            var shadowCasterField = new PropertyField(m_AddShadowCasters, styles.addShadowCasters.text)
+            {
+                tooltip = styles.addShadowCasters.tooltip
+            };
+            shadowCasterField.AddToClassList(k_SubElementUssClass);
+            shadowCasterField.SetEnabled(areShadowsEnabled);
+            shadowCasterField.schedule.Execute(() =>
+            {
+                areShadowsEnabled = isUrpEnabled && m_GenerateModelPrefab.boolValue;
+                if (shadowCasterField.enabledSelf != areShadowsEnabled)
+                    shadowCasterField.SetEnabled(areShadowsEnabled);  
+            }).Every(100);
+            foldOut.Add(shadowCasterField);
 #endif
-                
-                EditorGUI.indentLevel--;
-                
-                EditorGUILayout.PropertyField(m_GenerateAnimationClips, styles.generateAnimationClips);
-                ExportAnimationAssetsButton();
-                
-                GUILayout.Space(5);
-                
-                EditorGUI.indentLevel--;
-            }
-        }
 
-        void ExportAnimationAssetsButton()
-        {
-            GUILayout.BeginHorizontal();
-            GUILayout.FlexibleSpace();
-
-            using (new EditorGUI.DisabledScope(targets.Length > 1 || 
-                                               m_DefaultClip == null ||
-                                               !m_GenerateAnimationClips.boolValue))
+            var generateClipsField = new PropertyField(m_GenerateAnimationClips, styles.generateAnimationClips.text)
             {
-                if (GUILayout.Button(styles.exportAnimationAssetsText))
+                tooltip = styles.generateAnimationClips.tooltip
+            };
+            foldOut.Add(generateClipsField);
+            
+            SetupAnimationAssetsButton(foldOut);
+            
+            var paddingElement = new VisualElement()
+            {
+                name = "PaddingElement"
+            };
+            paddingElement.AddToClassList(k_PaddingElementUssClass);
+            foldOut.Add(paddingElement);            
+        }
+        
+        void SetupAnimationAssetsButton(VisualElement root)
+        {
+            var isEnabled = m_ImporterTargets.Length == 1 &&
+                            m_DefaultClip != null &&
+                            m_GenerateAnimationClips.boolValue;
+
+            var assetsBtn = new Button()
+            {
+                text = styles.exportAnimationAssetsText.text
+            };
+            assetsBtn.SetEnabled(isEnabled);
+            assetsBtn.schedule.Execute(() =>
+            {
+                isEnabled = m_ImporterTargets.Length == 1 &&
+                            m_DefaultClip != null &&
+                            m_GenerateAnimationClips.boolValue;
+                if (assetsBtn.enabledSelf != isEnabled)
+                    assetsBtn.SetEnabled(isEnabled);  
+            }).Every(100);
+            assetsBtn.clicked += () =>
+            {
+                ImportUtilities.ExportAnimationAssets(m_ImporterTargets);
+                Apply();
+                GUIUtility.ExitGUI();
+            };
+            root.Add(assetsBtn);
+
+            var helpBox = new HelpBox(styles.exportAnimationInfoText.text, HelpBoxMessageType.Info);
+            helpBox.visible = m_GenerateAnimationClips.boolValue && !m_PrevGenerateAnimationClips.boolValue;
+            helpBox.EnableInClassList(k_HiddenElementUssClass, !helpBox.visible);
+            helpBox.schedule.Execute(() =>
+            {
+                // If the Generate Animation Clips checkbox has been checked, but not yet applied.
+                var isVisible = m_GenerateAnimationClips.boolValue && !m_PrevGenerateAnimationClips.boolValue;
+                if (helpBox.visible != isVisible)
                 {
-                    ImportUtilities.ExportAnimationAssets(m_ImporterTargets);
-                    Apply();
-                    GUIUtility.ExitGUI();
+                    helpBox.visible = isVisible;
+                    helpBox.EnableInClassList(k_HiddenElementUssClass, !isVisible);
                 }
-            }
-            
-            GUILayout.EndHorizontal();  
-            
-            // If the Generate Animation Clips checkbox has been checked, but not yet applied.
-            if (m_GenerateAnimationClips.boolValue && !m_PrevGenerateAnimationClips.boolValue)
-            {
-                EditorGUILayout.HelpBox(styles.exportAnimationInfoText.text, MessageType.Info);   
-            }
+            }).Every(100);
+            root.Add(helpBox);
         }
 
-        void CommonTextureSettingsGUI()
+        void SetupCommonTextureSettingsContainer(VisualElement root)
         {
-            if (m_EditorFoldOutState.DoTextureUI(styles.textureHeaderText))
+            var foldOut = new Foldout()
             {
-                EditorGUI.indentLevel++;
+                text = styles.textureHeaderText.text,
+                tooltip = styles.textureHeaderText.tooltip,
+                value = m_EditorFoldOutState.textureFoldout
+            };
+            ImporterEditorUtils.AddSkinUssClass(foldOut.Q<Toggle>());
+            foldOut.RegisterValueChangedCallback(_ => { m_EditorFoldOutState.textureFoldout = foldOut.value; });
+            root.Add(foldOut);
+
+            var imguiContainer = new IMGUIContainer(() =>
+            {
+                serializedObject.Update();
+                extraDataSerializedObject.Update();
                 
                 EditorGUI.BeginChangeCheck();
 
@@ -542,11 +528,10 @@ namespace UnityEditor.U2D.Aseprite
                     !InternalEditorBridge.DoesHardwareSupportsFullNPOT())
                 {
                     var displayWarning = false;
-                    foreach (var target in targets)
+                    foreach (var importer in m_ImporterTargets)
                     {
-                        var imp = (AsepriteImporter)target;
-                        var w = imp.textureActualWidth;
-                        var h = imp.textureActualHeight;
+                        var w = importer.textureActualWidth;
+                        var h = importer.textureActualHeight;
                         if (!Mathf.IsPowerOfTwo(w) || !Mathf.IsPowerOfTwo(h))
                         {
                             displayWarning = true;
@@ -600,11 +585,195 @@ namespace UnityEditor.U2D.Aseprite
                     }
                 }
                 GUILayout.Space(5);
+
+                serializedObject.ApplyModifiedProperties();
+                extraDataSerializedObject.ApplyModifiedProperties();
+            });
+            foldOut.Add(imguiContainer);         
+        }
+
+        void SetupPlatformSettingsContainer(VisualElement root)
+        {
+            var foldOut = new Foldout()
+            {
+                text = styles.platformSettingsHeaderText.text,
+                tooltip = styles.platformSettingsHeaderText.tooltip,
+                value = m_EditorFoldOutState.platformSettingsFoldout
+            };
+            ImporterEditorUtils.AddSkinUssClass(foldOut.Q<Toggle>());
+            foldOut.RegisterValueChangedCallback(_ => { m_EditorFoldOutState.platformSettingsFoldout = foldOut.value; });
+            root.Add(foldOut);
+
+            var imguiContainer = new IMGUIContainer(() =>
+            {
+                serializedObject.Update();
+                extraDataSerializedObject.Update();                
                 
-                EditorGUI.indentLevel--;
+                GUILayout.Space(5);
+                m_TexturePlatformSettingsHelper.ShowPlatformSpecificSettings();
+                GUILayout.Space(5);
+                
+                serializedObject.ApplyModifiedProperties();
+                extraDataSerializedObject.ApplyModifiedProperties();
+            });
+            foldOut.Add(imguiContainer);
+        }
+
+        void SetupAdvancedContainer(VisualElement root)
+        {
+            if (m_TextureType.hasMultipleDifferentValues)
+                return;
+            if (!m_AdvancedInspectorGUI.ContainsKey((TextureImporterType) m_TextureType.intValue))
+                return;
+            
+            var foldOut = new Foldout()
+            {
+                text = styles.advancedHeaderText.text,
+                tooltip = styles.advancedHeaderText.tooltip,
+                value = m_EditorFoldOutState.advancedFoldout
+            };
+            ImporterEditorUtils.AddSkinUssClass(foldOut.Q<Toggle>());
+            foldOut.RegisterValueChangedCallback(_ => { m_EditorFoldOutState.advancedFoldout = foldOut.value; });
+            root.Add(foldOut);
+
+            var imguiContainer = new IMGUIContainer(() =>
+            {
+                serializedObject.Update();
+                extraDataSerializedObject.Update();
+                
+                foreach (var action in m_AdvancedInspectorGUI[(TextureImporterType) m_TextureType.intValue])
+                {
+                    action();
+                }
+                
+                serializedObject.ApplyModifiedProperties();
+                extraDataSerializedObject.ApplyModifiedProperties();
+            });
+            foldOut.Add(imguiContainer);
+        }
+
+        void InitPreview()
+        {
+            if (m_ImporterTargets.Length > 1)
+                return;
+            
+            var importerPath = m_AssetPaths[0];
+            var gameObject = AssetDatabase.LoadAssetAtPath<GameObject>(importerPath);
+
+            if (m_ModelPreviewer != null)
+            {
+                m_ModelPreviewer.Dispose();
+                m_ModelPreviewer = null;
             }
-        }    
+
+            if (gameObject != null)
+            {
+                var clips = GetAllAnimationClips(importerPath);
+                m_ModelPreviewer = new ModelPreviewer(gameObject, clips);
+                m_DefaultClip = clips != null && clips.Length > 0 ? clips[0] : null;
+            }
+        }
+
+        void DisposePreview()
+        {
+            if (m_ModelPreviewer == null)
+                return;
         
+            m_ModelPreviewer.Dispose();
+            m_ModelPreviewer = null;
+        }
+
+        static AnimationClip[] GetAllAnimationClips(string assetPath)
+        {
+            var assets = AssetDatabase.LoadAllAssetsAtPath(assetPath);
+            var clips = new List<AnimationClip>();
+            for (var i = 0; i < assets.Length; ++i)
+            {
+                if (assets[i] is AnimationClip clip)
+                    clips.Add(clip);
+            }
+
+            return clips.ToArray();
+        }
+        
+        /// <summary>
+        /// Override for AssetImporter.extraDataType
+        /// </summary>
+        protected override Type extraDataType => typeof(AsepriteImporterEditorExternalData);
+        
+        /// <summary>
+        /// Override for AssetImporter.InitializeExtraDataInstance
+        /// </summary>
+        /// <param name="extraTarget">Target object</param>
+        /// <param name="targetIndex">Target index</param>
+        protected override void InitializeExtraDataInstance(UnityEngine.Object extraTarget, int targetIndex)
+        {
+            var importer = targets[targetIndex] as AsepriteImporter;
+            var extraData = extraTarget as AsepriteImporterEditorExternalData;
+            var platformSettingsNeeded = TexturePlatformSettingsHelper.PlatformSettingsNeeded(this);
+            if (importer != null)
+            {
+                extraData.Init(importer, platformSettingsNeeded);
+            }
+        }
+        
+        /// <summary>
+        /// Implementation of virtual method CreateInspectorGUI.
+        /// </summary>
+        /// <returns>VisualElement container for Inspector visual.</returns>
+        public override VisualElement CreateInspectorGUI()
+        {
+            m_RootVisualElement = new VisualElement()
+            {
+                name = "Root"
+            };
+            
+            var styleSheet = EditorGUIUtility.Load("packages/com.unity.2d.aseprite/Editor/Assets/UI/AsepriteImporterStyleSheet.uss") as StyleSheet;
+            m_RootVisualElement.styleSheets.Add(styleSheet);
+
+            m_InspectorSettingsView = new VisualElement()
+            {
+                name = "InspectorSettings"
+            };
+            m_RootVisualElement.Add(m_InspectorSettingsView);
+
+            ShowInspectorTab(m_ActiveEditorIndex);
+            
+            return m_RootVisualElement;
+        }   
+        
+        /// <summary>
+        /// Implementation of AssetImporterEditor.OnDisable
+        /// </summary>
+        public override void OnDisable()
+        {
+            base.OnDisable();
+            DisposePreview();
+            
+            if(m_RootVisualElement != null)
+                m_RootVisualElement.Clear();
+        }
+
+        void ShowInspectorTab(int tab)
+        {
+            m_InspectorSettingsView.Clear();
+            m_InspectorSettingsView.Add(m_InspectorUI[tab]);
+        }
+
+#if UNITY_2022_2_OR_NEWER
+        /// <summary>
+        /// Implementation of AssetImporterEditor.SaveChanges.
+        /// </summary>
+        public override void SaveChanges()
+        {
+            ApplyTexturePlatformSettings();
+            
+            serializedObject.ApplyModifiedProperties();
+            extraDataSerializedObject.ApplyModifiedProperties();
+            base.SaveChanges();
+        }        
+#endif
+
         // showPerAxisWrapModes is state of whether "Per-Axis" mode should be active in the main dropdown.
         // It is set automatically if wrap modes in UVW are different, or if user explicitly picks "Per-Axis" option -- when that one is picked,
         // then it should stay true even if UVW wrap modes will initially be the same.
@@ -735,35 +904,6 @@ namespace UnityEditor.U2D.Aseprite
             return false;
         }
 
-        void DoPlatformSettings()
-        {
-            if (m_EditorFoldOutState.DoPlatformSettingsUI(styles.platformSettingsHeaderText))
-            {
-                GUILayout.Space(5);
-                m_TexturePlatformSettingsHelper.ShowPlatformSpecificSettings();
-                GUILayout.Space(5);
-            }
-        }
-        
-        void DoAdvancedInspector()
-        {
-            if (m_TextureType.hasMultipleDifferentValues)
-                return;
-            
-            if (m_AdvancedInspectorGUI.ContainsKey((TextureImporterType)m_TextureType.intValue))
-            {
-                if (m_EditorFoldOutState.DoAdvancedUI(styles.advancedHeaderText))
-                {
-                    foreach (var action in m_AdvancedInspectorGUI[(TextureImporterType) m_TextureType.intValue])
-                    {
-                        EditorGUI.indentLevel++;
-                        action();
-                        EditorGUI.indentLevel--;
-                    }
-                }
-            }
-        }        
-        
         void ColorSpaceGUI()
         {
             ToggleFromInt(m_sRGBTexture, styles.sRGBTexture);
@@ -790,7 +930,7 @@ namespace UnityEditor.U2D.Aseprite
         
         void POTScaleGUI()
         {
-            using (new EditorGUI.DisabledScope(m_IsPOT || m_TextureType.intValue == (int)TextureImporterType.Sprite))
+            using (new EditorGUI.DisabledScope(m_IsPowerOfTwo || m_TextureType.intValue == (int)TextureImporterType.Sprite))
             {
                 EnumPopup(m_NPOTScale, typeof(TextureImporterNPOTScale), styles.npot);
             }
@@ -855,13 +995,6 @@ namespace UnityEditor.U2D.Aseprite
             }
         }
 
-        void ApplyRevertGUIVisualElement()
-        {
-            serializedObject.ApplyModifiedProperties();
-            extraDataSerializedObject.ApplyModifiedProperties();
-            ApplyRevertGUI();
-        }
-
         /// <summary>
         /// Implementation of AssetImporterEditor.Apply
         /// </summary>
@@ -879,9 +1012,9 @@ namespace UnityEditor.U2D.Aseprite
 
         void ApplyTexturePlatformSettings()
         {
-            for(var i = 0; i< targets.Length && i < extraDataTargets.Length; ++i)
+            for(var i = 0; i< m_ImporterTargets.Length && i < extraDataTargets.Length; ++i)
             {
-                var asepriteImporter = (AsepriteImporter)targets[i];
+                var asepriteImporter = m_ImporterTargets[i];
                 var externalData = (AsepriteImporterEditorExternalData)extraDataTargets[i];
                 foreach (var ps in externalData.platformSettings)
                 {
@@ -906,10 +1039,7 @@ namespace UnityEditor.U2D.Aseprite
         /// Implementation of ITexturePlatformSettingsDataProvider.GetTargetCount.
         /// </summary>
         /// <returns>Returns the number of selected targets.</returns>
-        int ITexturePlatformSettingsDataProvider.GetTargetCount()
-        {
-            return targets.Length;
-        }
+        int ITexturePlatformSettingsDataProvider.GetTargetCount() => targets.Length;
 
         /// <summary>
         /// ITexturePlatformSettingsDataProvider.GetPlatformTextureSettings.
@@ -971,8 +1101,8 @@ namespace UnityEditor.U2D.Aseprite
         /// <param name="platformSettings">TextureImporterPlatformSettings to apply to target.</param>
         void ITexturePlatformSettingsDataProvider.SetPlatformTextureSettings(int i, TextureImporterPlatformSettings platformSettings)
         {
-            var psdImporter = ((AsepriteImporter)targets[i]);
-            var sp = new SerializedObject(psdImporter);
+            var importer = (AsepriteImporter)targets[i];
+            var sp = new SerializedObject(importer);
             sp.FindProperty("m_PlatformSettingsDirtyTick").longValue = System.DateTime.Now.Ticks;
             sp.ApplyModifiedProperties();
         }
@@ -1114,6 +1244,8 @@ namespace UnityEditor.U2D.Aseprite
         /// <param name="r">Preview Rect.</param>
         public override void DrawPreview(Rect r)
         {
+            if (HasRenamedAssets())
+                ReloadPreviewData();
             if (m_ModelPreviewer == null)
                 InitPreview();
 
@@ -1121,46 +1253,52 @@ namespace UnityEditor.U2D.Aseprite
                 m_ModelPreviewer.DrawPreview(r, "PreBackgroundSolid");
             else
                 base.DrawPreview(r);
-        }        
+        }
+
+        void ReloadPreviewData()
+        {
+            DisposePreview();
+            CacheImporterData();
+            InitPreview();
+            Apply();
+        }
+
+        bool HasRenamedAssets()
+        {
+            for (var i = 0; i < m_AssetPaths.Length; ++i)
+            {
+                if (m_AssetPaths[i] != (targets[i] as AsepriteImporter).assetPath)
+                    return true;
+            }
+            return false;
+        }
         
         class Styles
         {
-            public readonly GUIContent textureTypeTitle = new GUIContent("Texture Type", "What will this texture be used for?");
-            public readonly GUIContent[] textureTypeOptions =
-            {
-                new GUIContent("Default", "Texture is a normal image such as a diffuse texture or other."),
-                new GUIContent("Sprite (2D and UI)", "Texture is used for a sprite."),
-            };
-            public readonly int[] textureTypeValues =
-            {
-                (int)TextureImporterType.Default,
-                (int)TextureImporterType.Sprite,
-            };
-            
-            readonly GUIContent textureShape2D = new GUIContent("2D, Texture is 2D.");
-            readonly  GUIContent textureShapeCube = new GUIContent("Cube", "Texture is a Cubemap.");
-            public readonly Dictionary<TextureImporterShape, GUIContent[]> textureShapeOptionsDictionnary = new Dictionary<TextureImporterShape, GUIContent[]>();
-            public readonly Dictionary<TextureImporterShape, int[]> textureShapeValuesDictionnary = new Dictionary<TextureImporterShape, int[]>();
+            readonly GUIContent textureShape2D = new ("2D, Texture is 2D.");
+            readonly  GUIContent textureShapeCube = new ("Cube", "Texture is a Cubemap.");
+            public readonly Dictionary<TextureImporterShape, GUIContent[]> textureShapeOptionsDictionnary = new ();
+            public readonly Dictionary<TextureImporterShape, int[]> textureShapeValuesDictionnary = new ();
 
 
-            public readonly GUIContent filterMode = new GUIContent("Filter Mode");
+            public readonly GUIContent filterMode = new ("Filter Mode");
             public readonly GUIContent[] filterModeOptions =
             {
-                new GUIContent("Point (no filter)"),
-                new GUIContent("Bilinear"),
-                new GUIContent("Trilinear")
+                new ("Point (no filter)"),
+                new ("Bilinear"),
+                new ("Trilinear")
             };
 
-            public readonly GUIContent mipmapFadeOutToggle = new GUIContent("Fadeout Mip Maps");
-            public readonly GUIContent mipmapFadeOut = new GUIContent("Fade Range");
-            public readonly GUIContent readWrite = new GUIContent("Read/Write Enabled", "Enable to be able to access the raw pixel data from code.");
+            public readonly GUIContent mipmapFadeOutToggle = new ("Fadeout Mip Maps");
+            public readonly GUIContent mipmapFadeOut = new ("Fade Range");
+            public readonly GUIContent readWrite = new ("Read/Write Enabled", "Enable to be able to access the raw pixel data from code.");
 
-            public readonly GUIContent alphaSource = new GUIContent("Alpha Source", "How is the alpha generated for the imported texture.");
+            public readonly GUIContent alphaSource = new ("Alpha Source", "How is the alpha generated for the imported texture.");
             public readonly GUIContent[] alphaSourceOptions =
             {
-                new GUIContent("None", "No Alpha will be used."),
-                new GUIContent("Input Texture Alpha", "Use Alpha from the input texture if one is provided."),
-                new GUIContent("From Gray Scale", "Generate Alpha from image gray scale."),
+                new ("None", "No Alpha will be used."),
+                new ("Input Texture Alpha", "Use Alpha from the input texture if one is provided."),
+                new ("From Gray Scale", "Generate Alpha from image gray scale."),
             };
             public readonly int[] alphaSourceValues =
             {
@@ -1169,62 +1307,62 @@ namespace UnityEditor.U2D.Aseprite
                 (int)TextureImporterAlphaSource.FromGrayScale,
             };
 
-            public readonly GUIContent generateMipMaps = new GUIContent("Generate Mip Maps");
-            public readonly GUIContent sRGBTexture = new GUIContent("sRGB (Color Texture)", "Texture content is stored in gamma space. Non-HDR color textures should enable this flag (except if used for IMGUI).");
-            public readonly GUIContent borderMipMaps = new GUIContent("Border Mip Maps");
+            public readonly GUIContent generateMipMaps = new ("Generate Mip Maps");
+            public readonly GUIContent sRGBTexture = new ("sRGB (Color Texture)", "Texture content is stored in gamma space. Non-HDR color textures should enable this flag (except if used for IMGUI).");
+            public readonly GUIContent borderMipMaps = new ("Border Mip Maps");
 #if ENABLE_TEXTURE_STREAMING            
             public readonly GUIContent streamingMipMaps = EditorGUIUtility.TrTextContent("Mip Streaming", "Only load larger mipmaps as needed to render the current game cameras. Requires texture streaming to be enabled in quality settings.");
             public readonly GUIContent streamingMipmapsPriority = EditorGUIUtility.TrTextContent("Priority", "Mipmap streaming priority when there's contention for resources. Positive numbers represent higher priority. Valid range is -128 to 127.");
 #endif            
-            public readonly GUIContent mipMapsPreserveCoverage = new GUIContent("Mip Maps Preserve Coverage", "The alpha channel of generated Mip Maps will preserve coverage during the alpha test.");
-            public readonly GUIContent alphaTestReferenceValue = new GUIContent("Alpha Cutoff Value", "The reference value used during the alpha test. Controls Mip Map coverage.");
-            public readonly GUIContent mipMapFilter = new GUIContent("Mip Map Filtering");
+            public readonly GUIContent mipMapsPreserveCoverage = new ("Mip Maps Preserve Coverage", "The alpha channel of generated Mip Maps will preserve coverage during the alpha test.");
+            public readonly GUIContent alphaTestReferenceValue = new ("Alpha Cutoff Value", "The reference value used during the alpha test. Controls Mip Map coverage.");
+            public readonly GUIContent mipMapFilter = new ("Mip Map Filtering");
             public readonly GUIContent[] mipMapFilterOptions =
             {
-                new GUIContent("Box"),
-                new GUIContent("Kaiser"),
+                new ("Box"),
+                new ("Kaiser"),
             };
-            public readonly GUIContent npot = new GUIContent("Non Power of 2", "How non-power-of-two textures are scaled on import.");
+            public readonly GUIContent npot = new ("Non Power of 2", "How non-power-of-two textures are scaled on import.");
             
-            public readonly GUIContent[] spriteMeshTypeOptions =
+            public readonly List<string> spriteMeshTypeOptions = new()
             {
-                new GUIContent("Full Rect"),
-                new GUIContent("Tight"),
+                L10n.Tr("Full Rect"),
+                L10n.Tr("Tight"),
             };
             
-            public readonly GUIContent spritePixelsPerUnit = new GUIContent("Pixels Per Unit", "How many pixels in the sprite correspond to one unit in the world.");
-            public readonly GUIContent spriteMeshType = new GUIContent("Mesh Type", "Type of sprite mesh to generate.");
+            public readonly GUIContent spritePixelsPerUnit = new ("Pixels Per Unit", "How many pixels in the sprite correspond to one unit in the world.");
+            public readonly GUIContent spriteMeshType = new ("Mesh Type", "Type of sprite mesh to generate.");
 
-            public readonly GUIContent warpNotSupportWarning = new GUIContent("Graphics device doesn't support Repeat wrap mode on NPOT textures. Falling back to Clamp.");
-            public readonly GUIContent anisoLevelLabel = new GUIContent("Aniso Level");
-            public readonly GUIContent anisotropicDisableInfo = new GUIContent("Anisotropic filtering is disabled for all textures in Quality Settings.");
-            public readonly GUIContent anisotropicForceEnableInfo = new GUIContent("Anisotropic filtering is enabled for all textures in Quality Settings.");
-            public readonly GUIContent unappliedSettingsDialogTitle = new GUIContent("Unapplied import settings");
-            public readonly GUIContent unappliedSettingsDialogContent = new GUIContent("Unapplied import settings for \'{0}\'.\nApply and continue to sprite editor or cancel.");
-            public readonly GUIContent applyButtonLabel = new GUIContent("Apply");
-            public readonly GUIContent cancelButtonLabel = new GUIContent("Cancel");
-            public readonly GUIContent spriteEditorButtonLabel = new GUIContent("Open Sprite Editor");
-            public readonly GUIContent alphaIsTransparency = new GUIContent("Alpha Is Transparency", "If the provided alpha channel is transparency, enable this to pre-filter the color to avoid texture filtering artifacts. This is not supported for HDR textures.");
+            public readonly GUIContent warpNotSupportWarning = new ("Graphics device doesn't support Repeat wrap mode on NPOT textures. Falling back to Clamp.");
+            public readonly GUIContent anisoLevelLabel = new ("Aniso Level");
+            public readonly GUIContent anisotropicDisableInfo = new ("Anisotropic filtering is disabled for all textures in Quality Settings.");
+            public readonly GUIContent anisotropicForceEnableInfo = new ("Anisotropic filtering is enabled for all textures in Quality Settings.");
+            public readonly GUIContent unappliedSettingsDialogTitle = new ("Unapplied import settings");
+            public readonly GUIContent unappliedSettingsDialogContent = new ("Unapplied import settings for \'{0}\'.\nApply and continue to sprite editor or cancel.");
+            public readonly GUIContent applyButtonLabel = new ("Apply");
+            public readonly GUIContent cancelButtonLabel = new ("Cancel");
+            public readonly GUIContent spriteEditorButtonLabel = new ("Open Sprite Editor");
+            public readonly GUIContent alphaIsTransparency = new ("Alpha Is Transparency", "If the provided alpha channel is transparency, enable this to pre-filter the color to avoid texture filtering artifacts. This is not supported for HDR textures.");
             
-            public readonly GUIContent advancedHeaderText = new GUIContent("Advanced", "Show advanced settings.");
+            public readonly GUIContent advancedHeaderText = new ("Advanced", "Show advanced settings.");
 
             public readonly GUIContent platformSettingsHeaderText  = new GUIContent("Platform Settings");
 
             public readonly GUIContent[] platformSettingsSelection;
 
-            public readonly GUIContent wrapModeLabel = new GUIContent("Wrap Mode");
-            public readonly GUIContent wrapU = new GUIContent("U axis");
-            public readonly GUIContent wrapV = new GUIContent("V axis");
-            public readonly GUIContent wrapW = new GUIContent("W axis");
+            public readonly GUIContent wrapModeLabel = new ("Wrap Mode");
+            public readonly GUIContent wrapU = new ("U axis");
+            public readonly GUIContent wrapV = new ("V axis");
+            public readonly GUIContent wrapW = new ("W axis");
 
 
             public readonly GUIContent[] wrapModeContents =
             {
-                new GUIContent("Repeat"),
-                new GUIContent("Clamp"),
-                new GUIContent("Mirror"),
-                new GUIContent("Mirror Once"),
-                new GUIContent("Per-axis")
+                new ("Repeat"),
+                new ("Clamp"),
+                new ("Mirror"),
+                new ("Mirror Once"),
+                new ("Per-axis")
             };
             public readonly int[] wrapModeValues =
             {
@@ -1238,35 +1376,32 @@ namespace UnityEditor.U2D.Aseprite
             public readonly GUIContent importHiddenLayer = EditorGUIUtility.TrTextContent("Include Hidden Layers", "Settings to determine when hidden layers should be imported.");
             public readonly GUIContent defaultPivotSpace = EditorGUIUtility.TrTextContent("Pivot Space", "Select which space the pivot should be calculated in.");
             public readonly GUIContent defaultPivotAlignment = EditorGUIUtility.TrTextContent("Pivot Alignment", "Select where the pivot should be located based on the Pivot Space.");
+            public readonly GUIContent customPivotPosition = EditorGUIUtility.TrTextContent("Custom Pivot Position", "Input the normalized position of the Sprite pivots. The position will be calculated based on the Pivot Space.");
 
-            public readonly GUIContent[] spriteAlignmentOptions =
+            public readonly List<string> spriteAlignmentOptions = new()
             {
-                new GUIContent("Center"),
-                new GUIContent("Top Left"),
-                new GUIContent("Top"),
-                new GUIContent("Top Right"),
-                new GUIContent("Left"),
-                new GUIContent("Right"),
-                new GUIContent("Bottom Left"),
-                new GUIContent("Bottom"),
-                new GUIContent("Bottom Right"),
-                new GUIContent("Custom"),
+                L10n.Tr("Center"),
+                L10n.Tr("Top Left"),
+                L10n.Tr("Top"),
+                L10n.Tr("Top Right"),
+                L10n.Tr("Left"),
+                L10n.Tr("Right"),
+                L10n.Tr("Bottom Left"),
+                L10n.Tr("Bottom"),
+                L10n.Tr("Bottom Right"),
+                L10n.Tr("Custom"),
             };
 
             public readonly GUIContent layerImportMode = EditorGUIUtility.TrTextContent("Import Mode", "Choose between generating one Sprite per layer, or merge all layers in a frame into a single Sprite.");
-            public readonly GUIContent[] layerImportOptions =
+            public readonly List<string> layerImportOptions = new()
             {
-                new GUIContent("Individual Layers", "Generate one Sprite per layer."),
-                new GUIContent("Merged Layers", "Merge all layers in a frame into a single Sprite."),
+                L10n.Tr("Individual Layers"),
+                L10n.Tr("Merge Frame")
             };
 
-            public readonly int[] layerImportValues =
-            {
-                (int)LayerImportModes.Individual,
-                (int)LayerImportModes.Merged
-            };            
-            
             public readonly GUIContent generateModelPrefab = EditorGUIUtility.TrTextContent("Model Prefab", "Generate a Model Prefab laid out the same way as inside Aseprite.");
+
+            public readonly GUIContent addSortingGroup = EditorGUIUtility.TrTextContent("Sorting Group", "Add a Sorting Group component to the root of the generated model prefab if it has more than one Sprite Renderer.");
             public readonly GUIContent addShadowCasters = EditorGUIUtility.TrTextContent("Shadow Casters", "Add Shadow Casters on all GameObjects with SpriteRenderer. Note: The Universal Rendering Pipeline package has to be installed.");
             public readonly GUIContent generateAnimationClips = EditorGUIUtility.TrTextContent("Animation Clips", "Generate Animation Clips based on the frame and tag data from the Aseprite file.");
             
@@ -1315,7 +1450,7 @@ namespace UnityEditor.U2D.Aseprite
                 return s_Styles;
             }
         }
-        
+
         class AsepriteImporterEditorFoldOutState
         {
             readonly SavedBool m_GeneralFoldout;
@@ -1325,56 +1460,50 @@ namespace UnityEditor.U2D.Aseprite
             readonly SavedBool m_TextureFoldout;
             readonly SavedBool m_PlatformSettingsFoldout;
 
+            public bool generalFoldout 
+            {
+                get => m_GeneralFoldout.value;
+                set => m_GeneralFoldout.value = value;
+            }
+            
+            public bool layerImportFoldout 
+            {
+                get => m_LayerImportFoldout.value;
+                set => m_LayerImportFoldout.value = value;
+            }
+            
+            public bool generateAssetFoldout 
+            {
+                get => m_GenerateAssetFoldout.value;
+                set => m_GenerateAssetFoldout.value = value;
+            }
+            
+            public bool advancedFoldout 
+            {
+                get => m_AdvancedFoldout.value;
+                set => m_AdvancedFoldout.value = value;
+            }     
+            
+            public bool textureFoldout 
+            {
+                get => m_TextureFoldout.value;
+                set => m_TextureFoldout.value = value;
+            }   
+            
+            public bool platformSettingsFoldout 
+            {
+                get => m_PlatformSettingsFoldout.value;
+                set => m_PlatformSettingsFoldout.value = value;
+            }
+
             public AsepriteImporterEditorFoldOutState()
             {
                 m_GeneralFoldout = new SavedBool("AsepriteImporterEditor.m_GeneralFoldout", true);
-                m_LayerImportFoldout = new SavedBool("PSDImporterEditor.m_LayerImportFoldout", true);
+                m_LayerImportFoldout = new SavedBool("AsepriteImporterEditor.m_LayerImportFoldout", true);
                 m_GenerateAssetFoldout = new SavedBool("AsepriteImporterEditor.m_ExportAssetFoldout", true);
                 m_AdvancedFoldout = new SavedBool("AsepriteImporterEditor.m_AdvancedFoldout", false);
                 m_TextureFoldout = new SavedBool("AsepriteImporterEditor.m_TextureFoldout", false);
                 m_PlatformSettingsFoldout = new SavedBool("AsepriteImporterEditor.m_PlatformSettingsFoldout", false);
-            }
-            
-            static bool DoFoldout(GUIContent title, bool state)
-            {
-                InspectorUtils.DrawSplitter();
-                return InspectorUtils.DrawHeaderFoldout(title, state);
-            }
-            
-            public bool DoGeneralUI(GUIContent title)
-            {
-                m_GeneralFoldout.value = DoFoldout(title, m_GeneralFoldout.value);
-                return m_GeneralFoldout.value;
-            }
-            
-            public bool DoLayerImportUI(GUIContent title)
-            {
-                m_LayerImportFoldout.value = DoFoldout(title, m_LayerImportFoldout.value);
-                return m_LayerImportFoldout.value;
-            }
-            
-            public bool DoGenerateAssetUI(GUIContent title)
-            {
-                m_GenerateAssetFoldout.value = DoFoldout(title, m_GenerateAssetFoldout.value);
-                return m_GenerateAssetFoldout.value;
-            }            
-
-            public bool DoAdvancedUI(GUIContent title)
-            {
-                m_AdvancedFoldout.value = DoFoldout(title, m_AdvancedFoldout.value);
-                return m_AdvancedFoldout.value;
-            }
-
-            public bool DoPlatformSettingsUI(GUIContent title)
-            {
-                m_PlatformSettingsFoldout.value = DoFoldout(title, m_PlatformSettingsFoldout.value);
-                return m_PlatformSettingsFoldout.value;
-            }
-            
-            public bool DoTextureUI(GUIContent title)
-            {
-                m_TextureFoldout.value = DoFoldout(title, m_TextureFoldout.value);
-                return m_TextureFoldout.value;
             }
 
             class SavedBool
