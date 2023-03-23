@@ -84,6 +84,11 @@ namespace UnityEditor.U2D.Aseprite
                 SetDirty();
             }
         }
+        
+        /// <summary>
+        /// The canvas size of the source file.
+        /// </summary>
+        public Vector2 canvasSize => m_CanvasSize;
 
         /// <summary>
         /// Should include hidden layers from the source file.

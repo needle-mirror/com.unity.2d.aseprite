@@ -13,6 +13,7 @@ namespace UnityEditor.U2D.Aseprite
         [SerializeField] string m_Name;
         [SerializeField] LayerFlags m_LayerFlags;
         [SerializeField] LayerTypes m_LayerType;
+        [SerializeField] BlendModes m_BlendMode;
         [SerializeField] List<Cell> m_Cells = new List<Cell>();
         [SerializeField] List<LinkedCell> m_LinkedCells = new List<LinkedCell>();
         [SerializeField] int m_ParentIndex = -1;
@@ -45,6 +46,11 @@ namespace UnityEditor.U2D.Aseprite
             get => m_LayerType;
             set => m_LayerType = value;
         }
+        public BlendModes blendMode
+        {
+            get => m_BlendMode;
+            set => m_BlendMode = value;
+        }
         public List<Cell> cells
         {
             get => m_Cells;
@@ -70,15 +76,16 @@ namespace UnityEditor.U2D.Aseprite
     }
 
     [Serializable]
-    internal class Cell
+    internal struct Cell
     {
         [SerializeField] string m_Name;
         [SerializeField] int m_FrameIndex;
         [SerializeField] RectInt m_CellRect;
         [SerializeField] string m_SpriteId;
 
-        [NonSerialized] public bool updatedCellRect = false;
+        [NonSerialized] public bool updatedCellRect;
         [NonSerialized] public float opacity;
+        [NonSerialized] public BlendModes blendMode;
         [NonSerialized] public NativeArray<Color32> image;
 
         public string name
@@ -124,11 +131,17 @@ namespace UnityEditor.U2D.Aseprite
     internal class Frame
     {
         int m_Duration;
+        string[] m_EventStrings;
 
         public int duration
         {
             get => m_Duration;
             set => m_Duration = value;
+        }
+        public string[] eventStrings
+        {
+            get => m_EventStrings;
+            set => m_EventStrings = value;
         }
     }
 

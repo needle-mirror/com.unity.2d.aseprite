@@ -6,12 +6,11 @@ namespace UnityEditor.U2D.Aseprite
 {
     internal static class ImportLayers
     {
-        public static void Import(List<Layer> layers, out List<Cell> cellLookup, out List<NativeArray<Color32>> cellBuffers, out List<int> cellWidth, out List<int> cellHeight)
+        public static void Import(List<Layer> layers, out List<NativeArray<Color32>> cellBuffers, out List<int> cellWidth, out List<int> cellHeight)
         {
             cellBuffers = new List<NativeArray<Color32>>();
             cellWidth = new List<int>();
             cellHeight = new List<int>();
-            cellLookup = new List<Cell>();
 
             for (var i = 0; i < layers.Count; ++i)
             {
@@ -26,7 +25,6 @@ namespace UnityEditor.U2D.Aseprite
                     cellBuffers.Add(cells[m].image);
                     cellWidth.Add(width);
                     cellHeight.Add(height);
-                    cellLookup.Add(cells[m]);
                 }
             }
 

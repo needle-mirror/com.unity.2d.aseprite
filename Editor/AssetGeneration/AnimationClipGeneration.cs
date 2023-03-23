@@ -39,7 +39,7 @@ namespace UnityEditor.U2D.Aseprite
             var animationClip = new AnimationClip()
             {
                 name = tag.name,
-                frameRate = 60f
+                frameRate = 100f
             };
 
             var clipSettings = new AnimationClipSettings();
@@ -63,13 +63,14 @@ namespace UnityEditor.U2D.Aseprite
                 activeFrames.UnionWith(AddLinkedCellsToClip(in linkedCells, in cells, in tag, in sprites, in frames, ref spriteKeyframes));
 
                 spriteKeyframes.Sort((x, y) => x.time.CompareTo(y.time));
-                DuplicateLastFrame(ref spriteKeyframes, frames[^1]);
+                DuplicateLastFrame(ref spriteKeyframes, frames[tag.toFrame - 1]);
 
                 var path = GetGameObjectPath(layerGo.transform);
                 var spriteBinding = EditorCurveBinding.PPtrCurve(path, typeof(SpriteRenderer), "m_Sprite");
                 AnimationUtility.SetObjectReferenceCurve(animationClip, spriteBinding, spriteKeyframes.ToArray());
 
                 AddEnabledKeyframes(layerGo, tag, in frames, in activeFrames, in animationClip);
+                AddAnimationEvents(in tag, in frames, animationClip);
             }
 
             return animationClip;
@@ -112,10 +113,11 @@ namespace UnityEditor.U2D.Aseprite
                     linkedCell.frameIndex >= tag.toFrame)
                     continue;
                 
-                var cell = cells.Find(x => x.frameIndex == linkedCell.linkedToFrame);
-                if (cell == null)
+                var cellIndex = cells.FindIndex(x => x.frameIndex == linkedCell.linkedToFrame);
+                if (cellIndex == -1)
                     continue;
-                    
+
+                var cell = cells[cellIndex];
                 var sprite = Array.Find(sprites, x => x.GetSpriteID() == cell.spriteId);
                 if (sprite == null)
                     continue;  
@@ -218,6 +220,32 @@ namespace UnityEditor.U2D.Aseprite
             keyframe.inTangent = float.PositiveInfinity;
             keyframe.outTangent = float.PositiveInfinity;
             return keyframe;
-        }             
+        }
+
+        static void AddAnimationEvents(in Tag tag, in List<Frame> frames, AnimationClip animationClip)
+        {
+            var events = new List<AnimationEvent>();
+            
+            for (var frameIndex = tag.fromFrame; frameIndex < tag.toFrame; ++frameIndex)
+            {
+                var frame = frames[frameIndex];
+                if (frame.eventStrings.Length == 0)
+                    continue;
+
+                var frameTime = GetTimeFromFrame(frames, frameIndex);
+                var eventStrings = frame.eventStrings;
+                for (var m = 0; m < eventStrings.Length; ++m)
+                {
+                    events.Add(new AnimationEvent()
+                    {
+                        time = frameTime,
+                        functionName = eventStrings[m]
+                    });   
+                }
+            }
+            
+            if (events.Count > 0)
+                AnimationUtility.SetAnimationEvents(animationClip, events.ToArray());
+        }
     }
 }

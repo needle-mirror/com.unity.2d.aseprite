@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.0.0-pre.3] - 2023-03-23
+### Added
+- Bursted the texture generation tasks, to speed up importation of Aseprite files. (Note: Only for Unity 2022.2 and newer).
+- Layer blend modes are now supported with Import Mode: Merge Frames.
+- Added ability to generate Animation Events from Cell user data.
+- Added ability to export Animator Controller and/or Animation Clips.
+- Added canvasSize to the Aseprite Importer's public API.
+
+### Fixed
+- Fixed an issue where the last frame in a generated Animation Clip would receive an incorrect length. (DANB-434)
+- Improved the background importer, so that it only imports modified Aseprite files in the background.
+
 ## [1.0.0-pre.2] - 2023-02-27
 ### Added
 - Added support for individual frame timings in animation clips.

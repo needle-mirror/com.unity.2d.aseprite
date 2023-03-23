@@ -21,9 +21,11 @@ namespace UnityEditor.U2D.Aseprite.Common
 
         public static void ApplySpriteEditorWindow()
         {
-            SpriteUtilityWindow.ApplySpriteEditorWindow();    
+            SpriteUtilityWindow.ApplySpriteEditorWindow();
         }
 
         public static void AddManagedGameObject(this PreviewRenderUtility scene, GameObject go) => scene.AddManagedGO(go);
+        
+        public static void RefreshInspectors() => InspectorWindow.RefreshInspectors(); 
     }
 }

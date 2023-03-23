@@ -12,6 +12,8 @@ This page highlights which Aseprite feature the Aseprite Importer supports/does 
 **Layer settings**
 - Visible/Hidden layer
     - Hidden layers are by default not imported. This can be changed by checking “Include hidden layers” in the import settings.
+- Layer blend modes
+    - All blend modes are supported with Import Mode: Merge frames.
 - Layer & Cel opacity    
 - Linked Cels
 - Tags
@@ -25,7 +27,5 @@ This page highlights which Aseprite feature the Aseprite Importer supports/does 
     - Layer groups will be generated in the prefab hierarchy if the import mode is set to **Individual layers**. 
 
 ## Unsupported features
-- Layer modes
-    - All layers are imported as Layer Mode: Normal.
 - [Slices](https://www.aseprite.org/docs/slices/)
 - [Tilemaps](https://www.aseprite.org/docs/tilemap/)

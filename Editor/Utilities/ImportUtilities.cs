@@ -132,41 +132,63 @@ namespace UnityEditor.U2D.Aseprite
             return path;
         }
 
-        public static void ExportAnimationAssets(AsepriteImporter[] importers)
+        public static void ExportAnimationAssets(AsepriteImporter[] importers, bool exportClips, bool exportController)
         {
-            var path = EditorUtility.SaveFolderPanel(
+            var savePath = EditorUtility.SaveFolderPanel(
                 "Export Animation Assets", 
                 Application.dataPath, "");
-            if (string.IsNullOrEmpty(path))
+
+            ExportAnimationAssets(savePath, importers, exportClips, exportController);
+        }
+
+        public static void ExportAnimationAssets(string savePath, AsepriteImporter[] importers, bool exportClips, bool exportController)
+        {
+            if (string.IsNullOrEmpty(savePath))
                 return;
             
             for (var i = 0; i < importers.Length; ++i)
             {
-                var clips = ExportAnimationClips(importers[i], path);
-                ExportAnimatorController(importers[i], clips, path);
+                var importedObjectPath = importers[i].assetPath;
+                AnimationClip[] clips;
+
+                if (exportClips)
+                    clips = ExportAnimationClips(importedObjectPath, savePath);
+                else
+                    clips = GetAllAnimationClips(importedObjectPath);
+                
+                if (exportController)
+                    ExportAnimatorController(importers[i], clips, savePath);
             }
         }
         
-        static AnimationClip[] ExportAnimationClips(AsepriteImporter importer, string path)
+        static AnimationClip[] ExportAnimationClips(string importedObjectPath, string path)
         {
             var relativePath = FileUtil.GetProjectRelativePath(path);
-            
-            var importedObjectPath = importer.assetPath;
-            var allAssets = AssetDatabase.LoadAllAssetsAtPath(importedObjectPath);
+            var animationClips = GetAllAnimationClips(importedObjectPath);
 
+            var clips = new List<AnimationClip>();
+            for (var i = 0; i < animationClips.Length; ++i)
+            {
+                var clip = animationClips[i];
+                var clipPath = $"{relativePath}/{clip.name}.anim";
+                var result = AssetDatabase.ExtractAsset(clip, clipPath);
+                if (!string.IsNullOrEmpty(result))
+                    Debug.LogWarning(result);
+
+                var newClip = AssetDatabase.LoadAssetAtPath<AnimationClip>(clipPath);
+                clips.Add(newClip);
+            }
+            return clips.ToArray();
+        }
+
+        static AnimationClip[] GetAllAnimationClips(string assetPath)
+        {
+            var allAssets = AssetDatabase.LoadAllAssetsAtPath(assetPath);
             var clips = new List<AnimationClip>();
             for (var m = 0; m < allAssets.Length; ++m)
             {
                 if (allAssets[m] is AnimationClip clip)
-                {
-                    var clipPath = $"{relativePath}/{clip.name}.anim";
-                    var result = AssetDatabase.ExtractAsset(clip, clipPath);
-                    if (!string.IsNullOrEmpty(result))
-                        Debug.LogWarning(result);
-
-                    var newClip = AssetDatabase.LoadAssetAtPath<AnimationClip>(clipPath);
-                    clips.Add(newClip);
-                }
+                    clips.Add(clip);
             }
             return clips.ToArray();
         }

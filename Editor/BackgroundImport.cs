@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using UnityEditor.U2D.Aseprite.Common;
 using UnityEngine;
 
 namespace UnityEditor.U2D.Aseprite
@@ -7,7 +9,8 @@ namespace UnityEditor.U2D.Aseprite
     [InitializeOnLoad]
     internal static class BackgroundImport
     {
-        static string k_AssetsPath = "Assets/";
+        static readonly string k_AssetsPath = "Assets/";
+        static readonly List<string> s_AssetsFullPath = new List<string>();
         static bool s_HasChange = false;
         static bool s_LastSettingsValue = false;
 
@@ -67,14 +70,14 @@ namespace UnityEditor.U2D.Aseprite
             s_Watcher.Deleted += OnChangeDetected;
             s_Watcher.EnableRaisingEvents = true;
         }
-
+        
         static void OnChangeDetected(object sender, FileSystemEventArgs e)
         {
             var extension = Path.GetExtension(e.FullPath);
-            if (extension == ".meta" ||
-                extension == ".cs")
+            if (extension != ".aseprite" && extension != ".ase")
                 return;
             
+            s_AssetsFullPath.Add(e.FullPath);
             s_HasChange = true;
         }
 
@@ -101,17 +104,14 @@ namespace UnityEditor.U2D.Aseprite
                 return;
             
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport & ImportAssetOptions.ForceUpdate);
+
+            var relativePaths = new List<string>(s_AssetsFullPath.Count);
+            for (var i = 0; i < s_AssetsFullPath.Count; ++i)
+                relativePaths.Add(FileUtil.GetProjectRelativePath(s_AssetsFullPath[i]));
             
-            var assetGuids = AssetDatabase.FindAssets("", new[] { k_AssetsPath });
-            var assetPaths = new string[assetGuids.Length];
-            for (var i = 0; i < assetGuids.Length; ++i)
-            {
-                var path = AssetDatabase.GUIDToAssetPath(assetGuids[i]);
-                assetPaths[i] = path;
-            }
-            
-            AssetDatabase.ForceReserializeAssets(assetPaths, ForceReserializeAssetsOptions.ReserializeAssets);
-            
+            AssetDatabase.ForceReserializeAssets(relativePaths);
+            InternalEditorBridge.RefreshInspectors();
+
             s_HasChange = false;
         }
     }

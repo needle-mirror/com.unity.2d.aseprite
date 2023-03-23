@@ -289,11 +289,7 @@ namespace UnityEditor.U2D.Aseprite
                     if (EditorUtility.DisplayDialog(s_Styles.unappliedSettingsDialogTitle.text,
                             dialogText, s_Styles.applyButtonLabel.text, s_Styles.cancelButtonLabel.text))
                     {
-#if UNITY_2022_2_OR_NEWER
                         SaveChanges();
-#else
-                        ApplyAndImport();
-#endif
                         InternalEditorBridge.ShowSpriteEditorWindow(this.assetTarget);
 
                         // We re-imported the asset which destroyed the editor, so we can't keep running the UI here.
@@ -477,9 +473,8 @@ namespace UnityEditor.U2D.Aseprite
             }).Every(100);
             assetsBtn.clicked += () =>
             {
-                ImportUtilities.ExportAnimationAssets(m_ImporterTargets);
-                Apply();
-                GUIUtility.ExitGUI();
+                var window = EditorWindow.GetWindow<ExportAssetsPopup>();
+                window.ShowExportPopup(this, m_ImporterTargets);
             };
             root.Add(assetsBtn);
 
@@ -771,7 +766,12 @@ namespace UnityEditor.U2D.Aseprite
             serializedObject.ApplyModifiedProperties();
             extraDataSerializedObject.ApplyModifiedProperties();
             base.SaveChanges();
-        }        
+        }
+#else
+        internal void SaveChanges()
+        {
+            ApplyAndImport();
+        }
 #endif
 
         // showPerAxisWrapModes is state of whether "Per-Axis" mode should be active in the main dropdown.

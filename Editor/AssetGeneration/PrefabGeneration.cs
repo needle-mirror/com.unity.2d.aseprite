@@ -76,10 +76,10 @@ namespace UnityEditor.U2D.Aseprite
             AsepriteImporterSettings importSettings,
             Vector2Int canvasSize)
         {
-            var firstCell = layer.cells.Count > 0 ? layer.cells[0] : null;
-            if (firstCell == null)
+            if (layer.cells.Count == 0)
                 return;
 
+            var firstCell = layer.cells[0];
             var gameObject = layerIdToGameObject[layer.index];
             var sprite = Array.Find(sprites, x => x.GetSpriteID() == firstCell.spriteId);
                 

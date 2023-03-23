@@ -103,7 +103,33 @@ namespace UnityEditor.U2D.Aseprite
                     
                     chunk.Read(reader);
                     frame.chunks[m] = chunk;
+                    
+                    if (chunk.chunkType == ChunkTypes.UserData)
+                        AssociateUserDataWithChunk(frame.chunks, m, (UserDataChunk)chunk);
                 }
+            }
+        }
+
+        static void AssociateUserDataWithChunk(BaseChunk[] chunks, int index, UserDataChunk userData)
+        {
+            BaseChunk firstNonDataChunk = null;
+            for (var i = index; i >= 0; --i)
+            {
+                if (chunks[i] != null && chunks[i] is not UserDataChunk)
+                {
+                    firstNonDataChunk = chunks[i];
+                    break;
+                }
+            }
+
+            if (firstNonDataChunk == null)
+                return;
+
+            switch (firstNonDataChunk.chunkType)
+            {
+                case ChunkTypes.Cell:
+                    ((CellChunk)firstNonDataChunk).dataChunk = userData;
+                    break;
             }
         }
     }

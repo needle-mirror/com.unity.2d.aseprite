@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -7,7 +9,7 @@ namespace UnityEditor.U2D.Aseprite
 {
     internal static class ImportMergedLayers
     {
-        public static void Import(string assetName, ref List<Layer> layers, out List<Cell> cellLookup, out List<NativeArray<Color32>> cellBuffers, out List<int> cellWidth, out List<int> cellHeight)
+        public static void Import(string assetName, ref List<Layer> layers, out List<NativeArray<Color32>> cellBuffers, out List<int> cellWidth, out List<int> cellHeight)
         {
             var cellsPerFrame = GetAllCellsPerFrame(in layers);
             var mergedCells = MergeCells(in cellsPerFrame, assetName);
@@ -16,8 +18,7 @@ namespace UnityEditor.U2D.Aseprite
             cellBuffers = new List<NativeArray<Color32>>();
             cellWidth = new List<int>();
             cellHeight = new List<int>();
-            cellLookup = new List<Cell>();
-            
+
             for (var i = 0; i < mergedCells.Count; ++i)
             {
                 var width = mergedCells[i].cellRect.width;
@@ -28,7 +29,6 @@ namespace UnityEditor.U2D.Aseprite
                 cellBuffers.Add(mergedCells[i].image);
                 cellWidth.Add(width);
                 cellHeight.Add(height);
-                cellLookup.Add(mergedCells[i]);
             }
 
             UpdateLayerList(mergedCells, assetName, ref layers);
@@ -85,20 +85,36 @@ namespace UnityEditor.U2D.Aseprite
             var mergedCells = new List<Cell>(cellsPerFrame.Count);
             foreach (var (frameIndex, cells) in cellsPerFrame)
             {
-                var textures = new NativeArray<Color32>[cells.Count];
-                var cellRects = new RectInt[cells.Count];
-
-                for (var i = 0; i < cells.Count; ++i)
+                unsafe
                 {
-                    textures[i] = cells[i].image;
-                    cellRects[i] = cells[i].cellRect;
-                }
+                    var count = cells.Count;
 
-                var mergedCell = TextureTasks.MergeTextures(textures, cellRects);
-                mergedCell.frameIndex = frameIndex;
-                mergedCell.name = ImportUtilities.GetCellName(assetName, frameIndex, cellsPerFrame.Count);
-                mergedCell.spriteId = GUID.Generate();
-                mergedCells.Add(mergedCell);
+                    var textures = new NativeArray<IntPtr>(count, Allocator.Persistent);
+                    var cellRects = new NativeArray<RectInt>(count, Allocator.Persistent);
+                    var cellBlendModes = new NativeArray<BlendModes>(count, Allocator.Persistent);
+
+                    for (var i = 0; i < cells.Count; ++i)
+                    {
+                        textures[i] = (IntPtr)cells[i].image.GetUnsafePtr();
+                        cellRects[i] = cells[i].cellRect;
+                        cellBlendModes[i] = cells[i].blendMode;
+                    }
+                    
+                    TextureTasks.MergeTextures(in textures, in cellRects, in cellBlendModes, out var output);
+                    var mergedCell = new Cell()
+                    {
+                        cellRect = output.rect,
+                        image = output.image,
+                        frameIndex = frameIndex,
+                        name = ImportUtilities.GetCellName(assetName, frameIndex, cellsPerFrame.Count),
+                        spriteId = GUID.Generate()
+                    };
+                    mergedCells.Add(mergedCell);
+
+                    textures.Dispose();
+                    cellRects.Dispose();
+                    cellBlendModes.Dispose();
+                }
             }
 
             return mergedCells;

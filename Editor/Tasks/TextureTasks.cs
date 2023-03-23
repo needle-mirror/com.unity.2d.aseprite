@@ -1,10 +1,16 @@
+using System;
+using Unity.Burst;
 using Unity.Collections;
 using UnityEngine;
 
 namespace UnityEditor.U2D.Aseprite
 {
+#if UNITY_2022_2_OR_NEWER    
+    [BurstCompile]
+#endif
     internal static class TextureTasks
     {
+        [BurstCompile]
         public static void AddOpacity(ref NativeArray<Color32> texture, float opacity)
         {
             for (var i = 0; i < texture.Length; ++i)
@@ -15,6 +21,7 @@ namespace UnityEditor.U2D.Aseprite
             }
         }
         
+        [BurstCompile]
         public static void FlipTextureY(ref NativeArray<Color32> texture, int width, int height)
         {
             if (width == 0 || height == 0)
@@ -38,9 +45,16 @@ namespace UnityEditor.U2D.Aseprite
             texture = outputTexture;
         }
 
-        public static Cell MergeTextures(NativeArray<Color32>[] textures, RectInt[] textureSizes)
+        public struct MergeOutput
         {
-            var combinedRect = GetCombinedRect(textureSizes);
+            public RectInt rect;
+            public NativeArray<Color32> image;
+        }
+        
+        [BurstCompile]
+        public static unsafe void MergeTextures(in NativeArray<IntPtr> textures, in NativeArray<RectInt> textureSizes, in NativeArray<BlendModes> blendModes, out MergeOutput output)
+        {
+            GetCombinedRect(in textureSizes, out var combinedRect);
             var outputTexture = new NativeArray<Color32>(combinedRect.width * combinedRect.height, Allocator.Persistent);
 
             var outStartX = combinedRect.x;
@@ -49,7 +63,8 @@ namespace UnityEditor.U2D.Aseprite
             var outHeight = combinedRect.height;
             for (var i = 0; i < textures.Length; ++i)
             {
-                var inputColor = textures[i];
+                var inputColor = (Color32*)textures[i];
+                var inputBlend = blendModes[i];
                 var inX = textureSizes[i].x;
                 var inY = textureSizes[i].y;
                 var inWidth = textureSizes[i].width;
@@ -79,39 +94,96 @@ namespace UnityEditor.U2D.Aseprite
                         if (outBufferIndex < 0 || outBufferIndex > (outWidth * outHeight))
                             continue;
 
-                        Color inColor = inputColor[inBufferIndex];
-                        Color prevOutColor = outputTexture[outBufferIndex];
-                        var outColor = new Color();
+                        var inColor = inputColor[inBufferIndex];
+                        var prevOutColor = outputTexture[outBufferIndex];
 
-                        var destAlpha = prevOutColor.a * (1 - inColor.a);
-                        outColor.a = inColor.a + prevOutColor.a * (1 - inColor.a);
-                        
-                        var premultiplyAlpha = outColor.a > 0.0f ? 1 / outColor.a : 1f;
-                        outColor.r = (inColor.r * inColor.a + prevOutColor.r * destAlpha) * premultiplyAlpha;
-                        outColor.g = (inColor.g * inColor.a + prevOutColor.g * destAlpha) * premultiplyAlpha;
-                        outColor.b = (inColor.b * inColor.a + prevOutColor.b * destAlpha) * premultiplyAlpha;
+                        Color32 outColor;
+                        switch (inputBlend)
+                        {
+                            case BlendModes.Darken:
+                                PixelBlends.Darken(in prevOutColor, in inColor, out outColor);
+                                break;
+                            case BlendModes.Multiply:
+                                PixelBlends.Multiply(in prevOutColor, in inColor, out outColor);
+                                break;
+                            case BlendModes.ColorBurn:
+                                PixelBlends.ColorBurn(in prevOutColor, in inColor, out outColor);
+                                break;
+                            case BlendModes.Lighten:
+                                PixelBlends.Lighten(in prevOutColor, in inColor, out outColor);
+                                break;
+                            case BlendModes.Screen:
+                                PixelBlends.Screen(in prevOutColor, in inColor, out outColor);
+                                break;
+                            case BlendModes.ColorDodge:
+                                PixelBlends.ColorDodge(in prevOutColor, in inColor, out outColor);
+                                break;
+                            case BlendModes.Addition:
+                                PixelBlends.Addition(in prevOutColor, in inColor, out outColor);
+                                break;
+                            case BlendModes.Overlay:
+                                PixelBlends.Overlay(in prevOutColor, in inColor, out outColor);
+                                break;
+                            case BlendModes.SoftLight:
+                                PixelBlends.SoftLight(in prevOutColor, in inColor, out outColor);
+                                break;
+                            case BlendModes.HardLight:
+                                PixelBlends.HardLight(in prevOutColor, in inColor, out outColor);
+                                break;
+                            case BlendModes.Difference:
+                                PixelBlends.Difference(in prevOutColor, in inColor, out outColor);
+                                break;
+                            case BlendModes.Exclusion:
+                                PixelBlends.Exclusion(in prevOutColor, in inColor, out outColor);
+                                break;
+                            case BlendModes.Subtract:
+                                PixelBlends.Subtract(in prevOutColor, in inColor, out outColor);
+                                break;
+                            case BlendModes.Divide:
+                                PixelBlends.Divide(in prevOutColor, in inColor, out outColor);
+                                break;
+                            case BlendModes.Hue:
+                                PixelBlends.Hue(in prevOutColor, in inColor, out outColor);
+                                break;
+                            case BlendModes.Saturation:
+                                PixelBlends.Saturation(in prevOutColor, in inColor, out outColor);
+                                break;
+                            case BlendModes.Color:
+                                PixelBlends.ColorBlend(in prevOutColor, in inColor, out outColor);
+                                break;
+                            case BlendModes.Luminosity:
+                                PixelBlends.Luminosity(in prevOutColor, in inColor, out outColor);
+                                break;
+                            case BlendModes.Normal:
+                            default:
+                                PixelBlends.Normal(in prevOutColor, in inColor, out outColor);
+                                break;
+                        }
 
                         outputTexture[outBufferIndex] = outColor;
                     }
                 }
             }
-
-            var outputCell = new Cell()
+            
+            output = new MergeOutput()
             {
-                cellRect = combinedRect,
+                rect = combinedRect,  
                 image = outputTexture
             };
-            return outputCell;
         }
 
-        static RectInt GetCombinedRect(RectInt[] rects)
+        [BurstCompile]
+        static void GetCombinedRect(in NativeArray<RectInt> rects, out RectInt combinedRect)
         {
-            var combinedRect = rects[0];
+            combinedRect = rects[0];
             for (var i = 1; i < rects.Length; ++i)
-                FitRectInsideRect(ref combinedRect, in rects[i]);
-            return combinedRect;
+            {
+                var rectToFitIn = rects[i];
+                FitRectInsideRect(ref combinedRect, in rectToFitIn);
+            }
         }
         
+        [BurstCompile]
         static void FitRectInsideRect(ref RectInt baseRect, in RectInt rectToFitIn)
         {
             if (baseRect.xMin > rectToFitIn.xMin)

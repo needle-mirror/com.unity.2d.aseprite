@@ -111,9 +111,10 @@ namespace UnityEditor.U2D.Aseprite
         
         AsepriteImportData m_ImportData;
         AsepriteFile m_AsepriteFile;
-        Vector2Int m_CanvasSize;
         List<Tag> m_Tags = new List<Tag>();
         List<Frame> m_Frames = new List<Frame>();
+        
+        [SerializeField] Vector2Int m_CanvasSize;
 
         GameObject m_RootGameObject;
         readonly Dictionary<int, GameObject> m_LayerIdToGameObject = new Dictionary<int, GameObject>(); 
@@ -179,19 +180,18 @@ namespace UnityEditor.U2D.Aseprite
                     return;
 
                 var assetName = System.IO.Path.GetFileNameWithoutExtension(ctx.assetPath);
-
-                List<Cell> cellLookup;
+                
                 List<NativeArray<Color32>> cellBuffers;
                 List<int> cellWidth;
                 List<int> cellHeight;
                 if (layerImportMode == LayerImportModes.IndividualLayers)
                 {
                     m_AsepriteLayers = UpdateLayers(in newLayers, in m_AsepriteLayers);
-                    ImportLayers.Import(m_AsepriteLayers, out cellLookup, out cellBuffers, out cellWidth, out cellHeight);
+                    ImportLayers.Import(m_AsepriteLayers, out cellBuffers, out cellWidth, out cellHeight);
                 }
                 else
                 {
-                    ImportMergedLayers.Import(assetName, ref newLayers, out cellLookup, out cellBuffers, out cellWidth, out cellHeight);
+                    ImportMergedLayers.Import(assetName, ref newLayers, out cellBuffers, out cellWidth, out cellHeight);
                     // Update layers after merged, since merged import creates new layers.
                     // The new layers should be compared and merged together with the ones existing in the meta file. 
                     m_AsepriteLayers = UpdateLayers(in newLayers, in m_AsepriteLayers);
@@ -207,7 +207,7 @@ namespace UnityEditor.U2D.Aseprite
                     packOffsets[i] *= -1;
                 }
 
-                var spriteImportData = UpdateSpriteImportData(cellLookup, spriteRects, packOffsets, uvTransforms);
+                var spriteImportData = UpdateSpriteImportData(in m_AsepriteLayers, spriteRects, packOffsets, uvTransforms);
 
                 importData.importedTextureHeight = textureActualHeight = packedTextureHeight;
                 importData.importedTextureWidth = textureActualWidth = packedTextureWidth;
@@ -271,6 +271,7 @@ namespace UnityEditor.U2D.Aseprite
                         layer.name = nameGenerator.GetUniqueName(layerChunk.name, layer.parentIndex);
                         layer.layerFlags = layerChunk.flags;
                         layer.layerType = layerChunk.layerType;
+                        layer.blendMode = layerChunk.blendMode;
                         layer.opacity = layerChunk.opacity / 255f;
                         layer.index = layers.Count;
                         layer.guid = Layer.GenerateGuid(layer);
@@ -307,11 +308,13 @@ namespace UnityEditor.U2D.Aseprite
                         {
                             var cell = new Cell();
                             cell.frameIndex = i;
+                            cell.updatedCellRect = false;
 
                             // Flip Y. Aseprite 0,0 is at Top Left. Unity 0,0 is at Bottom Left. 
                             var cellY = (m_CanvasSize.y - cellChunk.posY) - cellChunk.height;
                             cell.cellRect = new RectInt(cellChunk.posX, cellY, cellChunk.width, cellChunk.height);
                             cell.opacity = cellChunk.opacity / 255f;
+                            cell.blendMode = layer.blendMode;
                             cell.image = cellChunk.image;
                             cell.name = layer.name;
                             cell.spriteId = GUID.Generate();
@@ -367,9 +370,13 @@ namespace UnityEditor.U2D.Aseprite
         {
             for (var i = 0; i < layers.Count; ++i)
             {
-                var layer = layers[i];
-                for (var m = 0; m < layer.cells.Count; ++m)
-                    layer.cells[m].name = ImportUtilities.GetCellName(layer.cells[m].name, layer.cells[m].frameIndex, layer.cells.Count);
+                var cells = layers[i].cells;
+                for (var m = 0; m < cells.Count; ++m)
+                {
+                    var cell = cells[m];
+                    cell.name = ImportUtilities.GetCellName(cell.name, cell.frameIndex, cells.Count);
+                    cells[m] = cell;
+                }
             }
         }
 
@@ -410,12 +417,15 @@ namespace UnityEditor.U2D.Aseprite
                     {
                         if (m < oldCells.Count)
                         {
-                            newCells[m].spriteId = oldCells[m].spriteId;
+                            var oldCell = oldCells[m];
+                            var newCell = newCells[m];
+                            newCell.spriteId = oldCell.spriteId;
 #if UNITY_2023_1_OR_NEWER                            
-                            newCells[m].updatedCellRect = newCells[m].cellRect != oldCells[m].cellRect;
+                            newCell.updatedCellRect = newCell.cellRect != oldCell.cellRect;
 #else
-                            newCells[m].updatedCellRect = !newCells[m].cellRect.IsEqual(oldCells[m].cellRect);
+                            newCell.updatedCellRect = !newCell.cellRect.IsEqual(oldCell.cellRect);
 #endif
+                            newCells[m] = newCell;
                         }
                     }
                     finalLayer.cells = new List<Cell>(newCells);
@@ -435,14 +445,38 @@ namespace UnityEditor.U2D.Aseprite
             for (var i = 0; i < noOfFrames; ++i)
             {
                 var frameData = file.frameData[i];
+                var eventStrings = ExtractEventStringFromCells(frameData);
+                
                 var frame = new Frame()
                 {
-                    duration = frameData.frameDuration
+                    duration = frameData.frameDuration,
+                    eventStrings = eventStrings
                 };
                 frames.Add(frame);
             }
 
             return frames;
+        }
+
+        static string[] ExtractEventStringFromCells(FrameData frameData)
+        {
+            var chunks = frameData.chunks;
+            var eventStrings = new HashSet<string>();
+            for (var i = 0; i < chunks.Length; ++i)
+            {
+                if (chunks[i].chunkType != ChunkTypes.Cell)
+                    continue;
+                var cellChunk = (CellChunk)chunks[i];
+                if (cellChunk.dataChunk == null)
+                    continue;
+                var dataText = cellChunk.dataChunk.text;
+                if (string.IsNullOrEmpty(dataText) || !dataText.StartsWith("event:"))
+                    continue;
+                var eventString = dataText.Remove(0, "event:".Length);
+                eventString = eventString.Trim(' ');
+                eventStrings.Add(eventString);
+            }
+            return eventStrings.ToArray();
         }
 
         static List<Tag> ExtractTagsData(in AsepriteFile file)
@@ -480,8 +514,12 @@ namespace UnityEditor.U2D.Aseprite
             return tags;
         }
 
-        List<SpriteMetaData> UpdateSpriteImportData(List<Cell> cellLookup, RectInt[] spriteRects, Vector2Int[] packOffsets, Vector2Int[] uvTransforms)
+        List<SpriteMetaData> UpdateSpriteImportData(in List<Layer> layers, RectInt[] spriteRects, Vector2Int[] packOffsets, Vector2Int[] uvTransforms)
         {
+            var cellLookup = new List<Cell>();
+            for (var i = 0; i < layers.Count; ++i)
+                cellLookup.AddRange(layers[i].cells);
+
             var spriteImportData = GetSpriteImportData();
             if (spriteImportData.Count <= 0)
             {

@@ -1,8 +1,6 @@
-# What's new in version 1.0.0-pre.2
+# What's new in version 1.0.0-pre.3
 
-- Added support for individual frame timings in animation clips.
-- Added support for layer groups.
-- Added support for Layer & Cel opacity.
-- Added support for repeating/non repeating tags/Animation Clips.
-- Simplified the generated model prefab when only one Sprite Renderer is present.
-- A Sorting Group component is added by default to Model Prefabs with more than one Sprite Renderer.
+- Layer blend modes are now supported with Import Mode: Merge Frames.
+- Added ability to generate Animation Events from Cell user data.
+- Added ability to export Animator Controller and/or Animation Clips.
+- Sped up the importation of Aseprite files by bursting the image processing tasks. Note: Only for Unity 2022.2 and newer.

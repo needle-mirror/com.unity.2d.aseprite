@@ -36,9 +36,9 @@ namespace UnityEditor.U2D.Aseprite
         public int linkedToFrame { get; private set; } = -1;
         public ushort width { get; private set; }
         public ushort height { get; private set; }
-        public NativeArray<Color32> image => m_Image;
-        NativeArray<Color32> m_Image;
-        
+        public NativeArray<Color32> image { get; private set; }
+        public UserDataChunk dataChunk { get; set; }
+
         public override void Read(BinaryReader reader)
         {
             layerIndex = reader.ReadUInt16();
@@ -72,9 +72,9 @@ namespace UnityEditor.U2D.Aseprite
                 if (imageData != null)
                 {
                     if (m_ColorDepth == 32 || m_ColorDepth == 16)
-                        m_Image = ByteToColorArray(imageData, m_ColorDepth);
+                        image = ByteToColorArray(imageData, m_ColorDepth);
                     else if (m_ColorDepth == 8)
-                        m_Image = ByteToColorArrayUsingPalette(imageData, m_PaletteChunk, m_AlphaPaletteEntry);
+                        image = ByteToColorArrayUsingPalette(imageData, m_PaletteChunk, m_AlphaPaletteEntry);
                 }
                     
             }
@@ -95,9 +95,9 @@ namespace UnityEditor.U2D.Aseprite
                 var decompressedData = Zlib.Decompress(compressedData);
                 
                 if (m_ColorDepth == 32 || m_ColorDepth == 16)
-                    m_Image = ByteToColorArray(decompressedData, m_ColorDepth);
+                    image = ByteToColorArray(decompressedData, m_ColorDepth);
                 else if (m_ColorDepth == 8)
-                    m_Image = ByteToColorArrayUsingPalette(decompressedData, m_PaletteChunk, m_AlphaPaletteEntry);
+                    image = ByteToColorArrayUsingPalette(decompressedData, m_PaletteChunk, m_AlphaPaletteEntry);
             }
             else if (cellType == CellTypes.CompressedTileMap) // Not implemented yet.
             {
