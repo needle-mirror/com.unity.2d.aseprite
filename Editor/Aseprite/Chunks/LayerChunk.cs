@@ -59,7 +59,7 @@ namespace UnityEditor.U2D.Aseprite
         
         public LayerChunk(uint chunkSize) : base(chunkSize) { }
 
-        public override void Read(BinaryReader reader)
+        protected override void InternalRead(BinaryReader reader)
         {
             flags = (LayerFlags)reader.ReadUInt16();
             layerType = (LayerTypes)reader.ReadUInt16();

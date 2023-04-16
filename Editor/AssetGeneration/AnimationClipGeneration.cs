@@ -226,6 +226,7 @@ namespace UnityEditor.U2D.Aseprite
         {
             var events = new List<AnimationEvent>();
             
+            var startTime = GetTimeFromFrame(in frames, tag.fromFrame);
             for (var frameIndex = tag.fromFrame; frameIndex < tag.toFrame; ++frameIndex)
             {
                 var frame = frames[frameIndex];
@@ -238,7 +239,7 @@ namespace UnityEditor.U2D.Aseprite
                 {
                     events.Add(new AnimationEvent()
                     {
-                        time = frameTime,
+                        time = frameTime - startTime,
                         functionName = eventStrings[m]
                     });   
                 }

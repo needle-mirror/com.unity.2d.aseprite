@@ -6,6 +6,13 @@ namespace UnityEditor.U2D.Aseprite
     [Serializable]
     internal struct AsepriteImporterSettings
     {
+        [SerializeField] FileImportModes m_FileImportMode;
+        public FileImportModes fileImportMode
+        {
+            get => m_FileImportMode;
+            set => m_FileImportMode = value;
+        }
+        
         [SerializeField] bool m_ImportHiddenLayers;
         public bool importHiddenLayers
         {
@@ -39,6 +46,13 @@ namespace UnityEditor.U2D.Aseprite
         {
             get => m_CustomPivotPosition;
             set => m_CustomPivotPosition = value;
+        }
+
+        [SerializeField] uint m_SpritePadding;
+        public uint spritePadding
+        {
+            get => m_SpritePadding;
+            set => m_SpritePadding = value;
         }
 
         [SerializeField] bool m_GenerateModelPrefab;

@@ -91,7 +91,7 @@ namespace UnityEditor.U2D.Aseprite
                             chunk = new TagsChunk(chunkHeader.chunkSize);
                             break;
                         case ChunkTypes.Tileset:
-                            chunk = new TilesetChunk(chunkHeader.chunkSize);
+                            chunk = new TilesetChunk(chunkHeader.chunkSize, file.colorDepth, paletteChunk, file.alphaPaletteEntry);
                             break;
                         case ChunkTypes.UserData:
                             chunk = new UserDataChunk(chunkHeader.chunkSize);
@@ -101,11 +101,17 @@ namespace UnityEditor.U2D.Aseprite
                             return;
                     }
                     
-                    chunk.Read(reader);
+                    var successful = chunk.Read(reader);
+                    if (!successful)
+                    {
+                        frame.chunks[m] = new NoneChunk(0);
+                        continue;
+                    }
+                    
                     frame.chunks[m] = chunk;
                     
                     if (chunk.chunkType == ChunkTypes.UserData)
-                        AssociateUserDataWithChunk(frame.chunks, m, (UserDataChunk)chunk);
+                        AssociateUserDataWithChunk(frame.chunks, m, (UserDataChunk)chunk);   
                 }
             }
         }

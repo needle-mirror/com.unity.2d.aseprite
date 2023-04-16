@@ -19,7 +19,7 @@ namespace UnityEditor.U2D.Aseprite
         
         public ColorProfileChunk(uint chunkSize) : base(chunkSize) { }
 
-        public override void Read(BinaryReader reader)
+        protected override void InternalRead(BinaryReader reader)
         {
             profileType = (ColorProfileTypes)reader.ReadUInt16();
             flags = reader.ReadUInt16();

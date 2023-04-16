@@ -157,6 +157,15 @@ namespace UnityEditor.U2D.Aseprite
     }
 
     /// <summary>
+    /// Import modes for the file.
+    /// </summary>
+    public enum FileImportModes
+    {
+        SpriteSheet = 0,
+        AnimatedSprite = 1,
+    }
+
+    /// <summary>
     /// Import modes for all layers.
     /// </summary>
     public enum LayerImportModes

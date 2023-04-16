@@ -67,7 +67,6 @@ namespace UnityEditor.U2D.Aseprite
             s_Watcher.Changed += OnChangeDetected;
             s_Watcher.Created += OnChangeDetected;
             s_Watcher.Renamed += OnChangeDetected;
-            s_Watcher.Deleted += OnChangeDetected;
             s_Watcher.EnableRaisingEvents = true;
         }
         
@@ -76,7 +75,7 @@ namespace UnityEditor.U2D.Aseprite
             var extension = Path.GetExtension(e.FullPath);
             if (extension != ".aseprite" && extension != ".ase")
                 return;
-            
+
             s_AssetsFullPath.Add(e.FullPath);
             s_HasChange = true;
         }
@@ -112,6 +111,7 @@ namespace UnityEditor.U2D.Aseprite
             AssetDatabase.ForceReserializeAssets(relativePaths);
             InternalEditorBridge.RefreshInspectors();
 
+            s_AssetsFullPath.Clear();
             s_HasChange = false;
         }
     }

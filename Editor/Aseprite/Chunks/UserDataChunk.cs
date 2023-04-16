@@ -20,7 +20,7 @@ namespace UnityEditor.U2D.Aseprite
 
         public UserDataChunk(uint chunkSize) : base(chunkSize) { }
         
-        public override void Read(BinaryReader reader)
+        protected override void InternalRead(BinaryReader reader)
         {
             var flag = (UserDataFlags) reader.ReadUInt32();
 

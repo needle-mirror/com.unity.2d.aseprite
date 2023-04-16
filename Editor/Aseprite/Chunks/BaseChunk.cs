@@ -1,4 +1,6 @@
+using System;
 using System.IO;
+using UnityEngine;
 
 namespace UnityEditor.U2D.Aseprite
 {
@@ -38,14 +40,33 @@ namespace UnityEditor.U2D.Aseprite
     internal abstract class BaseChunk
     {
         public virtual ChunkTypes chunkType => ChunkTypes.None;
-
-        protected uint m_ChunkSize;
-
+        
+        protected readonly uint m_ChunkSize;
+        
         protected BaseChunk(uint chunkSize)
         {
             m_ChunkSize = chunkSize;
         }
-        
-        public abstract void Read(BinaryReader reader);
+
+        public bool Read(BinaryReader reader)
+        {
+            var bytes = reader.ReadBytes((int)m_ChunkSize - ChunkHeader.stride);
+            using var memoryStream = new MemoryStream(bytes);
+            using var chunkReader = new BinaryReader(memoryStream);
+
+            try
+            {
+                InternalRead(chunkReader);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Failed to read a chunk of type: {chunkType}. Skipping the chunk. \nException: {e}");
+                return false;
+            }
+
+            return true;
+        }
+
+        protected abstract void InternalRead(BinaryReader reader);
     }
 }

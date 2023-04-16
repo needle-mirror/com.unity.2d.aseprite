@@ -111,7 +111,16 @@ namespace UnityEditor.U2D.Aseprite
         internal SpriteRect[] GetSpriteRects()
         {
             if (spriteImportModeToUse == SpriteImportMode.Multiple)
-                return m_MultiSpriteImportData.Select(x => new SpriteMetaData(x) as SpriteRect).ToArray();
+            {
+                switch (m_AsepriteImporterSettings.fileImportMode)
+                {
+                    case FileImportModes.SpriteSheet:
+                        return m_SpriteSheetImportData.Select(x => new SpriteMetaData(x) as SpriteRect).ToArray();
+                    case FileImportModes.AnimatedSprite:
+                    default:
+                        return m_AnimatedSpriteImportData.Select(x => new SpriteMetaData(x) as SpriteRect).ToArray();
+                }
+            }
             return new[] { new SpriteMetaData(m_SingleSpriteImportData[0]) };
         }   
         

@@ -53,11 +53,13 @@ namespace UnityEditor.U2D.Aseprite
         SerializedProperty m_ConvertToNormalMap;
         SerializedProperty m_PlatformSettingsArrProp;
 
+        SerializedProperty m_FileImportMode;
         SerializedProperty m_ImportHiddenLayers;
         SerializedProperty m_LayerImportMode;
         SerializedProperty m_DefaultPivotSpace;
         SerializedProperty m_DefaultPivotAlignment;
         SerializedProperty m_CustomPivotPosition;
+        SerializedProperty m_SpritePadding;
 
         SerializedProperty m_GenerateModelPrefab;
         SerializedProperty m_AddSortingGroup;
@@ -80,7 +82,8 @@ namespace UnityEditor.U2D.Aseprite
         bool ITexturePlatformSettingsDataProvider.textureTypeHasMultipleDifferentValues => m_TextureType.hasMultipleDifferentValues;
         TextureImporterType ITexturePlatformSettingsDataProvider.textureType => (TextureImporterType)m_TextureType.intValue;
         SpriteImportMode ITexturePlatformSettingsDataProvider.spriteImportMode => spriteImportMode;
-        
+
+        FileImportModes fileImportMode => (FileImportModes) m_FileImportMode.intValue;
         SpriteImportMode spriteImportMode => (SpriteImportMode)m_SpriteMode.intValue;
 
         AnimationClip m_DefaultClip;
@@ -159,11 +162,13 @@ namespace UnityEditor.U2D.Aseprite
             m_PlatformSettingsArrProp = extraDataSerializedObject.FindProperty("platformSettings");
             
             var asepriteImporterSettings = serializedObject.FindProperty("m_AsepriteImporterSettings");
+            m_FileImportMode = asepriteImporterSettings.FindPropertyRelative("m_FileImportMode");
             m_ImportHiddenLayers = asepriteImporterSettings.FindPropertyRelative("m_ImportHiddenLayers");
             m_LayerImportMode = asepriteImporterSettings.FindPropertyRelative("m_LayerImportMode");
             m_DefaultPivotSpace = asepriteImporterSettings.FindPropertyRelative("m_DefaultPivotSpace");
             m_DefaultPivotAlignment = asepriteImporterSettings.FindPropertyRelative("m_DefaultPivotAlignment");
             m_CustomPivotPosition = asepriteImporterSettings.FindPropertyRelative("m_CustomPivotPosition");
+            m_SpritePadding = asepriteImporterSettings.FindPropertyRelative("m_SpritePadding");
 
             m_GenerateModelPrefab = asepriteImporterSettings.FindPropertyRelative("m_GenerateModelPrefab");
             m_AddSortingGroup = asepriteImporterSettings.FindPropertyRelative("m_AddSortingGroup");
@@ -236,10 +241,18 @@ namespace UnityEditor.U2D.Aseprite
             foldOut.RegisterValueChangedCallback(_ => { m_EditorFoldOutState.generalFoldout = foldOut.value; });
             root.Add(foldOut);
 
+            var importModeField = new PropertyField(m_FileImportMode, styles.fileImportMode.text)
+            {
+                tooltip = styles.fileImportMode.tooltip
+            };
+            importModeField.Bind(serializedObject);
+            foldOut.Add(importModeField);     
+            
             var ppuField = new PropertyField(m_SpritePixelsToUnits, styles.spritePixelsPerUnit.text)
             {
                 tooltip = styles.spritePixelsPerUnit.tooltip
             };
+            ppuField.Bind(serializedObject);
             ppuField.RegisterValueChangeCallback(x =>
             {
                 m_SpritePixelsToUnits.floatValue = Mathf.Max(m_SpritePixelsToUnits.floatValue, 1f);
@@ -319,6 +332,7 @@ namespace UnityEditor.U2D.Aseprite
             {
                 tooltip = styles.importHiddenLayer.tooltip
             };
+            hiddenLayersField.Bind(serializedObject);
             foldOut.Add(hiddenLayersField);
 
             var layerModePopup = new PopupField<string>(s_Styles.layerImportOptions, m_LayerImportMode.intValue)
@@ -338,6 +352,16 @@ namespace UnityEditor.U2D.Aseprite
             {
                 tooltip = styles.defaultPivotSpace.tooltip
             };
+            pivotSpaceField.Bind(serializedObject);
+            pivotSpaceField.schedule.Execute(() =>
+            {
+                var shouldShow = fileImportMode == FileImportModes.AnimatedSprite;
+                if (pivotSpaceField.visible != shouldShow)
+                {
+                    pivotSpaceField.visible = shouldShow;
+                    pivotSpaceField.EnableInClassList(k_HiddenElementUssClass, !shouldShow);
+                }
+            }).Every(100);
             foldOut.Add(pivotSpaceField);
             
             var pivotAlignmentPopup = new PopupField<string>(s_Styles.spriteAlignmentOptions, m_DefaultPivotAlignment.intValue)
@@ -351,6 +375,15 @@ namespace UnityEditor.U2D.Aseprite
                 serializedObject.ApplyModifiedProperties();
             });
             pivotAlignmentPopup.AddToClassList(k_BaseFieldAlignedUssClass);
+            pivotAlignmentPopup.schedule.Execute(() =>
+            {
+                var shouldShow = fileImportMode == FileImportModes.AnimatedSprite;
+                if (pivotAlignmentPopup.visible != shouldShow)
+                {
+                    pivotAlignmentPopup.visible = shouldShow;
+                    pivotAlignmentPopup.EnableInClassList(k_HiddenElementUssClass, !shouldShow);
+                }
+            }).Every(100);
             foldOut.Add(pivotAlignmentPopup);
 
             var shouldShow = (SpriteAlignment)pivotAlignmentPopup.index == SpriteAlignment.Custom;
@@ -359,8 +392,8 @@ namespace UnityEditor.U2D.Aseprite
                 tooltip = styles.customPivotPosition.tooltip,
                 visible = shouldShow
             };
+            customPivotField.Bind(serializedObject);
             customPivotField.EnableInClassList(k_HiddenElementUssClass, !shouldShow);
-            
             customPivotField.schedule.Execute(x =>
             {
                 var shouldShow = (SpriteAlignment)pivotAlignmentPopup.index == SpriteAlignment.Custom;
@@ -371,6 +404,22 @@ namespace UnityEditor.U2D.Aseprite
                 }
             }).Every(100);
             foldOut.Add(customPivotField);
+            
+            var spritePaddingField = new PropertyField(m_SpritePadding, styles.spritePadding.text)
+            {
+                tooltip = styles.spritePadding.tooltip
+            };
+            spritePaddingField.Bind(serializedObject);
+            spritePaddingField.schedule.Execute(() =>
+            {
+                var shouldShow = fileImportMode == FileImportModes.AnimatedSprite;
+                if (spritePaddingField.visible != shouldShow)
+                {
+                    spritePaddingField.visible = shouldShow;
+                    spritePaddingField.EnableInClassList(k_HiddenElementUssClass, !shouldShow);
+                }
+            }).Every(100);
+            foldOut.Add(spritePaddingField);
 
             var paddingElement = new VisualElement()
             {
@@ -396,12 +445,22 @@ namespace UnityEditor.U2D.Aseprite
             };
             ImporterEditorUtils.AddSkinUssClass(foldOut.Q<Toggle>());
             foldOut.RegisterValueChangedCallback(_ => { m_EditorFoldOutState.generateAssetFoldout = foldOut.value; });
+            foldOut.schedule.Execute(() =>
+            {
+                var shouldShow = fileImportMode == FileImportModes.AnimatedSprite;
+                if (foldOut.visible != shouldShow)
+                {
+                    foldOut.visible = shouldShow;
+                    foldOut.EnableInClassList(k_HiddenElementUssClass, !shouldShow);
+                }
+            }).Every(100);
             root.Add(foldOut);
 
             var generateModelField = new PropertyField(m_GenerateModelPrefab, styles.generateModelPrefab.text)
             {
                 tooltip = styles.generateModelPrefab.tooltip
             };
+            generateModelField.Bind(serializedObject);
             foldOut.Add(generateModelField);
 
             var isSortingEnabled = m_GenerateModelPrefab.boolValue;
@@ -409,6 +468,7 @@ namespace UnityEditor.U2D.Aseprite
             {
                 tooltip = styles.addSortingGroup.tooltip
             };
+            sortingGroupField.Bind(serializedObject);
             sortingGroupField.AddToClassList(k_SubElementUssClass);
             sortingGroupField.SetEnabled(isSortingEnabled);
             sortingGroupField.schedule.Execute(() =>
@@ -425,6 +485,7 @@ namespace UnityEditor.U2D.Aseprite
             {
                 tooltip = styles.addShadowCasters.tooltip
             };
+            shadowCasterField.Bind(serializedObject);
             shadowCasterField.AddToClassList(k_SubElementUssClass);
             shadowCasterField.SetEnabled(areShadowsEnabled);
             shadowCasterField.schedule.Execute(() =>
@@ -440,6 +501,7 @@ namespace UnityEditor.U2D.Aseprite
             {
                 tooltip = styles.generateAnimationClips.tooltip
             };
+            generateClipsField.Bind(serializedObject);
             foldOut.Add(generateClipsField);
             
             SetupAnimationAssetsButton(foldOut);
@@ -690,7 +752,7 @@ namespace UnityEditor.U2D.Aseprite
 
             return clips.ToArray();
         }
-        
+
         /// <summary>
         /// Override for AssetImporter.extraDataType
         /// </summary>
@@ -748,6 +810,15 @@ namespace UnityEditor.U2D.Aseprite
             if(m_RootVisualElement != null)
                 m_RootVisualElement.Clear();
         }
+        
+        /// <summary>
+        /// Implementation of AssetImporterEditor.ResetValues.
+        /// </summary>
+        protected override void ResetValues()
+        {
+            base.ResetValues();
+            m_TexturePlatformSettingsHelper = new TexturePlatformSettingsHelper(this);
+        }        
 
         void ShowInspectorTab(int tab)
         {
@@ -770,6 +841,7 @@ namespace UnityEditor.U2D.Aseprite
 #else
         internal void SaveChanges()
         {
+            ApplyTexturePlatformSettings();
             ApplyAndImport();
         }
 #endif
@@ -1000,6 +1072,8 @@ namespace UnityEditor.U2D.Aseprite
         /// </summary>
         protected override void Apply()
         {
+            m_TexturePlatformSettingsHelper.Apply();
+            ApplyTexturePlatformSettings();
             InternalEditorBridge.ApplySpriteEditorWindow();
             base.Apply();
             
@@ -1012,13 +1086,14 @@ namespace UnityEditor.U2D.Aseprite
 
         void ApplyTexturePlatformSettings()
         {
-            for(var i = 0; i< m_ImporterTargets.Length && i < extraDataTargets.Length; ++i)
+            for(var i = 0; i < targets.Length && i < extraDataTargets.Length; ++i)
             {
-                var asepriteImporter = m_ImporterTargets[i];
+                var asepriteImporter = (AsepriteImporter)targets[i];
                 var externalData = (AsepriteImporterEditorExternalData)extraDataTargets[i];
                 foreach (var ps in externalData.platformSettings)
                 {
                     asepriteImporter.SetImporterPlatformSettings(ps);
+                    asepriteImporter.Apply();
                 }
             }
         }
@@ -1330,6 +1405,7 @@ namespace UnityEditor.U2D.Aseprite
                 L10n.Tr("Tight"),
             };
             
+            public readonly GUIContent fileImportMode = new ("Import Mode", "How the file should be imported.");
             public readonly GUIContent spritePixelsPerUnit = new ("Pixels Per Unit", "How many pixels in the sprite correspond to one unit in the world.");
             public readonly GUIContent spriteMeshType = new ("Mesh Type", "Type of sprite mesh to generate.");
 
@@ -1377,6 +1453,7 @@ namespace UnityEditor.U2D.Aseprite
             public readonly GUIContent defaultPivotSpace = EditorGUIUtility.TrTextContent("Pivot Space", "Select which space the pivot should be calculated in.");
             public readonly GUIContent defaultPivotAlignment = EditorGUIUtility.TrTextContent("Pivot Alignment", "Select where the pivot should be located based on the Pivot Space.");
             public readonly GUIContent customPivotPosition = EditorGUIUtility.TrTextContent("Custom Pivot Position", "Input the normalized position of the Sprite pivots. The position will be calculated based on the Pivot Space.");
+            public readonly GUIContent spritePadding = EditorGUIUtility.TrTextContent("Sprite Padding", "Internal padding within each SpriteRect generated from the Aseprite file.");
 
             public readonly List<string> spriteAlignmentOptions = new()
             {

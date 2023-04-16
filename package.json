@@ -1,6 +1,6 @@
 {
   "name": "com.unity.2d.aseprite",
-  "version": "1.0.0-pre.3",
+  "version": "1.0.0-pre.4",
   "unity": "2021.3",
   "unityRelease": "15f1",
   "displayName": "2D Aseprite Importer",
@@ -20,18 +20,18 @@
     "com.unity.modules.animation": "1.0.0"
   },
   "relatedPackages": {
-    "com.unity.2d.aseprite.tests": "1.0.0-pre.3"
+    "com.unity.2d.aseprite.tests": "1.0.0-pre.4"
   },
   "_upm": {
-    "changelog": "### Added\n- Bursted the texture generation tasks, to speed up importation of Aseprite files. (Note: Only for Unity 2022.2 and newer).\n- Layer blend modes are now supported with Import Mode: Merge Frames.\n- Added ability to generate Animation Events from Cell user data.\n- Added ability to export Animator Controller and/or Animation Clips.\n- Added canvasSize to the Aseprite Importer's public API.\n\n### Fixed\n- Fixed an issue where the last frame in a generated Animation Clip would receive an incorrect length. (DANB-434)\n- Improved the background importer, so that it only imports modified Aseprite files in the background."
+    "changelog": "### Added\n- Added a property to set the padding within each generated SpriteRect.\n- Added an option to select import mode for the file, either Animated Sprite or Sprite Sheet.\n\n### Fixed\n- Fixed an issue where the platform settings could not be modified. (DANB-445)\n- Fixed an issue where the Animation Events would be generated with the wrong time stamp."
   },
   "upmCi": {
-    "footprint": "3db6c2648a467cf4d3238f146a45089491640b05"
+    "footprint": "6eca4a67e33611dfbb6bec0b2ebe460771f6b3ba"
   },
   "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.2d.aseprite@1.0/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/AsepriteImporter.git",
     "type": "git",
-    "revision": "e552cb20af4f9ed7608a26c7304c29e8f2c81ed5"
+    "revision": "a91ec89b192168b21b832c1b8a92cd612050989c"
   }
 }

@@ -3,11 +3,9 @@ using System.IO;
 namespace UnityEditor.U2D.Aseprite
 {
     /// <summary>Not supported yet.</summary>
-    internal class MaskChunk : BaseChunk
+    internal class NoneChunk : BaseChunk
     {
-        public override ChunkTypes chunkType => ChunkTypes.Mask;
-
-        public MaskChunk(uint chunkSize) : base(chunkSize) { }
+        public NoneChunk(uint chunkSize) : base(chunkSize) { }
         protected override void InternalRead(BinaryReader reader) { }
     }
 }

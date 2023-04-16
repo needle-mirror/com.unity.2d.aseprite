@@ -39,7 +39,7 @@ namespace UnityEditor.U2D.Aseprite
         public NativeArray<Color32> image { get; private set; }
         public UserDataChunk dataChunk { get; set; }
 
-        public override void Read(BinaryReader reader)
+        protected override void InternalRead(BinaryReader reader)
         {
             layerIndex = reader.ReadUInt16();
             posX = reader.ReadInt16();
@@ -70,13 +70,8 @@ namespace UnityEditor.U2D.Aseprite
                     imageData = reader.ReadBytes(width * height);
 
                 if (imageData != null)
-                {
-                    if (m_ColorDepth == 32 || m_ColorDepth == 16)
-                        image = ByteToColorArray(imageData, m_ColorDepth);
-                    else if (m_ColorDepth == 8)
-                        image = ByteToColorArrayUsingPalette(imageData, m_PaletteChunk, m_AlphaPaletteEntry);
-                }
-                    
+                    image = AsepriteUtilities.GenerateImageData(m_ColorDepth, imageData, m_PaletteChunk, m_AlphaPaletteEntry);
+
             }
             else if (cellType == CellTypes.LinkedCel)
             {
@@ -87,17 +82,10 @@ namespace UnityEditor.U2D.Aseprite
                 width = reader.ReadUInt16();
                 height = reader.ReadUInt16();
 
-                // 2 bytes of Rfc1950Header that we do not want
-                var magicBytes = reader.ReadBytes(2);
+                var dataSize = (int)m_ChunkSize - ChunkHeader.stride - 20;
+                var decompressedData = AsepriteUtilities.ReadAndDecompressedData(reader, dataSize);
                 
-                var dataSize = (int)m_ChunkSize - ChunkHeader.stride - 22;
-                var compressedData = reader.ReadBytes(dataSize);
-                var decompressedData = Zlib.Decompress(compressedData);
-                
-                if (m_ColorDepth == 32 || m_ColorDepth == 16)
-                    image = ByteToColorArray(decompressedData, m_ColorDepth);
-                else if (m_ColorDepth == 8)
-                    image = ByteToColorArrayUsingPalette(decompressedData, m_PaletteChunk, m_AlphaPaletteEntry);
+                image = AsepriteUtilities.GenerateImageData(m_ColorDepth, decompressedData, m_PaletteChunk, m_AlphaPaletteEntry);
             }
             else if (cellType == CellTypes.CompressedTileMap) // Not implemented yet.
             {
@@ -113,18 +101,14 @@ namespace UnityEditor.U2D.Aseprite
                 for (var i = 0; i < 10; ++i)
                     reader.ReadByte();
                 
-                // 2 bytes of Rfc1950Header that we do not want
-                var magicBytes = reader.ReadBytes(2);
-                
-                var dataSize = (int)m_ChunkSize - ChunkHeader.stride - 50;
-                var compressedData = reader.ReadBytes(dataSize);
-                var decompressedData = Zlib.Decompress(compressedData);
+                var dataSize = (int)m_ChunkSize - ChunkHeader.stride - 48;
+                var decompressedData = AsepriteUtilities.ReadAndDecompressedData(reader, dataSize);
 
                 var bytesPerTile = bitsPerTile / 8;
                 var noOfTiles = decompressedData.Length / bytesPerTile;
 
-                var memoryStream = new MemoryStream(decompressedData);
-                var binaryReader = new BinaryReader(memoryStream);
+                using var memoryStream = new MemoryStream(decompressedData);
+                using var binaryReader = new BinaryReader(memoryStream);
                 for (var i = 0; i < noOfTiles; ++i)
                 {
                     uint tileIndex = 0;
@@ -136,60 +120,6 @@ namespace UnityEditor.U2D.Aseprite
                         tileIndex = binaryReader.ReadByte();
                 }
             }
-        }
-
-        static NativeArray<Color32> ByteToColorArray(in byte[] data, ushort colorDepth)
-        {
-            NativeArray<Color32> image = default;
-            if (colorDepth == 32)
-            {
-                image = new NativeArray<Color32>(data.Length / 4, Allocator.Persistent);
-                for (var i = 0; i < image.Length; ++i)
-                {
-                    var dataIndex = i * 4;
-                    image[i] = new Color32(
-                        data[dataIndex],
-                        data[dataIndex + 1],
-                        data[dataIndex + 2],
-                        data[dataIndex + 3]);
-                }
-            }
-            else if (colorDepth == 16)
-            {
-                image = new NativeArray<Color32>(data.Length / 2, Allocator.Persistent);
-                for (var i = 0; i < image.Length; ++i)
-                {
-                    var dataIndex = i * 2;
-                    var value = data[dataIndex];
-                    var alpha = data[dataIndex + 1];
-                    image[i] = new Color32(value, value, value, alpha);
-                }
-            }
-            return image;
-        }
-
-        static NativeArray<Color32> ByteToColorArrayUsingPalette(in byte[] data, PaletteChunk paletteChunk, byte alphaPaletteEntry)
-        {
-            NativeArray<Color32> image = default;
-            if (paletteChunk == null)
-                return default;
-
-            var alphaColor = new Color32(0, 0, 0, 0);
-            
-            image = new NativeArray<Color32>(data.Length, Allocator.Persistent);
-            for (var i = 0; i < image.Length; ++i)
-            {
-                var paletteIndex = data[i];
-                if (paletteIndex != alphaPaletteEntry)
-                {
-                    var entry = paletteChunk.entries[paletteIndex];
-                    image[i] = entry.color;
-                }
-                else
-                    image[i] = alphaColor;
-            }
-
-            return image;
         }
     }    
 }

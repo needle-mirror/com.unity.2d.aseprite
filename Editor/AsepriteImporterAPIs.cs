@@ -6,6 +6,15 @@ namespace UnityEditor.U2D.Aseprite
     public partial class AsepriteImporter 
     {
         /// <summary>
+        /// How the file should be imported.
+        /// </summary>
+        public FileImportModes importMode
+        {
+            get => m_AsepriteImporterSettings.fileImportMode;
+            set => m_AsepriteImporterSettings.fileImportMode = value;
+        }        
+        
+        /// <summary>
         /// Which type of texture are we dealing with here.
         /// </summary>
         /// <value>Valid values are TextureImporterType.Default or TextureImporterType.Sprite.</value>
@@ -135,6 +144,15 @@ namespace UnityEditor.U2D.Aseprite
             get => m_AsepriteImporterSettings.customPivotPosition;
             set => m_AsepriteImporterSettings.customPivotPosition = value;
         }
+        
+        /// <summary>
+        /// Internal padding within each SpriteRect generated from the Aseprite file.
+        /// </summary>
+        public uint spritePadding
+        {
+            get => m_AsepriteImporterSettings.spritePadding;
+            set => m_AsepriteImporterSettings.spritePadding = value;
+        }        
 
         /// <summary>
         /// Generate a Model Prefab based on the layers of the source asset.
@@ -384,6 +402,26 @@ namespace UnityEditor.U2D.Aseprite
                 m_TextureImporterSettings.mipMapsPreserveCoverage = value;
                 SetDirty();
             }
+        }  
+        
+        /// <summary>
+        /// Retrieves the platform settings used by the importer for a given build target.
+        /// </summary>
+        /// <param name="buildTarget">The build target to query.</param>
+        /// <returns>TextureImporterPlatformSettings used for importing the texture for the build target.</returns>
+        public TextureImporterPlatformSettings GetImporterPlatformSettings(BuildTarget buildTarget)
+        {
+            return TextureImporterUtilities.GetPlatformTextureSettings(buildTarget, in m_PlatformSettings);
+        }        
+        
+        /// <summary>
+        /// Sets the platform settings used by the importer for a given build target.
+        /// </summary>
+        /// <param name="setting">TextureImporterPlatformSettings to be used by the importer for the build target indicated by TextureImporterPlatformSettings.</param>
+        public void SetImporterPlatformSettings(TextureImporterPlatformSettings setting)
+        {
+            SetPlatformTextureSettings(setting);
+            SetDirty();
         }        
     }
 }

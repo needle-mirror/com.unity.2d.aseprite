@@ -28,7 +28,7 @@ namespace UnityEditor.U2D.Aseprite
 
         public TagsChunk(uint chunkSize) : base(chunkSize) { }
 
-        public override void Read(BinaryReader reader)
+        protected override void InternalRead(BinaryReader reader)
         {
             noOfTags = reader.ReadUInt16();
 

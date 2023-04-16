@@ -8,10 +8,6 @@ namespace UnityEditor.U2D.Aseprite
         public override ChunkTypes chunkType => ChunkTypes.OldPalette2;
 
         public OldPaletteChunk2(uint chunkSize) : base(chunkSize) { }
-
-        public override void Read(BinaryReader reader)
-        {
-            var bytes = reader.ReadBytes((int)m_ChunkSize - ChunkHeader.stride);
-        }
+        protected override void InternalRead(BinaryReader reader) { }
     }
 }

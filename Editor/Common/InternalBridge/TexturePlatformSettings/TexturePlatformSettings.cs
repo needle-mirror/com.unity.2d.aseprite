@@ -17,7 +17,7 @@ namespace UnityEditor.U2D.Aseprite.Common
         bool DoesSourceTextureHaveAlpha(int v);
         bool IsSourceTextureHDR(int v);
         void SetPlatformTextureSettings(int i, TextureImporterPlatformSettings platformSettings);
-        void GetImporterSettings(int i, UnityEditor.TextureImporterSettings settings);
+        void GetImporterSettings(int i, TextureImporterSettings settings);
         string GetBuildTargetName(SerializedProperty sp);
         SerializedProperty platformSettingsArray { get; }
     }
@@ -26,14 +26,11 @@ namespace UnityEditor.U2D.Aseprite.Common
     internal class TexturePlatformSettings : BaseTextureImportPlatformSettings
     {
         [SerializeField]
-        TextureImportPlatformSettingsData m_Data = new TextureImportPlatformSettingsData();
+        TextureImportPlatformSettingsData m_Data = new ();
         ITexturePlatformSettingsDataProvider m_DataProvider;
         Func<BaseTextureImportPlatformSettings> DefaultImportSettings;
 
-        public override TextureImportPlatformSettingsData model
-        {
-            get => m_Data;
-        }
+        public override TextureImportPlatformSettingsData model => m_Data;
 
         public TexturePlatformSettings(string name, BuildTarget target, ITexturePlatformSettingsDataProvider inspector, Func<BaseTextureImportPlatformSettings> defaultPlatform)
             : base(name, target)
@@ -75,20 +72,9 @@ namespace UnityEditor.U2D.Aseprite.Common
             model.textureFormatProperty = model.platformTextureSettingsProp.FindPropertyRelative("m_TextureFormat");
         }
 
-        public override bool textureTypeHasMultipleDifferentValues
-        {
-            get { return m_DataProvider.textureTypeHasMultipleDifferentValues; }
-        }
-
-        public override TextureImporterType textureType
-        {
-            get { return m_DataProvider.textureType; }
-        }
-
-        public override SpriteImportMode spriteImportMode
-        {
-            get { return m_DataProvider.spriteImportMode; }
-        }
+        public override bool textureTypeHasMultipleDifferentValues => m_DataProvider.textureTypeHasMultipleDifferentValues;
+        public override TextureImporterType textureType => m_DataProvider.textureType;
+        public override SpriteImportMode spriteImportMode => m_DataProvider.spriteImportMode;
 
         public override int GetTargetCount()
         {
@@ -153,7 +139,7 @@ namespace UnityEditor.U2D.Aseprite.Common
             m_DataProvider.SetPlatformTextureSettings(i, platformSettings);
         }
 
-        private string GetFixedPlatformName(string platform)
+        string GetFixedPlatformName(string platform)
         {
             var targetGroup = BuildPipeline.GetBuildTargetGroupByName(platform);
             if (targetGroup != BuildTargetGroup.Unknown)
@@ -179,7 +165,7 @@ namespace UnityEditor.U2D.Aseprite.Common
                 name = TextureImporterInspector.s_DefaultPlatformName
             });
 
-            foreach (BuildPlatform bp in validPlatforms)
+            foreach (var bp in validPlatforms)
             {
                 platformSettings.Add(new TextureImporterPlatformSettings
                 {
@@ -194,12 +180,12 @@ namespace UnityEditor.U2D.Aseprite.Common
         public TexturePlatformSettingsHelper(ITexturePlatformSettingsDataProvider dataProvider)
         {
             m_DataProvider = dataProvider;
-            BuildPlatform[] validPlatforms = BaseTextureImportPlatformSettings.GetBuildPlayerValidPlatforms();
+            var validPlatforms = BaseTextureImportPlatformSettings.GetBuildPlayerValidPlatforms();
 
             m_PlatformSettings = new List<TexturePlatformSettings>();
             m_PlatformSettings.Add(new TexturePlatformSettings(TextureImporterInspector.s_DefaultPlatformName, BuildTarget.StandaloneWindows, dataProvider, DefaultTextureImportPlatformSettings));
 
-            foreach (BuildPlatform bp in validPlatforms)
+            foreach (var bp in validPlatforms)
             {
                 m_PlatformSettings.Add(new TexturePlatformSettings(bp.name, bp.defaultTarget, dataProvider, DefaultTextureImportPlatformSettings));
             }
@@ -210,25 +196,10 @@ namespace UnityEditor.U2D.Aseprite.Common
             return m_PlatformSettings[0];
         }
 
-        public static string defaultPlatformName
-        {
-            get => TextureImporterInspector.s_DefaultPlatformName;
-        }
-
-        public SpriteImportMode spriteImportMode
-        {
-            get { return m_DataProvider.spriteImportMode; }
-        }
-
-        public TextureImporterType textureType
-        {
-            get { return m_DataProvider.textureType; }
-        }
-
-        public bool textureTypeHasMultipleDifferentValues
-        {
-            get { return m_DataProvider.textureTypeHasMultipleDifferentValues; }
-        }
+        public static string defaultPlatformName => TextureImporterInspector.s_DefaultPlatformName;
+        public SpriteImportMode spriteImportMode => m_DataProvider.spriteImportMode;
+        public TextureImporterType textureType => m_DataProvider.textureType;
+        public bool textureTypeHasMultipleDifferentValues => m_DataProvider.textureTypeHasMultipleDifferentValues;
 
         public void ShowPlatformSpecificSettings()
         {
@@ -248,14 +219,13 @@ namespace UnityEditor.U2D.Aseprite.Common
 
 
             //Show platform settings
-            using (var changed = new EditorGUI.ChangeCheckScope())
+            using var changed = new EditorGUI.ChangeCheckScope();
+            
+            BaseTextureImportPlatformSettings.ShowPlatformSpecificSettings(m_PlatformSettings.ConvertAll<BaseTextureImportPlatformSettings>(x => x as BaseTextureImportPlatformSettings), selectedPage);
+            // Doing it this way is slow, but it ensure Presets get updated correctly whenever the UI is being changed.
+            if (changed.changed)
             {
-                BaseTextureImportPlatformSettings.ShowPlatformSpecificSettings(m_PlatformSettings.ConvertAll<BaseTextureImportPlatformSettings>(x => x as BaseTextureImportPlatformSettings), selectedPage);
-                // Doing it this way is slow, but it ensure Presets get updated correctly whenever the UI is being changed.
-                if (changed.changed)
-                {
-                    BaseTextureImportPlatformSettings.ApplyPlatformSettings(m_PlatformSettings.ConvertAll<BaseTextureImportPlatformSettings>(x => x as BaseTextureImportPlatformSettings));
-                }
+                BaseTextureImportPlatformSettings.ApplyPlatformSettings(m_PlatformSettings.ConvertAll<BaseTextureImportPlatformSettings>(x => x as BaseTextureImportPlatformSettings));
             }
         }
 

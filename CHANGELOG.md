@@ -1,4 +1,12 @@
 # Changelog
+## [1.0.0-pre.4] - 2023-04-16
+### Added
+- Added a property to set the padding within each generated SpriteRect.
+- Added an option to select import mode for the file, either Animated Sprite or Sprite Sheet.
+
+### Fixed
+- Fixed an issue where the platform settings could not be modified. (DANB-445)
+- Fixed an issue where the Animation Events would be generated with the wrong time stamp.
 
 ## [1.0.0-pre.3] - 2023-03-23
 ### Added

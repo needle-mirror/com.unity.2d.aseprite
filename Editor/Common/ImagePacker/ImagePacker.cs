@@ -47,12 +47,13 @@ namespace UnityEditor.U2D.Aseprite.Common
         /// <param name="width">Image buffers width</param>
         /// <param name="height">Image buffers height</param>
         /// <param name="padding">Padding between each packed image</param>
+        /// <param name="spriteSizeExpand">Pack sprite expand size</param>
         /// <param name="outPackedBuffer">Packed image buffer</param>
         /// <param name="outPackedBufferWidth">Packed image buffer's width</param>
         /// <param name="outPackedBufferHeight">Packed image buffer's height</param>
         /// <param name="outPackedRect">Location of each image buffers in the packed buffer</param>
         /// <param name="outUVTransform">Translation data from image original buffer to packed buffer</param>
-        public static void Pack(NativeArray<Color32>[] buffers, int[] width, int[] height, int padding, out NativeArray<Color32> outPackedBuffer, out int outPackedBufferWidth, out int outPackedBufferHeight, out RectInt[] outPackedRect, out Vector2Int[] outUVTransform)
+        public static void Pack(NativeArray<Color32>[] buffers, int[] width, int[] height, int padding, uint spriteSizeExpand, out NativeArray<Color32> outPackedBuffer, out int outPackedBufferWidth, out int outPackedBufferHeight, out RectInt[] outPackedRect, out Vector2Int[] outUVTransform)
         {
             UnityEngine.Profiling.Profiler.BeginSample("Pack");
             // Determine the area that contains data in the buffer
@@ -64,8 +65,8 @@ namespace UnityEditor.U2D.Aseprite.Common
                 for (var i = 0; i < tightRects.Length; ++i)
                 {
                     var t = tightRects[i];
-                    t.width = tightRects[i].width;
-                    t.height = tightRects[i].height;
+                    t.width = tightRects[i].width + (int)spriteSizeExpand;
+                    t.height = tightRects[i].height + (int)spriteSizeExpand;
                     tightRectArea[i] = t;
                 }
                 Pack(tightRectArea, padding, out outPackedRect, out outPackedBufferWidth, out outPackedBufferHeight);

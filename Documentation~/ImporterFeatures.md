@@ -28,6 +28,18 @@ The Aseprite Importer is available after you import a .ase/.aseprite file into y
   </thead>
   <tbody>
     <tr>
+      <td rowspan="3"><strong>Import Mode</strong></td>
+      <td colspan="2">How the file should be imported. This is set to <b>Animated Sprite</b> by default.</td>
+    </tr>
+    <tr>
+      <td><strong>Sprite Sheet</strong></td>
+      <td>The file is imported as a Sprite Sheet, and can be sliced up in the Sprite Editor.</td>
+    </tr>
+    <tr>
+      <td><strong>Animated Sprite</strong></td>
+      <td>The file is imported with animation in mind. Animation assets are generated and attached to a model prefab on import.</td>
+    </tr> 
+    <tr>
       <td rowspan="1"><strong>Pixels Per Unit</strong></td>
       <td colspan="2">Sets the number of pixels that equals one Unity unit.</td>
     </tr>
@@ -87,7 +99,11 @@ The Aseprite Importer is available after you import a .ase/.aseprite file into y
     <tr>
       <td rowspan="1"><strong>Pivot Alignment</strong></td>
       <td colspan="2">How a Sprite's graphic rectangle is aligned with its pivot point. This property is set <b>Bottom</b> by default.</td>
-    </tr>    
+    </tr>   
+    <tr>
+      <td rowspan="1"><strong>Sprite Padding</strong></td>
+      <td colspan="2">Internal padding within each SpriteRect generated from the Aseprite file. This property is set <b>0</b> by default.</td>
+    </tr>      
   </tbody>
 </table>
 

@@ -1,6 +1,4 @@
-# What's new in version 1.0.0-pre.3
+# What's new in version 1.0.0-pre.4
 
-- Layer blend modes are now supported with Import Mode: Merge Frames.
-- Added ability to generate Animation Events from Cell user data.
-- Added ability to export Animator Controller and/or Animation Clips.
-- Sped up the importation of Aseprite files by bursting the image processing tasks. Note: Only for Unity 2022.2 and newer.
+- Added a property to set the padding within each generated SpriteRect.
+- Added an option to select import mode for the file, either Animated Sprite or Sprite Sheet.

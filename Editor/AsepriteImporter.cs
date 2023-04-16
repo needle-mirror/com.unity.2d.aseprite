@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEditor.AssetImporters;
 using UnityEditor.U2D.Aseprite.Common;
 using UnityEditor.U2D.Sprites;
+using UnityEngine.Serialization;
 
 namespace UnityEditor.U2D.Aseprite
 {
@@ -13,7 +14,7 @@ namespace UnityEditor.U2D.Aseprite
     /// ScriptedImporter to import Aseprite files
     /// </summary>
     // Version using unity release + 5 digit padding for future upgrade. Eg 2021.2 -> 21200000
-    [ScriptedImporter(21300001, new string[] {"aseprite", "ase"}, AllowCaching = true)]
+    [ScriptedImporter(21300002, new string[] {"aseprite", "ase"}, AllowCaching = true)]
     [HelpURL("https://docs.unity3d.com/Packages/com.unity.2d.aseprite@latest")]
     public partial class AsepriteImporter : ScriptedImporter, ISpriteEditorDataProvider
     {
@@ -74,11 +75,13 @@ namespace UnityEditor.U2D.Aseprite
         [SerializeField] AsepriteImporterSettings m_PreviousAsepriteImporterSettings;
         [SerializeField] AsepriteImporterSettings m_AsepriteImporterSettings = new AsepriteImporterSettings()
         {
+            fileImportMode = FileImportModes.AnimatedSprite,
             importHiddenLayers = false,
             layerImportMode = LayerImportModes.MergeFrame,
             defaultPivotAlignment = SpriteAlignment.BottomCenter,
             defaultPivotSpace = PivotSpaces.Canvas,
             customPivotPosition = new Vector2(0.5f, 0.5f),
+            spritePadding = 0,
             generateAnimationClips = true,
             generateModelPrefab = true,
             addSortingGroup = true,
@@ -98,7 +101,10 @@ namespace UnityEditor.U2D.Aseprite
         [SerializeField] string m_TextureAssetName = null;
         
         [SerializeField] List<SpriteMetaData> m_SingleSpriteImportData = new List<SpriteMetaData>(1) { new SpriteMetaData() };
-        [SerializeField] List<SpriteMetaData> m_MultiSpriteImportData = new List<SpriteMetaData>();
+        [FormerlySerializedAs("m_MultiSpriteImportData")] 
+        [SerializeField] List<SpriteMetaData> m_AnimatedSpriteImportData = new List<SpriteMetaData>();
+        [SerializeField] List<SpriteMetaData> m_SpriteSheetImportData = new List<SpriteMetaData>();
+        
         [SerializeField] List<Layer> m_AsepriteLayers = new List<Layer>();
 
         [SerializeField] List<TextureImporterPlatformSettings> m_PlatformSettings = new List<TextureImporterPlatformSettings>();
@@ -198,7 +204,8 @@ namespace UnityEditor.U2D.Aseprite
                 }
 
                 var padding = 4;
-                ImagePacker.Pack(cellBuffers.ToArray(), cellWidth.ToArray(), cellHeight.ToArray(), padding, out var outputImageBuffer, out var packedTextureWidth, out var packedTextureHeight, out var spriteRects, out var uvTransforms);
+                var spritePadding = m_AsepriteImporterSettings.fileImportMode == FileImportModes.AnimatedSprite ? m_AsepriteImporterSettings.spritePadding : 0;
+                ImagePacker.Pack(cellBuffers.ToArray(), cellWidth.ToArray(), cellHeight.ToArray(), padding, spritePadding, out var outputImageBuffer, out var packedTextureWidth, out var packedTextureHeight, out var spriteRects, out var uvTransforms);
                 
                 var packOffsets = new Vector2Int[spriteRects.Length];
                 for (var i = 0; i < packOffsets.Length; ++i)
@@ -516,6 +523,11 @@ namespace UnityEditor.U2D.Aseprite
 
         List<SpriteMetaData> UpdateSpriteImportData(in List<Layer> layers, RectInt[] spriteRects, Vector2Int[] packOffsets, Vector2Int[] uvTransforms)
         {
+            if (m_AsepriteImporterSettings.fileImportMode == FileImportModes.SpriteSheet)
+            {
+                return GetSpriteImportData();
+            }
+            
             var cellLookup = new List<Cell>();
             for (var i = 0; i < layers.Count; ++i)
                 cellLookup.AddRange(layers[i].cells);
@@ -691,6 +703,8 @@ namespace UnityEditor.U2D.Aseprite
         {
             if (output.sprites.Length == 0)
                 return;
+            if (m_AsepriteImporterSettings.fileImportMode != FileImportModes.AnimatedSprite)
+                return;
             
             PrefabGeneration.Generate(
                 ctx, 
@@ -707,6 +721,8 @@ namespace UnityEditor.U2D.Aseprite
         {
             if (output.sprites.Length == 0)
                 return;
+            if (m_AsepriteImporterSettings.fileImportMode != FileImportModes.AnimatedSprite)
+                return;            
             if (!generateAnimationClips)
                 return;
             var noOfFrames = m_AsepriteFile.noOfFrames;
@@ -737,10 +753,13 @@ namespace UnityEditor.U2D.Aseprite
 
         void RegisterAnimatorController(AssetImportContext ctx, string assetName)
         {
+            if (m_AsepriteImporterSettings.fileImportMode != FileImportModes.AnimatedSprite)
+                return;
+            
             AnimatorControllerGeneration.Generate(ctx, assetName, m_RootGameObject, generateModelPrefab);
         }
 
-        void Apply()
+        internal void Apply()
         {
             // Do this so that asset change save dialog will not show
             var originalValue = EditorPrefs.GetBool("VerifySavingAssets", false);
@@ -756,16 +775,6 @@ namespace UnityEditor.U2D.Aseprite
             return base.SupportsRemappedAssetType(type);
         }
 
-        /// <summary>
-        /// Sets the platform settings used by the importer for a given build target.
-        /// </summary>
-        /// <param name="setting">TextureImporterPlatformSettings to be used by the importer for the build target indicated by TextureImporterPlatformSettings.</param>
-        public void SetImporterPlatformSettings(TextureImporterPlatformSettings setting)
-        {
-            SetPlatformTextureSettings(setting);
-            SetDirty();
-        }
-        
         void SetPlatformTextureSettings(TextureImporterPlatformSettings platformSettings)
         {
             var index = m_PlatformSettings.FindIndex(x => x.name == platformSettings.name);
@@ -783,14 +792,32 @@ namespace UnityEditor.U2D.Aseprite
         List<SpriteMetaData> GetSpriteImportData()
         {
             if (spriteImportModeToUse == SpriteImportMode.Multiple)
-                return m_MultiSpriteImportData;
+            {
+                switch (m_AsepriteImporterSettings.fileImportMode)
+                {
+                    case FileImportModes.SpriteSheet:
+                        return m_SpriteSheetImportData;
+                    case FileImportModes.AnimatedSprite:
+                    default:
+                        return m_AnimatedSpriteImportData;
+                }
+            }
             return m_SingleSpriteImportData;
         }
 
         internal SpriteRect GetSpriteData(GUID guid)
         {
             if (spriteImportModeToUse == SpriteImportMode.Multiple)
-                return m_MultiSpriteImportData.FirstOrDefault(x => x.spriteID == guid);
+            {
+                switch (m_AsepriteImporterSettings.fileImportMode)
+                {
+                    case FileImportModes.SpriteSheet:
+                        return m_SpriteSheetImportData.FirstOrDefault(x => x.spriteID == guid);
+                    case FileImportModes.AnimatedSprite:
+                    default:
+                        return m_AnimatedSpriteImportData.FirstOrDefault(x => x.spriteID == guid);
+                }
+            }
             return m_SingleSpriteImportData[0];
         }
         
