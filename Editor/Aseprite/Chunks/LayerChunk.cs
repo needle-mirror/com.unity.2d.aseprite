@@ -3,8 +3,11 @@ using System.IO;
 
 namespace UnityEditor.U2D.Aseprite
 {
+    /// <summary>
+    /// Flags for layer options.
+    /// </summary>
     [Flags]
-    internal enum LayerFlags
+    public enum LayerFlags
     {
         Visible = 1, 
         Editable = 2, 
@@ -15,14 +18,20 @@ namespace UnityEditor.U2D.Aseprite
         ReferenceLayer = 64        
     }   
     
-    internal enum LayerTypes
+    /// <summary>
+    /// Layer types.
+    /// </summary>
+    public enum LayerTypes
     {
         Normal = 0,
         Group = 1,
         Tilemap = 2
     }
     
-    internal enum BlendModes
+    /// <summary>
+    /// Layer blend modes.
+    /// </summary>
+    public enum BlendModes
     {
         Normal         = 0,
         Multiply       = 1,
@@ -45,19 +54,41 @@ namespace UnityEditor.U2D.Aseprite
         Divide         = 18        
     }    
     
-    internal class LayerChunk : BaseChunk
+    /// <summary>
+    /// Parsed representation of an Aseprite Layer chunk.
+    /// </summary>
+    public class LayerChunk : BaseChunk
     {
         public override ChunkTypes chunkType => ChunkTypes.Layer;
 
+        /// <summary>
+        /// Layer option flags.
+        /// </summary>
         public LayerFlags flags { get; private set; }
+        /// <summary>
+        /// Type of layer.
+        /// </summary>
         public LayerTypes layerType { get; private set; }
+        /// <summary>
+        /// The child level is used to show the relationship of this layer with the last one read.
+        /// </summary>
         public ushort childLevel { get; private set; }
+        /// <summary>
+        /// Layer blend mode.
+        /// </summary>
         public BlendModes blendMode { get; private set; }
+        // Layer opacity (0 = transparent, 255 = opaque).
         public byte opacity { get; private set; }
+        /// <summary>
+        /// Layer name.
+        /// </summary>
         public string name { get; private set; }
+        /// <summary>
+        /// Tileset index (Only available for Tilemap layers).
+        /// </summary>
         public uint tileSetIndex { get; private set; }
         
-        public LayerChunk(uint chunkSize) : base(chunkSize) { }
+        internal LayerChunk(uint chunkSize) : base(chunkSize) { }
 
         protected override void InternalRead(BinaryReader reader)
         {

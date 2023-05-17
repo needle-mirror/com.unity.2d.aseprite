@@ -49,3 +49,27 @@ If you like to have an Animator Controller which you can change, follow these st
 An Animator Controller should now be located in the selected folder. If the Animation Clip checkbox was left unchecked, all the states within the Animator Controller are linked back to the Aseprite file, meaning that the clips will stay up to date with any changes made in Aseprite. 
 
 Do note that if you add a new [tag](https://www.aseprite.org/docs/tags/) in Aseprite, you need to add the resulting Animation Clip to the exported Animator Controller, as this will not happen automatically.
+
+## How to inject custom assets on import?
+The Aseprite Importer comes with an event, OnPostAsepriteImport, which is fired at the end of the import process. This event can be used to inject or change the generated assets when importing an Aseprite file. 
+
+```CSharp
+using UnityEditor;
+using UnityEditor.U2D.Aseprite;
+using UnityEngine;
+
+public class GameObjectInjector : AssetPostprocessor
+{
+    void OnPreprocessAsset()
+    {
+        if (assetImporter is AsepriteImporter aseImporter)
+            aseImporter.OnPostAsepriteImport += OnPostAsepriteImport;
+    }
+
+    static void OnPostAsepriteImport(AsepriteImporter.ImportEventArgs args)
+    {
+        var myGo = new GameObject("MyGameObject");
+        args.context.AddObjectToAsset(myGo.name, myGo);
+    }
+}
+```

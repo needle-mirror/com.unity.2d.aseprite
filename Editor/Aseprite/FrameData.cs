@@ -1,16 +1,34 @@
+using System;
+using System.Collections.ObjectModel;
 using System.IO;
 using UnityEngine.Assertions;
 
 namespace UnityEditor.U2D.Aseprite
 {
-    internal class FrameData
+    /// <summary>
+    /// Parsed representation of an Aseprite frame.
+    /// </summary>
+    public class FrameData : IDisposable
     {
+        /// <summary>
+        /// Bytes in this frame.
+        /// </summary>
         public uint noOfBytes { get; private set; }
+        /// <summary>
+        /// Frame duration in milliseconds.
+        /// </summary>
         public ushort frameDuration { get; private set; }
+        /// <summary>
+        /// Number of chunks.
+        /// </summary>
         public uint chunkCount { get; private set; }
-        public BaseChunk[] chunks { get; private set; }
+        /// <summary>
+        /// Chunk data for this frame.
+        /// </summary>
+        public ReadOnlyCollection<BaseChunk> chunks => Array.AsReadOnly(m_Chunks);
+        BaseChunk[] m_Chunks;
 
-        public void Read(BinaryReader reader)
+        internal void Read(BinaryReader reader)
         {
             noOfBytes = reader.ReadUInt32();
             var misc0 = reader.ReadUInt16();
@@ -23,7 +41,20 @@ namespace UnityEditor.U2D.Aseprite
             Assert.IsTrue(misc0 == 0xF1FA, "Reading mismatch.");
             
             this.chunkCount = chunkCount != 0 ? chunkCount : legacyChunkCount;
-            chunks = new BaseChunk[this.chunkCount];
+            m_Chunks = new BaseChunk[this.chunkCount];
+        }
+        
+        internal void SetChunkData(int index, BaseChunk data)
+        {
+            if (index < 0 || index >= m_Chunks.Length)
+                return;
+            m_Chunks[index] = data;
+        }    
+        
+        public void Dispose()
+        {
+            for (var i = 0; i < m_Chunks.Length; ++i)
+                m_Chunks[i].Dispose();
         }
     }
 }

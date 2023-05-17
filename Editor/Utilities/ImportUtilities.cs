@@ -71,7 +71,7 @@ namespace UnityEditor.U2D.Aseprite
     {
         public static void SaveAllPalettesToDisk(AsepriteFile file)
         {
-            for (var i = 0; i < file.frameData.Length; ++i)
+            for (var i = 0; i < file.frameData.Count; ++i)
             {
                 var frame = file.frameData[i];
                 for (var m = 0; m < frame.chunkCount; ++m)
@@ -154,7 +154,7 @@ namespace UnityEditor.U2D.Aseprite
                 if (exportClips)
                     clips = ExportAnimationClips(importedObjectPath, savePath);
                 else
-                    clips = GetAllAnimationClips(importedObjectPath);
+                    clips = GetAllClipsFromController(importedObjectPath);
                 
                 if (exportController)
                     ExportAnimatorController(importers[i], clips, savePath);
@@ -164,7 +164,7 @@ namespace UnityEditor.U2D.Aseprite
         static AnimationClip[] ExportAnimationClips(string importedObjectPath, string path)
         {
             var relativePath = FileUtil.GetProjectRelativePath(path);
-            var animationClips = GetAllAnimationClips(importedObjectPath);
+            var animationClips = GetAllClipsFromController(importedObjectPath);
 
             var clips = new List<AnimationClip>();
             for (var i = 0; i < animationClips.Length; ++i)
@@ -181,16 +181,10 @@ namespace UnityEditor.U2D.Aseprite
             return clips.ToArray();
         }
 
-        static AnimationClip[] GetAllAnimationClips(string assetPath)
+        static AnimationClip[] GetAllClipsFromController(string assetPath)
         {
-            var allAssets = AssetDatabase.LoadAllAssetsAtPath(assetPath);
-            var clips = new List<AnimationClip>();
-            for (var m = 0; m < allAssets.Length; ++m)
-            {
-                if (allAssets[m] is AnimationClip clip)
-                    clips.Add(clip);
-            }
-            return clips.ToArray();
+            var controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(assetPath);
+            return controller.animationClips;
         }
 
         static void ExportAnimatorController(AsepriteImporter importer, AnimationClip[] clips, string path)

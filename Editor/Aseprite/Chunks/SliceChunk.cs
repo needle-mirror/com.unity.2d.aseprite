@@ -2,12 +2,15 @@ using System.IO;
 
 namespace UnityEditor.U2D.Aseprite
 {
-    /// <summary>Not supported yet.</summary>
+    /// <summary>
+    /// Parsed representation of an Aseprite Slice chunk.
+    /// </summary>
+    /// <note>Not supported yet.</note>
     internal class SliceChunk : BaseChunk
     {
         public override ChunkTypes chunkType => ChunkTypes.Slice;
 
-        public SliceChunk(uint chunkSize) : base(chunkSize) { }
+        internal SliceChunk(uint chunkSize) : base(chunkSize) { }
         protected override void InternalRead(BinaryReader reader) { }
     }
 }

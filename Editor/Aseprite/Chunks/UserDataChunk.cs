@@ -11,14 +11,23 @@ namespace UnityEditor.U2D.Aseprite
         HasColor = 2
     }
     
-    internal class UserDataChunk : BaseChunk
+    /// <summary>
+    /// Parsed representation of an Aseprite UserData chunk.
+    /// </summary>
+    public class UserDataChunk : BaseChunk
     {
         public override ChunkTypes chunkType => ChunkTypes.UserData;
         
+        /// <summary>
+        /// Text data.
+        /// </summary>
         public string text { get; private set; }
+        /// <summary>
+        /// Color data.
+        /// </summary>
         public Color32 color { get; private set; }
 
-        public UserDataChunk(uint chunkSize) : base(chunkSize) { }
+        internal UserDataChunk(uint chunkSize) : base(chunkSize) { }
         
         protected override void InternalRead(BinaryReader reader)
         {

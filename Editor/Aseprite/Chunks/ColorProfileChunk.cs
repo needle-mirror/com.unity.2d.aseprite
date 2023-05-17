@@ -2,22 +2,47 @@ using System.IO;
 
 namespace UnityEditor.U2D.Aseprite
 {
-    internal enum ColorProfileTypes
+    /// <summary>
+    /// Supported color profiles.
+    /// </summary>
+    public enum ColorProfileTypes
     {
+        /// <summary>
+        /// No color profile (as in old .aseprite files).
+        /// </summary>
         NoProfile   = 0,
+        /// <summary>
+        /// use sRGB.
+        /// </summary>
         sRGB        = 1,
+        /// <summary>
+        /// use the embedded ICC profile. 
+        /// </summary>
         ICC         = 2
     }    
     
-    internal class ColorProfileChunk : BaseChunk
+    /// <summary>
+    /// Parsed representation of an Aseprite ColorProfile chunk.
+    /// </summary>
+    public class ColorProfileChunk : BaseChunk
     {
         public override ChunkTypes chunkType => ChunkTypes.ColorProfile;
 
+        /// <summary>
+        /// The color profile used in this Aseprite file.
+        /// </summary>
         public ColorProfileTypes profileType { get; private set; }
+        /// <summary>
+        /// Flags for this color profile. <br />
+        /// 1 - use special fixed gamma.
+        /// </summary>
         public ushort flags { get; private set; }
+        /// <summary>
+        /// Fixed gamma (1.0 = linear).
+        /// </summary>
         public float gamma { get; private set; }
         
-        public ColorProfileChunk(uint chunkSize) : base(chunkSize) { }
+        internal ColorProfileChunk(uint chunkSize) : base(chunkSize) { }
 
         protected override void InternalRead(BinaryReader reader)
         {

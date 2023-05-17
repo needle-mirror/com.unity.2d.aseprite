@@ -1,31 +1,88 @@
+/// .ase & .aseprite file format specs:
+/// https://github.com/aseprite/aseprite/blob/main/docs/ase-file-specs.md    
+
+using System;
+using System.Collections.ObjectModel;
 using System.IO;
 using UnityEngine.Assertions;
 
 namespace UnityEditor.U2D.Aseprite
 {
-    internal class AsepriteFile
+    /// <summary>
+    /// Parsed representation of an Aseprite file.
+    /// Should be disposed after use.
+    /// </summary>
+    public class AsepriteFile : IDisposable
     {
-        public uint fileSize { get; private set; }
-        public ushort noOfFrames { get; private set; }
-        public ushort width { get; private set; }
-        public ushort height { get; private set; }
-        public ushort colorDepth { get; private set; }
-        public uint flags { get; private set; }
         /// <summary>
-        /// Time per frame (in milliseconds)
+        /// File size in bytes.
+        /// </summary>
+        public uint fileSize { get; private set; }
+        /// <summary>
+        /// Number of frames in the file.
+        /// </summary>
+        public ushort noOfFrames { get; private set; }
+        /// <summary>
+        /// Canvas width in pixels.
+        /// </summary>
+        public ushort width { get; private set; }
+        /// <summary>
+        /// Canvas height in pixels.
+        /// </summary>
+        public ushort height { get; private set; }
+        /// <summary>
+        /// Color depth (bits per pixel).
+        /// </summary>
+        public ushort colorDepth { get; private set; }
+        
+        internal uint flags { get; private set; }
+        
+        /// <summary>
+        /// Time per frame in milliseconds.
         /// </summary>
         public ushort animSpeed { get; private set; }
+        /// <summary>
+        /// Palette entry (index) which represent transparent color
+        /// in all non-background layers (only for Indexed sprites).
+        /// </summary>
         public byte alphaPaletteEntry { get; private set; }
+        /// <summary>
+        /// Number of colors (0 means 256 for old sprites).
+        /// </summary>
         public ushort noOfColors { get; private set; }
+        /// <summary>
+        /// Pixel width (pixel ratio is "pixel width/pixel height").
+        /// If this or pixel height field is zero, pixel ratio is 1:1.
+        /// </summary> 
         public byte pixelWidth { get; private set; }
+        /// <summary>
+        /// Pixel height (pixel ratio is "pixel width/pixel height").
+        /// If this or pixel width field is zero, pixel ratio is 1:1.
+        /// </summary>
         public byte pixelHeight { get; private set; }
+        /// <summary>
+        /// X position of the grid.
+        /// </summary>
         public short gridPosX { get; private set; }
+        /// <summary>
+        /// Y position of the grid.
+        /// </summary>
         public short gridPosY { get; private set; }
+        /// <summary>
+        /// Grid width (zero if there is no grid, grid size is 16x16 on Aseprite by default).
+        /// </summary>
         public ushort gridWidth { get; private set; }
+        /// <summary>
+        /// Grid height (zero if there is no grid).
+        /// </summary>
         public ushort gridHeight { get; private set; }
-        public FrameData[] frameData { get; private set; }
+        /// <summary>
+        /// Parsed data of each frame.
+        /// </summary>
+        public ReadOnlyCollection<FrameData> frameData => Array.AsReadOnly(m_FrameData);
+        FrameData[] m_FrameData;
 
-        public void Read(BinaryReader reader)
+        internal void Read(BinaryReader reader)
         {
             fileSize = reader.ReadUInt32();
             var misc0 = reader.ReadUInt16();
@@ -55,7 +112,20 @@ namespace UnityEditor.U2D.Aseprite
             for (var i = 0; i < 84; ++i)
                 reader.ReadByte();
 
-            frameData = new FrameData[noOfFrames];
+            m_FrameData = new FrameData[noOfFrames];
+        }
+
+        internal void SetFrameData(int index, FrameData data)
+        {
+            if (index < 0 || index >= m_FrameData.Length)
+                return;
+            m_FrameData[index] = data;
+        }
+
+        public void Dispose()
+        {
+            for (var i = 0; i < m_FrameData.Length; ++i)
+                m_FrameData[i].Dispose();
         }
     }
 }

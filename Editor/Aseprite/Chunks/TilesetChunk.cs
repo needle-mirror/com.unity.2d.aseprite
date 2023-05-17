@@ -3,30 +3,55 @@ using System.IO;
 
 namespace UnityEditor.U2D.Aseprite
 {
+    /// <summary>
+    /// Flags to define where data for a tileset is stored.
+    /// </summary>
     [Flags]
-    internal enum TileSetFlags
+    public enum TileSetFlags
     {
         IncludesLinkToExternal = 1, 
         IncludesTilesInFile = 2, 
         Misc = 4,
     }     
     
-    internal class TilesetChunk : BaseChunk
+    /// <summary>
+    /// Parsed representation of an Aseprite Tileset chunk.
+    /// </summary>
+    /// <note>Not supported yet.</note> 
+    public class TilesetChunk : BaseChunk
     {
         public override ChunkTypes chunkType => ChunkTypes.Tileset;
 
+        /// <summary>
+        /// The ID of the tileset.
+        /// </summary>
         public uint tileSetId  { get; private set; }
+        /// <summary>
+        /// Flags to define where data for a tileset is stored. 
+        /// </summary>
         public TileSetFlags tileSetFlags { get; private set; }
+        /// <summary>
+        /// The number of tiles in the tileset. 
+        /// </summary>
         public uint noOfTiles { get; private set; }
+        /// <summary>
+        /// Tile width in pixels.
+        /// </summary>
         public ushort width { get; private set; }
+        /// <summary>
+        /// Tile height in pixels.
+        /// </summary>
         public ushort height { get; private set; }
+        /// <summary>
+        /// The name of the tileset.
+        /// </summary>
         public string tileSetName { get; private set; }
 
         readonly ushort m_ColorDepth;
         readonly PaletteChunk m_PaletteChunk;
         readonly byte m_AlphaPaletteEntry;
 
-        public TilesetChunk(uint chunkSize, ushort colorDepth, PaletteChunk paletteChunk, byte alphaPaletteEntry) : base(chunkSize)
+        internal TilesetChunk(uint chunkSize, ushort colorDepth, PaletteChunk paletteChunk, byte alphaPaletteEntry) : base(chunkSize)
         {
             m_ColorDepth = colorDepth;
             m_PaletteChunk = paletteChunk;
@@ -57,7 +82,10 @@ namespace UnityEditor.U2D.Aseprite
                 var compressedDataLength = (int)reader.ReadUInt32();
                 var decompressedData = AsepriteUtilities.ReadAndDecompressedData(reader, compressedDataLength);
                 
-                var image = AsepriteUtilities.GenerateImageData(m_ColorDepth, decompressedData, m_PaletteChunk, m_AlphaPaletteEntry);                
+                var image = AsepriteUtilities.GenerateImageData(m_ColorDepth, decompressedData, m_PaletteChunk, m_AlphaPaletteEntry);
+                
+                // Disposing for now.
+                image.Dispose();
             }
         }
     }

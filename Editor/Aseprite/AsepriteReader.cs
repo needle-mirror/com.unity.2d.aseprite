@@ -1,14 +1,20 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
 namespace UnityEditor.U2D.Aseprite
 {
-    // .ase & .aseprite file format specs:
-    // https://github.com/aseprite/aseprite/blob/main/docs/ase-file-specs.md
-    
-    internal static class AsepriteReader
+    /// <summary>
+    /// File parsing utility for Aseprite files.
+    /// </summary>
+    public static class AsepriteReader
     {
+        /// <summary>
+        /// Reads an Aseprite file from the given path.
+        /// </summary>
+        /// <param name="assetPath">Path to the file.</param>
+        /// <returns>Returns a parsed representation of the file.</returns>
         public static AsepriteFile ReadFile(string assetPath)
         {
             var fileStream = new FileStream(assetPath, FileMode.Open, FileAccess.Read);
@@ -42,7 +48,7 @@ namespace UnityEditor.U2D.Aseprite
             {
                 var frame = new FrameData();
                 frame.Read(reader);
-                file.frameData[i] = frame;
+                file.SetFrameData(i, frame);
 
                 var noOfChunks = frame.chunkCount;
                 for (var m = 0; m < noOfChunks; ++m)
@@ -104,11 +110,11 @@ namespace UnityEditor.U2D.Aseprite
                     var successful = chunk.Read(reader);
                     if (!successful)
                     {
-                        frame.chunks[m] = new NoneChunk(0);
+                        frame.SetChunkData(m, new NoneChunk(0));
                         continue;
                     }
                     
-                    frame.chunks[m] = chunk;
+                    frame.SetChunkData(m, chunk);
                     
                     if (chunk.chunkType == ChunkTypes.UserData)
                         AssociateUserDataWithChunk(frame.chunks, m, (UserDataChunk)chunk);   
@@ -116,7 +122,7 @@ namespace UnityEditor.U2D.Aseprite
             }
         }
 
-        static void AssociateUserDataWithChunk(BaseChunk[] chunks, int index, UserDataChunk userData)
+        static void AssociateUserDataWithChunk(IReadOnlyList<BaseChunk> chunks, int index, UserDataChunk userData)
         {
             BaseChunk firstNonDataChunk = null;
             for (var i = index; i >= 0; --i)

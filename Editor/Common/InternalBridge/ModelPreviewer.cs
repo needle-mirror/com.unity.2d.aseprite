@@ -53,12 +53,22 @@ namespace UnityEditor.U2D.Aseprite.Common
             m_Animator = m_PreviewObject.GetComponent<Animator>();
             m_Clips = clips;
 
+            var clipInfos = m_Animator.GetCurrentAnimatorClipInfo(0);
+            
+            var defaultClipName = string.Empty;
+            if (clipInfos.Length > 0)
+                defaultClipName = clipInfos[0].clip.name;
+            
             m_ClipNames = new GUIContent[m_Clips.Length];
             m_ClipIndices = new int[m_Clips.Length];
             for (var i = 0; i < m_ClipNames.Length; ++i)
             {
                 m_ClipNames[i] = new GUIContent(m_Clips[i].name);
                 m_ClipIndices[i] = i;
+
+                // Set starting clip to default clip.
+                if (m_Clips[i].name == defaultClipName)
+                    m_ClipIndex = i;
             }
         }
 
@@ -222,13 +232,22 @@ namespace UnityEditor.U2D.Aseprite.Common
 
         static Bounds GetRenderableBounds(SpriteRenderer[] renderers)
         {
+            if (renderers.Length == 1)
+            {
+                var renderBound = renderers[0].bounds;
+                var localPos = renderers[0].transform.localPosition;
+                renderBound.center -= localPos;
+                return renderBound;
+            }
+            
             var bounds = new Bounds();
             foreach (var rendererComponents in renderers)
             {
+                var renderBound = rendererComponents.bounds;
                 if (bounds.extents == Vector3.zero)
-                    bounds = rendererComponents.bounds;
+                    bounds = renderBound;
                 else if(rendererComponents.enabled)
-                    bounds.Encapsulate(rendererComponents.bounds);
+                    bounds.Encapsulate(renderBound);
             }
             return bounds;
         }

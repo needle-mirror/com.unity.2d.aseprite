@@ -4,7 +4,10 @@ using UnityEngine;
 
 namespace UnityEditor.U2D.Aseprite
 {
-    internal enum ChunkTypes
+    /// <summary>
+    /// Aseprite Chunk Types.
+    /// </summary>
+    public enum ChunkTypes
     {
         None          = 0,
         OldPalette    = 0x0004,
@@ -23,22 +26,36 @@ namespace UnityEditor.U2D.Aseprite
         Tileset       = 0x2023
     }
     
-    internal class ChunkHeader
+    /// <summary>
+    /// The header of each chunk.
+    /// </summary>
+    public class ChunkHeader
     {
+        /// <summary>
+        /// The stride of the chunk header in bytes.
+        /// </summary>
         public const int stride = 6;
-        
+        /// <summary>
+        /// The size of the chunk in bytes.
+        /// </summary>
         public uint chunkSize { get; private set; }
+        /// <summary>
+        /// The type of the chunk.
+        /// </summary>
         public ChunkTypes chunkType { get; private set; }
 
-        public void Read(BinaryReader reader)
+        internal void Read(BinaryReader reader)
         {
             chunkSize = reader.ReadUInt32();
             chunkType = (ChunkTypes)reader.ReadUInt16();            
         }
     }    
     
-    internal abstract class BaseChunk
+    public abstract class BaseChunk : IDisposable
     {
+        /// <summary>
+        /// The type of the chunk.
+        /// </summary>
         public virtual ChunkTypes chunkType => ChunkTypes.None;
         
         protected readonly uint m_ChunkSize;
@@ -48,7 +65,7 @@ namespace UnityEditor.U2D.Aseprite
             m_ChunkSize = chunkSize;
         }
 
-        public bool Read(BinaryReader reader)
+        internal bool Read(BinaryReader reader)
         {
             var bytes = reader.ReadBytes((int)m_ChunkSize - ChunkHeader.stride);
             using var memoryStream = new MemoryStream(bytes);
@@ -68,5 +85,7 @@ namespace UnityEditor.U2D.Aseprite
         }
 
         protected abstract void InternalRead(BinaryReader reader);
+        
+        public virtual void Dispose() { }
     }
 }

@@ -5,19 +5,25 @@ using UnityEngine.Assertions;
 
 namespace UnityEditor.U2D.Aseprite
 {
-    internal enum CellTypes
+    /// <summary>
+    /// Aseprite cell types.
+    /// </summary>
+    public enum CellTypes
     {
         RawImage = 0,
-        LinkedCel = 1,
+        LinkedCell = 1,
         CompressedImage = 2,
         CompressedTileMap = 3
     }
     
-    internal class CellChunk : BaseChunk
+    /// <summary>
+    /// Parsed representation of an Aseprite Cell chunk.
+    /// </summary>
+    public class CellChunk : BaseChunk
     {
         public override ChunkTypes chunkType => ChunkTypes.Cell;
         
-        public CellChunk(uint chunkSize, ushort colorDepth, PaletteChunk paletteChunk, byte alphaPaletteEntry) : base(chunkSize)
+        internal CellChunk(uint chunkSize, ushort colorDepth, PaletteChunk paletteChunk, byte alphaPaletteEntry) : base(chunkSize)
         {
             m_ColorDepth = colorDepth;
             m_PaletteChunk = paletteChunk;
@@ -28,15 +34,46 @@ namespace UnityEditor.U2D.Aseprite
         readonly PaletteChunk m_PaletteChunk;
         readonly byte m_AlphaPaletteEntry;
         
+        /// <summary>
+        /// The layer index is a number to identify a layer in the sprite.
+        /// Layers are numbered in the same order as Layer Chunks appear in the file.
+        /// </summary>
         public ushort layerIndex { get; private set; }
+        /// <summary>
+        /// The Cell's X position on the canvas.
+        /// </summary>
         public short posX { get; private set; }
+        /// <summary>
+        /// The Cell's Y position on the canvas.
+        /// </summary>
         public short posY { get; private set; }
+        /// <summary>
+        /// Opacity level of the cell (0 = transparent, 255 = opaque).
+        /// </summary>
         public byte opacity { get; private set; }
+        /// <summary>
+        /// The type of cell. 
+        /// </summary>
         public CellTypes cellType { get; private set; }
+        /// <summary>
+        /// The frame index of the cell (Only available for Linked Cells). 
+        /// </summary>
         public int linkedToFrame { get; private set; } = -1;
+        /// <summary>
+        /// The width of the cell in pixels.
+        /// </summary>
         public ushort width { get; private set; }
+        /// <summary>
+        /// The height of the cell in pixels.
+        /// </summary>
         public ushort height { get; private set; }
+        /// <summary>
+        /// The image data of the cell.
+        /// </summary>
         public NativeArray<Color32> image { get; private set; }
+        /// <summary>
+        /// User data associated with the cell. 
+        /// </summary>
         public UserDataChunk dataChunk { get; set; }
 
         protected override void InternalRead(BinaryReader reader)
@@ -54,8 +91,6 @@ namespace UnityEditor.U2D.Aseprite
                 Assert.IsTrue(miscVal == 0);
             }
             
-            // 16 bytes read so far.
-
             if (cellType == CellTypes.RawImage)
             {
                 width = reader.ReadUInt16();
@@ -73,7 +108,7 @@ namespace UnityEditor.U2D.Aseprite
                     image = AsepriteUtilities.GenerateImageData(m_ColorDepth, imageData, m_PaletteChunk, m_AlphaPaletteEntry);
 
             }
-            else if (cellType == CellTypes.LinkedCel)
+            else if (cellType == CellTypes.LinkedCell)
             {
                 linkedToFrame = reader.ReadUInt16();
             }
@@ -120,6 +155,11 @@ namespace UnityEditor.U2D.Aseprite
                         tileIndex = binaryReader.ReadByte();
                 }
             }
+        }
+
+        public override void Dispose()
+        {
+            image.DisposeIfCreated();
         }
     }    
 }

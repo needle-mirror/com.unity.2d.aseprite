@@ -810,7 +810,17 @@ namespace UnityEditor.U2D.Aseprite
             if(m_RootVisualElement != null)
                 m_RootVisualElement.Clear();
         }
-        
+
+#if UNITY_2023_2_OR_NEWER
+        /// <summary>
+        /// Implementation of AssetImporterEditor.DiscardChanges.
+        /// </summary>
+        public override void DiscardChanges()
+        {
+            base.DiscardChanges();
+            m_TexturePlatformSettingsHelper = new TexturePlatformSettingsHelper(this);
+        } 
+#else
         /// <summary>
         /// Implementation of AssetImporterEditor.ResetValues.
         /// </summary>
@@ -818,7 +828,8 @@ namespace UnityEditor.U2D.Aseprite
         {
             base.ResetValues();
             m_TexturePlatformSettingsHelper = new TexturePlatformSettingsHelper(this);
-        }        
+        }    
+#endif    
 
         void ShowInspectorTab(int tab)
         {

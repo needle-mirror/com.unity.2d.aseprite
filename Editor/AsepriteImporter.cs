@@ -235,12 +235,13 @@ namespace UnityEditor.U2D.Aseprite
                     importData.importedTextureHeight = output.texture.height;
                     importData.importedTextureWidth = output.texture.width;
                 }
+
+                RegisterAssets(ctx, output);
+                OnPostAsepriteImport?.Invoke(new ImportEventArgs(this, ctx));
                 
                 outputImageBuffer.DisposeIfCreated();
                 foreach (var cellBuffer in cellBuffers)
                     cellBuffer.DisposeIfCreated();
-
-                RegisterAssets(ctx, output);
             }
             catch (Exception e)
             {
@@ -250,6 +251,7 @@ namespace UnityEditor.U2D.Aseprite
             {
                 m_PreviousAsepriteImporterSettings = m_AsepriteImporterSettings;
                 EditorUtility.SetDirty(this);
+                m_AsepriteFile?.Dispose();
             }
         }
 
@@ -260,10 +262,10 @@ namespace UnityEditor.U2D.Aseprite
             var nameGenerator = new UniqueNameGenerator();
             var layers = new List<Layer>();
             var parentTable = new Dictionary<int, Layer>();
-            for (var i = 0; i < frameData.Length; ++i)
+            for (var i = 0; i < frameData.Count; ++i)
             {
                 var chunks = frameData[i].chunks;
-                for (var m = 0; m < chunks.Length; ++m)
+                for (var m = 0; m < chunks.Count; ++m)
                 {
                     if (chunks[m].chunkType == ChunkTypes.Layer)
                     {
@@ -288,10 +290,10 @@ namespace UnityEditor.U2D.Aseprite
                 }
             }
             
-            for (var i = 0; i < frameData.Length; ++i)
+            for (var i = 0; i < frameData.Count; ++i)
             {
                 var chunks = frameData[i].chunks;
-                for (var m = 0; m < chunks.Length; ++m)
+                for (var m = 0; m < chunks.Count; ++m)
                 {
                     if (chunks[m].chunkType == ChunkTypes.Cell)
                     {
@@ -304,7 +306,7 @@ namespace UnityEditor.U2D.Aseprite
                         }
 
                         var cellType = cellChunk.cellType;
-                        if (cellType == CellTypes.LinkedCel)
+                        if (cellType == CellTypes.LinkedCell)
                         {
                             var cell = new LinkedCell();
                             cell.frameIndex = i;
@@ -469,7 +471,7 @@ namespace UnityEditor.U2D.Aseprite
         {
             var chunks = frameData.chunks;
             var eventStrings = new HashSet<string>();
-            for (var i = 0; i < chunks.Length; ++i)
+            for (var i = 0; i < chunks.Count; ++i)
             {
                 if (chunks[i].chunkType != ChunkTypes.Cell)
                     continue;
@@ -741,14 +743,6 @@ namespace UnityEditor.U2D.Aseprite
             
             for (var i = 0; i < clips.Length; ++i)
                 ctx.AddObjectToAsset(clips[i].name, clips[i]);
-            
-            // Refresh animation window
-            if (EditorWindow.HasOpenInstances<AnimationWindow>())
-            {
-                var window = EditorWindow.GetWindow<AnimationWindow>();
-                if (window != null)
-                    window.animationClip = null;
-            }
         }
 
         void RegisterAnimatorController(AssetImportContext ctx, string assetName)

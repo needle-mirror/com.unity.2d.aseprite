@@ -1,24 +1,56 @@
+using System.Collections.ObjectModel;
 using System.IO;
 using UnityEngine;
 
 namespace UnityEditor.U2D.Aseprite
 {
-    internal struct PaletteEntry
+    /// <summary>
+    /// Structure for an entry in the color palette.
+    /// </summary>
+    public struct PaletteEntry
     {
-        public string name;
-        public Color32 color;
+        internal PaletteEntry(string name, Color32 color)
+        {
+            this.name = name;
+            this.color = color;
+        }
+
+        /// <summary>
+        /// Name of the color.
+        /// </summary>
+        public string name { get; private set; }
+        /// <summary>
+        /// Color value.
+        /// </summary>
+        public Color32 color { get; private set; }
     }    
     
-    internal class PaletteChunk : BaseChunk
+    /// <summary>
+    /// Parsed representation of an Aseprite Palette chunk.
+    /// </summary>
+    public class PaletteChunk : BaseChunk
     {
         public override ChunkTypes chunkType => ChunkTypes.Palette;
         
+        /// <summary>
+        /// Number of entries in the palette.
+        /// </summary>
         public uint noOfEntries { get; private set; }
+        /// <summary>
+        /// Index of the first color to change.
+        /// </summary>
         public uint firstColorIndex { get; private set; }
+        /// <summary>
+        /// Index of the last color to change.
+        /// </summary>
         public uint lastColorIndex { get; private set; }
-        public PaletteEntry[] entries { get; private set; }
-        
-        public PaletteChunk(uint chunkSize) : base(chunkSize) { }
+        /// <summary>
+        /// Array of palette entries.
+        /// </summary>
+        public ReadOnlyCollection<PaletteEntry> entries => System.Array.AsReadOnly(m_Entries);
+        PaletteEntry[] m_Entries;
+
+        internal PaletteChunk(uint chunkSize) : base(chunkSize) { }
         
         protected override void InternalRead(BinaryReader reader)
         {
@@ -30,7 +62,7 @@ namespace UnityEditor.U2D.Aseprite
             for (var i = 0; i < 8; ++i)
                 reader.ReadByte();
 
-            entries = new PaletteEntry[noOfEntries];
+            m_Entries = new PaletteEntry[noOfEntries];
             for (var i = 0; i < noOfEntries; ++i)
             {
                 var entryFlag = reader.ReadUInt16();
@@ -39,12 +71,14 @@ namespace UnityEditor.U2D.Aseprite
                 var blue = reader.ReadByte();
                 var alpha = reader.ReadByte();
 
-                entries[i].color = new Color32(red, green, blue, alpha);
-                entries[i].name = "";
+                var color = new Color32(red, green, blue, alpha);
+                var name = "";
 
                 var hasName = entryFlag == 1;
                 if (hasName)
-                    entries[i].name = AsepriteUtilities.ReadString(reader);
+                    name = AsepriteUtilities.ReadString(reader);
+
+                m_Entries[i] = new PaletteEntry(name, color);
             }
         }
     }

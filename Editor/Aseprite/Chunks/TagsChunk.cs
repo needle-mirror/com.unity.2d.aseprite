@@ -1,8 +1,12 @@
+using System.Collections.ObjectModel;
 using System.IO;
 
 namespace UnityEditor.U2D.Aseprite
 {
-    internal enum LoopAnimationDirection
+    /// <summary>
+    /// The different loop animation directions.
+    /// </summary>
+    public enum LoopAnimationDirection
     {
         Forward = 0,
         Reverse = 1,
@@ -10,23 +14,56 @@ namespace UnityEditor.U2D.Aseprite
         PingPongReverse = 3,
     }    
     
-    internal class TagData
+    /// <summary>
+    /// Parsed representation of an Aseprite Tag data.
+    /// </summary>    
+    public class TagData
     {
+        /// <summary>
+        /// The starting frame of the tag.
+        /// </summary>
         public ushort fromFrame { get; set; }
+        /// <summary>
+        /// The ending frame of the tag.
+        /// </summary>
         public ushort toFrame { get; set; }
+        /// <summary>
+        /// The loop animation direction.
+        /// </summary>
         public LoopAnimationDirection loopDirection { get; set; }
+        /// <summary>
+        /// The number of times the animation should loop.<br />
+        /// 0 = Doesn't specify (plays infinite in UI, once on export, for ping-pong it plays once in each direction).<br />
+        /// 1 = Plays once (for ping-pong, it plays just in one direction).<br />
+        /// 2 = Plays twice (for ping-pong, it plays once in one direction, and once in reverse).<br />
+        /// n = Plays N times.
+        /// </summary>
         public ushort noOfRepeats { get; set; }
+        /// <summary>
+        /// The name of the tag.
+        /// </summary>
         public string name { get; set; }
     }    
     
-    internal class TagsChunk : BaseChunk
+    /// <summary>
+    /// Parsed representation of an Aseprite Tags chunk.
+    /// </summary>    
+    public class TagsChunk : BaseChunk
     {
         public override ChunkTypes chunkType => ChunkTypes.Tags;
 
+        /// <summary>
+        /// The number of tags in the chunk.
+        /// </summary>
         public int noOfTags { get; private set; }
-        public TagData[] tagData { get; private set; }
 
-        public TagsChunk(uint chunkSize) : base(chunkSize) { }
+        /// <summary>
+        /// The tag data stored in the chunk.
+        /// </summary>
+        public ReadOnlyCollection<TagData> tagData => System.Array.AsReadOnly(m_TagData);
+        TagData[] m_TagData;
+
+        internal TagsChunk(uint chunkSize) : base(chunkSize) { }
 
         protected override void InternalRead(BinaryReader reader)
         {
@@ -36,14 +73,14 @@ namespace UnityEditor.U2D.Aseprite
             for (var i = 0; i < 8; ++i)
                 reader.ReadByte();
 
-            tagData = new TagData[noOfTags];
+            m_TagData = new TagData[noOfTags];
             for (var i = 0; i < noOfTags; ++i)
             {
-                tagData[i] = new TagData();
-                tagData[i].fromFrame = reader.ReadUInt16();
-                tagData[i].toFrame = reader.ReadUInt16();
-                tagData[i].loopDirection = (LoopAnimationDirection) reader.ReadByte();
-                tagData[i].noOfRepeats = reader.ReadUInt16();
+                m_TagData[i] = new TagData();
+                m_TagData[i].fromFrame = reader.ReadUInt16();
+                m_TagData[i].toFrame = reader.ReadUInt16();
+                m_TagData[i].loopDirection = (LoopAnimationDirection) reader.ReadByte();
+                m_TagData[i].noOfRepeats = reader.ReadUInt16();
                 
                 // Not in use bytes
                 for (var m = 0; m < 6; ++m)
@@ -53,7 +90,7 @@ namespace UnityEditor.U2D.Aseprite
                     reader.ReadByte();
                 reader.ReadByte();
                 
-                tagData[i].name = AsepriteUtilities.ReadString(reader);
+                m_TagData[i].name = AsepriteUtilities.ReadString(reader);
             }
         }
     }

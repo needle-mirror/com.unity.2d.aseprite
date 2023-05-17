@@ -13,8 +13,7 @@ namespace UnityEditor.U2D.Aseprite
         {
             var cellsPerFrame = GetAllCellsPerFrame(in layers);
             var mergedCells = MergeCells(in cellsPerFrame, assetName);
-            CleanupOldCellBuffers(cellsPerFrame);
-            
+
             cellBuffers = new List<NativeArray<Color32>>();
             cellWidth = new List<int>();
             cellHeight = new List<int>();
@@ -118,18 +117,6 @@ namespace UnityEditor.U2D.Aseprite
             }
 
             return mergedCells;
-        }
-
-        static void CleanupOldCellBuffers(in Dictionary<int, List<Cell>> cellsPerFrame)
-        {
-            foreach (var cells in cellsPerFrame.Values)
-            {
-                for (var i = 0; i < cells.Count; ++i)
-                {
-                    var cellBuffer = cells[i].image;
-                    cellBuffer.DisposeIfCreated();
-                }
-            }
         }
 
         static void UpdateLayerList(in List<Cell> cells, string assetName, ref List<Layer> layers)

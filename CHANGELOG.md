@@ -1,4 +1,14 @@
 # Changelog
+
+## [1.0.0] - 2023-05-17
+### Added
+- Added a new event to the Aseprite Importer which is fired at the last import process step.
+- Made the Aseprite file property publicly available.
+- Made the Aseprite file parsing API publicly available.
+
+### Fixed
+- Fixed an issue where the Animation Window would no longer detect Animation Clips on a prefab. (DANB-458)
+
 ## [1.0.0-pre.4] - 2023-04-16
 ### Added
 - Added a property to set the padding within each generated SpriteRect.

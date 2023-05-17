@@ -1,10 +1,16 @@
 using System;
+using UnityEditor.AssetImporters;
 using UnityEngine;
 
 namespace UnityEditor.U2D.Aseprite
 {
     public partial class AsepriteImporter 
     {
+        /// <summary>
+        /// A parsed representation of the Aseprite file.
+        /// </summary>
+        public AsepriteFile asepriteFile => m_AsepriteFile;
+        
         /// <summary>
         /// How the file should be imported.
         /// </summary>
@@ -422,6 +428,34 @@ namespace UnityEditor.U2D.Aseprite
         {
             SetPlatformTextureSettings(setting);
             SetDirty();
-        }        
+        }
+        
+        /// <summary>
+        /// Structure used for Aseprite Import Events. 
+        /// </summary>
+        public readonly struct ImportEventArgs
+        {
+            /// <summary>
+            /// The Aseprite Importer that fired the event.
+            /// </summary>
+            public readonly AsepriteImporter importer;
+            /// <summary>
+            /// The Asset Import Context that is being used for the import.
+            /// </summary>
+            public readonly AssetImportContext context;
+
+            public ImportEventArgs(AsepriteImporter importer, AssetImportContext context)
+            {
+                this.importer = importer;
+                this.context = context;
+            }
+        }
+        
+        public delegate void AsepriteImportEventHandler(ImportEventArgs args);
+        
+        /// <summary>
+        /// Event that is fired at the last step of the Aseprite import process.
+        /// </summary>
+        public AsepriteImportEventHandler OnPostAsepriteImport { get; set; }        
     }
 }
