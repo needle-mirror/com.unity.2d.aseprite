@@ -1,4 +1,7 @@
 # Changelog
+## [1.0.1] - 2023-08-16
+### Changed
+- Fixed an issue where the background importer would act on files that were not Aseprite files.
 
 ## [1.0.0] - 2023-05-17
 ### Added

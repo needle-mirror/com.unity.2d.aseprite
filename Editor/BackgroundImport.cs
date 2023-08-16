@@ -14,16 +14,28 @@ namespace UnityEditor.U2D.Aseprite
         static bool s_HasChange = false;
         static bool s_LastSettingsValue = false;
 
-        static FileSystemWatcher s_Watcher = null;
+        static FileSystemWatcher s_WatcherAse = null;
+        static FileSystemWatcher s_WatcherAseprite = null;
 
-        static BackgroundImport()
+        [InitializeOnLoadMethod]
+        static void Setup()
         {
+            
+            Cleanup();
+            
             EditorApplication.update += OnUpdate;
             if (ImportSettings.backgroundImport)
                 SetupWatcher();
 
             s_LastSettingsValue = ImportSettings.backgroundImport;
         }
+        
+        static void Cleanup()
+        {
+            EditorApplication.update -= OnUpdate;
+            StopWatchers();
+        }
+
 
         static void OnUpdate()
         {
@@ -44,7 +56,7 @@ namespace UnityEditor.U2D.Aseprite
             if (ImportSettings.backgroundImport)
                 SetupWatcher();
             else
-                StopWatcher();
+                StopWatchers();
             
             s_LastSettingsValue = ImportSettings.backgroundImport;
         }
@@ -60,14 +72,23 @@ namespace UnityEditor.U2D.Aseprite
         static void MonitorDirectory(object obj)
         {
             var path = (string)obj;
+            s_WatcherAse = SetupWatcher(path, "*.ase");
+            s_WatcherAseprite = SetupWatcher(path, "*.aseprite");
+        }
 
-            s_Watcher = new FileSystemWatcher();
-            s_Watcher.Path = path;
-            s_Watcher.IncludeSubdirectories = true;
-            s_Watcher.Changed += OnChangeDetected;
-            s_Watcher.Created += OnChangeDetected;
-            s_Watcher.Renamed += OnChangeDetected;
-            s_Watcher.EnableRaisingEvents = true;
+        static FileSystemWatcher SetupWatcher(string path, string filter)
+        {
+            var watcher = new FileSystemWatcher()
+            {
+                Filter = filter,
+                Path = path,
+                IncludeSubdirectories = true,
+                EnableRaisingEvents = true
+            };
+            watcher.Changed += OnChangeDetected;
+            watcher.Created += OnChangeDetected;
+            watcher.Renamed += OnChangeDetected;
+            return watcher;
         }
         
         static void OnChangeDetected(object sender, FileSystemEventArgs e)
@@ -80,12 +101,17 @@ namespace UnityEditor.U2D.Aseprite
             s_HasChange = true;
         }
 
-        static void StopWatcher()
+        static void StopWatchers()
         {
-            if (s_Watcher != null)
+            if (s_WatcherAse != null)
             {
-                s_Watcher.Dispose();
-                s_Watcher = null;
+                s_WatcherAse.Dispose();
+                s_WatcherAse = null;
+            }
+            if (s_WatcherAseprite != null)
+            {
+                s_WatcherAseprite.Dispose();
+                s_WatcherAseprite = null;
             }
         }
 
