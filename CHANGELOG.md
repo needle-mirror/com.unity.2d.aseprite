@@ -1,5 +1,9 @@
 # Changelog
-## [1.0.1] - 2023-08-16
+## [1.1.0] - 2023-11-24
+### Added
+- Added a mosaic padding option to the importer editor.
+- Added Generate Physics Shape option to the importer editor.
+
 ### Changed
 - Fixed an issue where the background importer would act on files that were not Aseprite files.
 

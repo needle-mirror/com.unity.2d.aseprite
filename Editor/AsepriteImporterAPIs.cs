@@ -88,6 +88,19 @@ namespace UnityEditor.U2D.Aseprite
         }    
         
         /// <summary>
+        /// If enabled, generates a default physics shape from the outline of the Sprite/s when a physics shape has not been set in the Sprite Editor.
+        /// </summary>
+        public bool generatePhysicsShape
+        {
+            get => m_GeneratePhysicsShape;
+            set
+            {
+                m_GeneratePhysicsShape = value;
+                SetDirty();
+            }
+        }         
+        
+        /// <summary>
         /// The number of blank pixels to leave between the edge of the graphic and the mesh.
         /// </summary>
         public uint spriteExtrude
@@ -152,7 +165,16 @@ namespace UnityEditor.U2D.Aseprite
         }
         
         /// <summary>
-        /// Internal padding within each SpriteRect generated from the Aseprite file.
+        /// External padding between each SpriteRect, in pixels.
+        /// </summary>
+        public uint mosaicPadding
+        {
+            get => m_AsepriteImporterSettings.mosaicPadding;
+            set => m_AsepriteImporterSettings.mosaicPadding = value;
+        }          
+        
+        /// <summary>
+        /// Internal padding within each SpriteRect, in pixels.
         /// </summary>
         public uint spritePadding
         {

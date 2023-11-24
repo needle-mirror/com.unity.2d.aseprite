@@ -19,6 +19,7 @@ namespace UnityEditor.U2D.Aseprite
         const string k_PaddingElementUssClass = "PaddingElement";
         const string k_SubElementUssClass = "SubElement";
 
+        SerializedProperty m_GeneratePhysicsShape;
         SerializedProperty m_TextureType;
         SerializedProperty m_TextureShape;
         SerializedProperty m_SpriteMode;
@@ -59,6 +60,7 @@ namespace UnityEditor.U2D.Aseprite
         SerializedProperty m_DefaultPivotSpace;
         SerializedProperty m_DefaultPivotAlignment;
         SerializedProperty m_CustomPivotPosition;
+        SerializedProperty m_MosaicPadding;
         SerializedProperty m_SpritePadding;
 
         SerializedProperty m_GenerateModelPrefab;
@@ -127,7 +129,9 @@ namespace UnityEditor.U2D.Aseprite
 
         void CacheSerializedProperties()
         {
-           var textureImporterSettingsSP = serializedObject.FindProperty("m_TextureImporterSettings");
+            m_GeneratePhysicsShape = serializedObject.FindProperty("m_GeneratePhysicsShape");
+            
+            var textureImporterSettingsSP = serializedObject.FindProperty("m_TextureImporterSettings");
             m_TextureType = textureImporterSettingsSP.FindPropertyRelative("m_TextureType");
             m_TextureShape = textureImporterSettingsSP.FindPropertyRelative("m_TextureShape");
             m_ConvertToNormalMap = textureImporterSettingsSP.FindPropertyRelative("m_ConvertToNormalMap");
@@ -168,6 +172,7 @@ namespace UnityEditor.U2D.Aseprite
             m_DefaultPivotSpace = asepriteImporterSettings.FindPropertyRelative("m_DefaultPivotSpace");
             m_DefaultPivotAlignment = asepriteImporterSettings.FindPropertyRelative("m_DefaultPivotAlignment");
             m_CustomPivotPosition = asepriteImporterSettings.FindPropertyRelative("m_CustomPivotPosition");
+            m_MosaicPadding = asepriteImporterSettings.FindPropertyRelative("m_MosaicPadding");
             m_SpritePadding = asepriteImporterSettings.FindPropertyRelative("m_SpritePadding");
 
             m_GenerateModelPrefab = asepriteImporterSettings.FindPropertyRelative("m_GenerateModelPrefab");
@@ -272,6 +277,13 @@ namespace UnityEditor.U2D.Aseprite
                 serializedObject.ApplyModifiedProperties();
             });
             foldOut.Add(meshField);
+
+            var physicsShapeField = new PropertyField(m_GeneratePhysicsShape, styles.generatePhysicsShape.text)
+            {
+                tooltip = styles.generatePhysicsShape.tooltip
+            };
+            physicsShapeField.Bind(serializedObject);
+            foldOut.Add(physicsShapeField);
 
             SetupSpriteEditorButton(foldOut);
             
@@ -396,14 +408,30 @@ namespace UnityEditor.U2D.Aseprite
             customPivotField.EnableInClassList(k_HiddenElementUssClass, !shouldShow);
             customPivotField.schedule.Execute(x =>
             {
-                var shouldShow = (SpriteAlignment)pivotAlignmentPopup.index == SpriteAlignment.Custom;
-                if (customPivotField.visible != shouldShow)
+                var isShowing = (SpriteAlignment)pivotAlignmentPopup.index == SpriteAlignment.Custom;
+                if (customPivotField.visible != isShowing)
                 {
-                    customPivotField.visible = shouldShow;
-                    customPivotField.EnableInClassList(k_HiddenElementUssClass, !shouldShow);
+                    customPivotField.visible = isShowing;
+                    customPivotField.EnableInClassList(k_HiddenElementUssClass, !isShowing);
                 }
             }).Every(100);
             foldOut.Add(customPivotField);
+            
+            var mosaicPaddingField = new PropertyField(m_MosaicPadding, styles.mosaicPadding.text)
+            {
+                tooltip = styles.mosaicPadding.tooltip
+            };
+            mosaicPaddingField.Bind(serializedObject);
+            mosaicPaddingField.schedule.Execute(() =>
+            {
+                var isShowing = fileImportMode == FileImportModes.AnimatedSprite;
+                if (mosaicPaddingField.visible != isShowing)
+                {
+                    mosaicPaddingField.visible = isShowing;
+                    mosaicPaddingField.EnableInClassList(k_HiddenElementUssClass, !isShowing);
+                }
+            }).Every(100);
+            foldOut.Add(mosaicPaddingField);            
             
             var spritePaddingField = new PropertyField(m_SpritePadding, styles.spritePadding.text)
             {
@@ -412,11 +440,11 @@ namespace UnityEditor.U2D.Aseprite
             spritePaddingField.Bind(serializedObject);
             spritePaddingField.schedule.Execute(() =>
             {
-                var shouldShow = fileImportMode == FileImportModes.AnimatedSprite;
-                if (spritePaddingField.visible != shouldShow)
+                var isShowing = fileImportMode == FileImportModes.AnimatedSprite;
+                if (spritePaddingField.visible != isShowing)
                 {
-                    spritePaddingField.visible = shouldShow;
-                    spritePaddingField.EnableInClassList(k_HiddenElementUssClass, !shouldShow);
+                    spritePaddingField.visible = isShowing;
+                    spritePaddingField.EnableInClassList(k_HiddenElementUssClass, !isShowing);
                 }
             }).Every(100);
             foldOut.Add(spritePaddingField);
@@ -1419,6 +1447,7 @@ namespace UnityEditor.U2D.Aseprite
             public readonly GUIContent fileImportMode = new ("Import Mode", "How the file should be imported.");
             public readonly GUIContent spritePixelsPerUnit = new ("Pixels Per Unit", "How many pixels in the sprite correspond to one unit in the world.");
             public readonly GUIContent spriteMeshType = new ("Mesh Type", "Type of sprite mesh to generate.");
+            public readonly GUIContent generatePhysicsShape = new ("Generate Physics Shape", "Generates a default physics shape from the outline of the Sprite/s when a physics shape has not been set in the Sprite Editor.");
 
             public readonly GUIContent warpNotSupportWarning = new ("Graphics device doesn't support Repeat wrap mode on NPOT textures. Falling back to Clamp.");
             public readonly GUIContent anisoLevelLabel = new ("Aniso Level");
@@ -1464,7 +1493,8 @@ namespace UnityEditor.U2D.Aseprite
             public readonly GUIContent defaultPivotSpace = EditorGUIUtility.TrTextContent("Pivot Space", "Select which space the pivot should be calculated in.");
             public readonly GUIContent defaultPivotAlignment = EditorGUIUtility.TrTextContent("Pivot Alignment", "Select where the pivot should be located based on the Pivot Space.");
             public readonly GUIContent customPivotPosition = EditorGUIUtility.TrTextContent("Custom Pivot Position", "Input the normalized position of the Sprite pivots. The position will be calculated based on the Pivot Space.");
-            public readonly GUIContent spritePadding = EditorGUIUtility.TrTextContent("Sprite Padding", "Internal padding within each SpriteRect generated from the Aseprite file.");
+            public readonly GUIContent mosaicPadding = EditorGUIUtility.TrTextContent("Mosaic Padding", "External padding between each SpriteRect, in pixels.");
+            public readonly GUIContent spritePadding = EditorGUIUtility.TrTextContent("Sprite Padding", "Internal padding within each SpriteRect, in pixels.");
 
             public readonly List<string> spriteAlignmentOptions = new()
             {

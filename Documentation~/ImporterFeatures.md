@@ -55,6 +55,10 @@ The Aseprite Importer is available after you import a .ase/.aseprite file into y
       <td><strong><a href="https://docs.unity3d.com/Documentation/ScriptReference/SpriteMeshType.Tight.html">Tight</a></strong></td>
       <td>Unity generates a Mesh based on the outline of the Sprite. If the Sprite is smaller than 32 x 32 pixels, Unity always maps it onto a <b>Full Rect</b> quad Mesh, even if you select <b>Tight</b>.</td>
     </tr>
+    <tr>
+      <td rowspan="1"><strong>Generate Physics Shape</strong></td>
+      <td colspan="2">Generates a default physics shape from the outline of the Sprite/s when a physics shape has not been set in the Sprite Editor.</td>
+    </tr>
   </tbody>
 </table>
 
@@ -101,8 +105,12 @@ The Aseprite Importer is available after you import a .ase/.aseprite file into y
       <td colspan="2">How a Sprite's graphic rectangle is aligned with its pivot point. This property is set <b>Bottom</b> by default.</td>
     </tr>   
     <tr>
+      <td rowspan="1"><strong>Mosaic Padding</strong></td>
+      <td colspan="2">External padding between each SpriteRect. This property is set <b>4</b> pixels by default.</td>
+    </tr>  
+    <tr>
       <td rowspan="1"><strong>Sprite Padding</strong></td>
-      <td colspan="2">Internal padding within each SpriteRect generated from the Aseprite file. This property is set <b>0</b> by default.</td>
+      <td colspan="2">Internal padding within each SpriteRect. This property is set <b>0</b> pixels by default.</td>
     </tr>      
   </tbody>
 </table>

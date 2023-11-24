@@ -5,11 +5,18 @@ The Aseprite Importer is an Asset importer that imports [Aseprite's](https://www
 See [Aseprite Features](AsepriteFeatures) to read more about which features from Aseprite are supported by the importer. See [Importer Features](ImporterFeatures) to read more about which features the Aseprite Importer provides.
 
 ## Getting Started
-**Prerequisite:** Unity 2021.3.15f1 or newer
+If you are using any of the following Unity versions or newer, Aseprite Importer package comes preinstalled when creating a new 2D or 2D URP project.
 
+- Unity 2023.2.0a19
+- Unity 2023.1.0f1
+- Unity 2022.3.2f1
+- Unity 2021.3.28f1
+
+You can also manually add the Aseprite Importer package by:
 1. Open [Package Manager](https://docs.unity3d.com/Manual/upm-ui.html).
-2. Press the + button and select **Add package by name**.
-3. Enter `com.unity.2d.aseprite`.
-4. Press OK.
+2. Search for **Aseprite Importer**.
+3. Select **2D Aseprite Importer** and press the **install** button.
     - If you see a Burst popup saying that a new version of Burst has been installed, restart the editor.
-5. You are now ready to import `.ase` and `.aseprite` files into your project.
+4. You are now ready to import `.ase` and `.aseprite` files into your project.
+
+**Note:** You need to use **Unity 2021.3.15f1** or newer.

@@ -81,6 +81,7 @@ namespace UnityEditor.U2D.Aseprite
             defaultPivotAlignment = SpriteAlignment.BottomCenter,
             defaultPivotSpace = PivotSpaces.Canvas,
             customPivotPosition = new Vector2(0.5f, 0.5f),
+            mosaicPadding = 4,
             spritePadding = 0,
             generateAnimationClips = true,
             generateModelPrefab = true,
@@ -109,6 +110,7 @@ namespace UnityEditor.U2D.Aseprite
 
         [SerializeField] List<TextureImporterPlatformSettings> m_PlatformSettings = new List<TextureImporterPlatformSettings>();
         
+        [SerializeField] bool m_GeneratePhysicsShape = false;
         [SerializeField] SecondarySpriteTexture[] m_SecondarySpriteTextures;   
         [SerializeField] string m_SpritePackingTag = "";   
         
@@ -154,6 +156,16 @@ namespace UnityEditor.U2D.Aseprite
         {
             get => importData.textureActualHeight;
             private set => importData.textureActualHeight = value;
+        }
+
+        float definitionScale
+        {
+            get
+            {
+                var definitionScaleW = importData.importedTextureWidth / (float) textureActualWidth;
+                var definitionScaleH = importData.importedTextureHeight / (float) textureActualHeight;
+                return Mathf.Min(definitionScaleW, definitionScaleH);
+            }
         }
 
         internal SecondarySpriteTexture[] secondaryTextures
@@ -203,9 +215,9 @@ namespace UnityEditor.U2D.Aseprite
                     m_AsepriteLayers = UpdateLayers(in newLayers, in m_AsepriteLayers);
                 }
 
-                var padding = 4;
-                var spritePadding = m_AsepriteImporterSettings.fileImportMode == FileImportModes.AnimatedSprite ? m_AsepriteImporterSettings.spritePadding : 0;
-                ImagePacker.Pack(cellBuffers.ToArray(), cellWidth.ToArray(), cellHeight.ToArray(), padding, spritePadding, out var outputImageBuffer, out var packedTextureWidth, out var packedTextureHeight, out var spriteRects, out var uvTransforms);
+                var mosaicPad = m_AsepriteImporterSettings.mosaicPadding;
+                var spritePad = m_AsepriteImporterSettings.fileImportMode == FileImportModes.AnimatedSprite ? m_AsepriteImporterSettings.spritePadding : 0;
+                ImagePacker.Pack(cellBuffers.ToArray(), cellWidth.ToArray(), cellHeight.ToArray(), (int)mosaicPad, spritePad, out var outputImageBuffer, out var packedTextureWidth, out var packedTextureHeight, out var spriteRects, out var uvTransforms);
                 
                 var packOffsets = new Vector2Int[spriteRects.Length];
                 for (var i = 0; i < packOffsets.Length; ++i)
@@ -236,6 +248,9 @@ namespace UnityEditor.U2D.Aseprite
                     importData.importedTextureWidth = output.texture.width;
                 }
 
+                if (output.texture != null && output.sprites != null)
+                    SetPhysicsOutline(GetDataProvider<ISpritePhysicsOutlineDataProvider>(), output.sprites, definitionScale, pixelsPerUnit, m_GeneratePhysicsShape);
+                
                 RegisterAssets(ctx, output);
                 OnPostAsepriteImport?.Invoke(new ImportEventArgs(this, ctx));
                 
@@ -639,6 +654,54 @@ namespace UnityEditor.U2D.Aseprite
             spriteData.name = cell.name;
             spriteData.uvTransform = uvTransform;
             return spriteData;
+        }
+        
+       static void SetPhysicsOutline(ISpritePhysicsOutlineDataProvider physicsOutlineDataProvider, Sprite[] sprites, float definitionScale, float pixelsPerUnit, bool generatePhysicsShape)
+        {
+            foreach (var sprite in sprites)
+            {
+                var guid = sprite.GetSpriteID();
+                var outline = physicsOutlineDataProvider.GetOutlines(guid);
+
+                var outlineOffset = sprite.pivot;
+                var generated = false;
+                if ((outline == null || outline.Count == 0) && generatePhysicsShape)
+                {
+                    InternalEditorBridge.GenerateOutlineFromSprite(sprite, 0.25f, 200, true, out var defaultOutline);
+                    outline = new List<Vector2[]>(defaultOutline.Length);
+                    for (var i = 0; i < defaultOutline.Length; ++i)
+                    {
+                        outline.Add(defaultOutline[i]);
+                    }
+
+                    generated = true;
+                }
+                if (outline != null && outline.Count > 0)
+                {
+                    // Ensure that outlines are all valid.
+                    var validOutlineCount = 0;
+                    for (var i = 0; i < outline.Count; ++i)
+                        validOutlineCount += ( (outline[i].Length > 2) ? 1 : 0 );
+
+                    var index = 0;
+                    var convertedOutline = new Vector2[validOutlineCount][];
+                    var useScale = generated ? pixelsPerUnit * definitionScale : definitionScale;
+
+                    for (var i = 0; i < outline.Count; ++i)
+                    {
+                        if (outline[i].Length > 2)
+                        {
+                            convertedOutline[index] = new Vector2[outline[i].Length];
+                            for (var j = 0; j < outline[i].Length; ++j)
+                            {
+                                convertedOutline[index][j] = outline[i][j] * useScale + outlineOffset;
+                            }
+                            index++;
+                        }
+                    }
+                    sprite.OverridePhysicsShape(convertedOutline);
+                }
+            }
         }
 
         void RegisterAssets(AssetImportContext ctx, TextureGenerationOutput output)

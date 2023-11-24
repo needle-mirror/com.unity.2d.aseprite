@@ -47,6 +47,13 @@ namespace UnityEditor.U2D.Aseprite
             get => m_CustomPivotPosition;
             set => m_CustomPivotPosition = value;
         }
+        
+        [SerializeField] uint m_MosaicPadding;
+        public uint mosaicPadding
+        {
+            get => m_MosaicPadding;
+            set => m_MosaicPadding = value;
+        }
 
         [SerializeField] uint m_SpritePadding;
         public uint spritePadding
