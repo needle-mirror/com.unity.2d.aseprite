@@ -303,7 +303,7 @@ namespace UnityEditor.U2D.Aseprite
             };
             root.Add(spriteEditorBtn);
 
-            spriteEditorBtn.SetEnabled(m_ImporterTargets.Length == 1);
+            spriteEditorBtn.SetEnabled(CanOpenSpriteEditor());
             spriteEditorBtn.clicked += () =>
             {
                 if (HasModified())
@@ -326,6 +326,11 @@ namespace UnityEditor.U2D.Aseprite
                     InternalEditorBridge.ShowSpriteEditorWindow(this.assetTarget);
                 }
             };
+        }
+
+        bool CanOpenSpriteEditor()
+        {
+            return m_ImporterTargets.Length == 1 && m_ImporterTargets[0].textureActualWidth > 0;
         }
 
         void SetupLayerImportContainer(VisualElement root)

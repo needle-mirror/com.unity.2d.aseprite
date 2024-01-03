@@ -1,4 +1,10 @@
 # Changelog
+## [1.1.1] - 2024-01-03
+### Fixed
+- Fixed an issue where the Sprite Editor could be opened even though there were no valid texture to open it with.
+- Fixed an issue where the importer would not generate a square power of two texture for compressions which needs it (pvrtc).
+- Fixed an issue where changes to linked cells would not be taken into account when reimporting.
+
 ## [1.1.0] - 2023-11-24
 ### Added
 - Added a mosaic padding option to the importer editor.

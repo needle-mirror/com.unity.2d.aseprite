@@ -217,7 +217,9 @@ namespace UnityEditor.U2D.Aseprite
 
                 var mosaicPad = m_AsepriteImporterSettings.mosaicPadding;
                 var spritePad = m_AsepriteImporterSettings.fileImportMode == FileImportModes.AnimatedSprite ? m_AsepriteImporterSettings.spritePadding : 0;
-                ImagePacker.Pack(cellBuffers.ToArray(), cellWidth.ToArray(), cellHeight.ToArray(), (int)mosaicPad, spritePad, out var outputImageBuffer, out var packedTextureWidth, out var packedTextureHeight, out var spriteRects, out var uvTransforms);
+                
+                var requireSquarePotTexture = IsRequiringSquarePotTexture(ctx);
+                ImagePacker.Pack(cellBuffers.ToArray(), cellWidth.ToArray(), cellHeight.ToArray(), (int)mosaicPad, spritePad, requireSquarePotTexture, out var outputImageBuffer, out var packedTextureWidth, out var packedTextureHeight, out var spriteRects, out var uvTransforms);
                 
                 var packOffsets = new Vector2Int[spriteRects.Length];
                 for (var i = 0; i < packOffsets.Length; ++i)
@@ -453,6 +455,7 @@ namespace UnityEditor.U2D.Aseprite
                         }
                     }
                     finalLayer.cells = new List<Cell>(newCells);
+                    finalLayer.linkedCells = new List<LinkedCell>(newLayers[layerIndex].linkedCells);
                     finalLayer.index = newLayers[layerIndex].index;
                     finalLayer.opacity = newLayers[layerIndex].opacity;
                     finalLayer.parentIndex = newLayers[layerIndex].parentIndex;
@@ -460,6 +463,12 @@ namespace UnityEditor.U2D.Aseprite
             }
 
             return finalLayers;
+        }
+
+        bool IsRequiringSquarePotTexture(AssetImportContext ctx)
+        {
+            var platformSettings = TextureImporterUtilities.GetPlatformTextureSettings(ctx.selectedBuildTarget, in m_PlatformSettings);
+            return (TextureImporterFormat.PVRTC_RGB2 <= platformSettings.format && platformSettings.format <= TextureImporterFormat.PVRTC_RGBA4);            
         }
 
         static List<Frame> ExtractFrameData(in AsepriteFile file)

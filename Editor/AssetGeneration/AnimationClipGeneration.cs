@@ -53,6 +53,8 @@ namespace UnityEditor.U2D.Aseprite
                     continue;
                 
                 var layerGo = layerIdToGameObject[layer.index];
+                if (layerGo.GetComponent<SpriteRenderer>() == null)
+                    continue;
 
                 var spriteKeyframes = new List<ObjectReferenceKeyframe>();
                 
