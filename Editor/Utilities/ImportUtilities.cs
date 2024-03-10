@@ -201,15 +201,16 @@ namespace UnityEditor.U2D.Aseprite
                 controller.AddMotion(clips[i]);
         }
 
-        public static Vector2 CalculateCellPivot(RectInt cellRect, Vector2Int canvasSize, SpriteAlignment alignment, Vector2 customPivot)
+        public static Vector2 CalculateCellPivot(RectInt cellRect, uint spritePadding, Vector2Int canvasSize, SpriteAlignment alignment, Vector2 customPivot)
         {
             if (cellRect.width == 0 || cellRect.height == 0)
                 return Vector2.zero;
 
             var scaleX = canvasSize.x / (float)cellRect.width;
             var scaleY = canvasSize.y / (float)cellRect.height;
-
-            var pivot = new Vector2(cellRect.x / (float)canvasSize.x, cellRect.y / (float)canvasSize.y);
+            var halfSpritePadding = spritePadding / 2f;
+            
+            var pivot = new Vector2((cellRect.x - halfSpritePadding) / (float)canvasSize.x, (cellRect.y - halfSpritePadding) / (float)canvasSize.y);
             pivot *= -1f;
 
             Vector2 alignmentPos;

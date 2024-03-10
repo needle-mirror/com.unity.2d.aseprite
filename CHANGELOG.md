@@ -1,4 +1,10 @@
 # Changelog
+## [1.1.2] - 2024-03-10
+### Fixed
+- Fixed an issue where the Mosaic padding did not show up in Sprite Sheet import mode.
+- Fixed an issue where using Sprite Padding with individual import mode would misalign the GameObjects in the generated model prefab.
+- Fixed an issue where the Aseprite package would contest with the XR subsystem package over the InternalAPIEditorBridge.005. (UUM-49338)
+
 ## [1.1.1] - 2024-01-03
 ### Fixed
 - Fixed an issue where the Sprite Editor could be opened even though there were no valid texture to open it with.

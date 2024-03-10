@@ -603,7 +603,8 @@ namespace UnityEditor.U2D.Aseprite
                         var areSettingsUpdated = !m_PreviousAsepriteImporterSettings.IsDefault() &&
                                                  (pivotAlignment != m_PreviousAsepriteImporterSettings.defaultPivotAlignment ||
                                                   pivotSpace != m_PreviousAsepriteImporterSettings.defaultPivotSpace ||
-                                                  customPivotPosition != m_PreviousAsepriteImporterSettings.customPivotPosition);
+                                                  customPivotPosition != m_PreviousAsepriteImporterSettings.customPivotPosition ||
+                                                  spritePadding != m_PreviousAsepriteImporterSettings.spritePadding);
                         
                         // Update pivot if either the importer settings are updated
                         // or the source files rect has been changed (Only for Canvas, as rect position doesn't matter in local). 
@@ -618,7 +619,7 @@ namespace UnityEditor.U2D.Aseprite
                             cellRect.width = spriteRects[i].width;
                             cellRect.height = spriteRects[i].height;
                             
-                            spriteData.pivot = ImportUtilities.CalculateCellPivot(cellRect, m_CanvasSize, pivotAlignment, customPivotPosition);
+                            spriteData.pivot = ImportUtilities.CalculateCellPivot(cellRect, spritePadding, m_CanvasSize, pivotAlignment, customPivotPosition);
                         }
                         else if (pivotSpace == PivotSpaces.Local && areSettingsUpdated)
                         {
@@ -650,7 +651,7 @@ namespace UnityEditor.U2D.Aseprite
                 cellRect.width = spriteRect.width;
                 cellRect.height = spriteRect.height;
 
-                spriteData.pivot = ImportUtilities.CalculateCellPivot(cellRect, m_CanvasSize, pivotAlignment, customPivotPosition);
+                spriteData.pivot = ImportUtilities.CalculateCellPivot(cellRect, spritePadding, m_CanvasSize, pivotAlignment, customPivotPosition);
             }
             else
             {

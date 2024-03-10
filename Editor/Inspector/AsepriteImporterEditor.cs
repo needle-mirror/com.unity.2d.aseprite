@@ -427,15 +427,6 @@ namespace UnityEditor.U2D.Aseprite
                 tooltip = styles.mosaicPadding.tooltip
             };
             mosaicPaddingField.Bind(serializedObject);
-            mosaicPaddingField.schedule.Execute(() =>
-            {
-                var isShowing = fileImportMode == FileImportModes.AnimatedSprite;
-                if (mosaicPaddingField.visible != isShowing)
-                {
-                    mosaicPaddingField.visible = isShowing;
-                    mosaicPaddingField.EnableInClassList(k_HiddenElementUssClass, !isShowing);
-                }
-            }).Every(100);
             foldOut.Add(mosaicPaddingField);            
             
             var spritePaddingField = new PropertyField(m_SpritePadding, styles.spritePadding.text)
