@@ -84,6 +84,9 @@ namespace UnityEditor.U2D.Aseprite
 
         internal void Read(BinaryReader reader)
         {
+            var streamLength = reader.BaseStream.Length;
+            Assert.IsTrue(streamLength >= 128, "File is too small to be a valid Aseprite file.");
+            
             fileSize = reader.ReadUInt32();
             var misc0 = reader.ReadUInt16();
             noOfFrames = reader.ReadUInt16();

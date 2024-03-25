@@ -1,4 +1,10 @@
 # Changelog
+## [1.1.3] - 2024-03-25
+### Fixed
+- Fixed an issue where the importer would not parse palette data from the "old palette" chunks.
+- Fixed an issue where the Physics Shapes would not take the Sprite Rects into account, causing the outline to be wrongly offset.
+- Fixed an issue where .ase/.aseprite files containing z-index data would fail to import. (DANB-608)
+
 ## [1.1.2] - 2024-03-10
 ### Fixed
 - Fixed an issue where the Mosaic padding did not show up in Sprite Sheet import mode.

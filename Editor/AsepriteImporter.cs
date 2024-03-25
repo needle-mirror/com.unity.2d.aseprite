@@ -342,6 +342,7 @@ namespace UnityEditor.U2D.Aseprite
                             cell.opacity = cellChunk.opacity / 255f;
                             cell.blendMode = layer.blendMode;
                             cell.image = cellChunk.image;
+                            cell.additiveSortOrder = cellChunk.zIndex;
                             cell.name = layer.name;
                             cell.spriteId = GUID.Generate();
 
@@ -672,8 +673,7 @@ namespace UnityEditor.U2D.Aseprite
             {
                 var guid = sprite.GetSpriteID();
                 var outline = physicsOutlineDataProvider.GetOutlines(guid);
-
-                var outlineOffset = sprite.pivot;
+                
                 var generated = false;
                 if ((outline == null || outline.Count == 0) && generatePhysicsShape)
                 {
@@ -696,16 +696,18 @@ namespace UnityEditor.U2D.Aseprite
                     var index = 0;
                     var convertedOutline = new Vector2[validOutlineCount][];
                     var useScale = generated ? pixelsPerUnit * definitionScale : definitionScale;
-
+                    
+                    var outlineOffset = Vector2.zero;
+                    outlineOffset.x = sprite.rect.width * 0.5f;
+                    outlineOffset.y = sprite.rect.height * 0.5f;
+                    
                     for (var i = 0; i < outline.Count; ++i)
                     {
                         if (outline[i].Length > 2)
                         {
                             convertedOutline[index] = new Vector2[outline[i].Length];
                             for (var j = 0; j < outline[i].Length; ++j)
-                            {
-                                convertedOutline[index][j] = outline[i][j] * useScale + outlineOffset;
-                            }
+                                convertedOutline[index][j] = outline[i][j] * useScale  + outlineOffset;
                             index++;
                         }
                     }

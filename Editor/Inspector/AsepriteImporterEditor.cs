@@ -747,7 +747,7 @@ namespace UnityEditor.U2D.Aseprite
                 m_ModelPreviewer = null;
             }
 
-            if (gameObject != null)
+            if (gameObject != null && gameObject.GetComponent<Animator>() != null)
             {
                 var clips = GetAllAnimationClips(importerPath);
                 m_ModelPreviewer = new ModelPreviewer(gameObject, clips);

@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.IO;
 using Unity.Collections;
 using UnityEngine;
@@ -28,12 +29,12 @@ namespace UnityEditor.U2D.Aseprite
             return decompressedData;
         }
         
-        public static NativeArray<Color32> GenerateImageData(ushort colorDepth, byte[] imageData, PaletteChunk paletteChunk, byte alphaPaletteEntry)
+        public static NativeArray<Color32> GenerateImageData(ushort colorDepth, byte[] imageData, ReadOnlyCollection<PaletteEntry> paletteEntries, byte alphaPaletteEntry)
         {
             if (colorDepth == 32 || colorDepth == 16)
                 return ByteToColorArray(imageData, colorDepth);
             if (colorDepth == 8)
-                return ByteToColorArrayUsingPalette(imageData, paletteChunk, alphaPaletteEntry);
+                return ByteToColorArrayUsingPalette(imageData, paletteEntries, alphaPaletteEntry);
             return default;
         }        
         
@@ -67,10 +68,10 @@ namespace UnityEditor.U2D.Aseprite
             return image;
         }
 
-        static NativeArray<Color32> ByteToColorArrayUsingPalette(in byte[] data, PaletteChunk paletteChunk, byte alphaPaletteEntry)
+        static NativeArray<Color32> ByteToColorArrayUsingPalette(in byte[] data, ReadOnlyCollection<PaletteEntry> paletteEntries, byte alphaPaletteEntry)
         {
             NativeArray<Color32> image = default;
-            if (paletteChunk == null)
+            if (paletteEntries == null || paletteEntries.Count == 0)
                 return default;
 
             var alphaColor = new Color32(0, 0, 0, 0);
@@ -79,9 +80,9 @@ namespace UnityEditor.U2D.Aseprite
             for (var i = 0; i < image.Length; ++i)
             {
                 var paletteIndex = data[i];
-                if (paletteIndex != alphaPaletteEntry)
+                if (paletteIndex != alphaPaletteEntry && paletteIndex < paletteEntries.Count)
                 {
-                    var entry = paletteChunk.entries[paletteIndex];
+                    var entry = paletteEntries[paletteIndex];
                     image[i] = entry.color;
                 }
                 else

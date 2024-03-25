@@ -1,4 +1,5 @@
 using System;
+using System.Collections.ObjectModel;
 using System.IO;
 
 namespace UnityEditor.U2D.Aseprite
@@ -48,13 +49,13 @@ namespace UnityEditor.U2D.Aseprite
         public string tileSetName { get; private set; }
 
         readonly ushort m_ColorDepth;
-        readonly PaletteChunk m_PaletteChunk;
+        readonly ReadOnlyCollection<PaletteEntry> m_PaletteEntries;
         readonly byte m_AlphaPaletteEntry;
 
-        internal TilesetChunk(uint chunkSize, ushort colorDepth, PaletteChunk paletteChunk, byte alphaPaletteEntry) : base(chunkSize)
+        internal TilesetChunk(uint chunkSize, ushort colorDepth, ReadOnlyCollection<PaletteEntry> paletteEntries, byte alphaPaletteEntry) : base(chunkSize)
         {
             m_ColorDepth = colorDepth;
-            m_PaletteChunk = paletteChunk;
+            m_PaletteEntries = paletteEntries;
             m_AlphaPaletteEntry = alphaPaletteEntry;
         }
 
@@ -82,7 +83,7 @@ namespace UnityEditor.U2D.Aseprite
                 var compressedDataLength = (int)reader.ReadUInt32();
                 var decompressedData = AsepriteUtilities.ReadAndDecompressedData(reader, compressedDataLength);
                 
-                var image = AsepriteUtilities.GenerateImageData(m_ColorDepth, decompressedData, m_PaletteChunk, m_AlphaPaletteEntry);
+                var image = AsepriteUtilities.GenerateImageData(m_ColorDepth, decompressedData, m_PaletteEntries, m_AlphaPaletteEntry);
                 
                 // Disposing for now.
                 image.Dispose();

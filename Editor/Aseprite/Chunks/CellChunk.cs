@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.IO;
 using Unity.Collections;
 using UnityEngine;
@@ -23,15 +24,15 @@ namespace UnityEditor.U2D.Aseprite
     {
         public override ChunkTypes chunkType => ChunkTypes.Cell;
         
-        internal CellChunk(uint chunkSize, ushort colorDepth, PaletteChunk paletteChunk, byte alphaPaletteEntry) : base(chunkSize)
+        internal CellChunk(uint chunkSize, ushort colorDepth, ReadOnlyCollection<PaletteEntry> paletteEntries, byte alphaPaletteEntry) : base(chunkSize)
         {
             m_ColorDepth = colorDepth;
-            m_PaletteChunk = paletteChunk;
+            m_PaletteEntries = paletteEntries;
             m_AlphaPaletteEntry = alphaPaletteEntry;
         }
 
         readonly ushort m_ColorDepth;
-        readonly PaletteChunk m_PaletteChunk;
+        readonly ReadOnlyCollection<PaletteEntry> m_PaletteEntries;
         readonly byte m_AlphaPaletteEntry;
         
         /// <summary>
@@ -55,6 +56,10 @@ namespace UnityEditor.U2D.Aseprite
         /// The type of cell. 
         /// </summary>
         public CellTypes cellType { get; private set; }
+        /// <summary>
+        /// A cell's draw order. Higher number means towards the front.
+        /// </summary>
+        internal short zIndex { get; private set; }
         /// <summary>
         /// The frame index of the cell (Only available for Linked Cells). 
         /// </summary>
@@ -83,9 +88,10 @@ namespace UnityEditor.U2D.Aseprite
             posY = reader.ReadInt16();
             opacity = reader.ReadByte();
             cellType = (CellTypes)reader.ReadUInt16();
+            zIndex = reader.ReadInt16();
             
             // Not in use bytes
-            for (var i = 0; i < 7; ++i)
+            for (var i = 0; i < 5; ++i)
             {
                 var miscVal = reader.ReadByte();
                 Assert.IsTrue(miscVal == 0);
@@ -105,7 +111,7 @@ namespace UnityEditor.U2D.Aseprite
                     imageData = reader.ReadBytes(width * height);
 
                 if (imageData != null)
-                    image = AsepriteUtilities.GenerateImageData(m_ColorDepth, imageData, m_PaletteChunk, m_AlphaPaletteEntry);
+                    image = AsepriteUtilities.GenerateImageData(m_ColorDepth, imageData, m_PaletteEntries, m_AlphaPaletteEntry);
 
             }
             else if (cellType == CellTypes.LinkedCell)
@@ -120,7 +126,7 @@ namespace UnityEditor.U2D.Aseprite
                 var dataSize = (int)m_ChunkSize - ChunkHeader.stride - 20;
                 var decompressedData = AsepriteUtilities.ReadAndDecompressedData(reader, dataSize);
                 
-                image = AsepriteUtilities.GenerateImageData(m_ColorDepth, decompressedData, m_PaletteChunk, m_AlphaPaletteEntry);
+                image = AsepriteUtilities.GenerateImageData(m_ColorDepth, decompressedData, m_PaletteEntries, m_AlphaPaletteEntry);
             }
             else if (cellType == CellTypes.CompressedTileMap) // Not implemented yet.
             {

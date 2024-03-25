@@ -27,18 +27,32 @@ namespace UnityEditor.U2D.Aseprite
                 tags.Add(tag);
             }
             
-            var clips = new AnimationClip[tags.Count];
+            var clips = new List<AnimationClip>(tags.Count);
+            var animationNames = new HashSet<string>(tags.Count);
             for (var i = 0; i < tags.Count; ++i)
-                clips[i] = CreateClip(tags[i], layers, frames, sprites, layerIdToGameObject);
+            {
+                var clipName = tags[i].name;
+                if (animationNames.Contains(clipName))
+                {
+                    var nameIndex = 0;
+                    while(animationNames.Contains(clipName))
+                        clipName = $"{tags[i].name}_{nameIndex++}";
+                    
+                    Debug.LogWarning($"The animation clip name {tags[i].name} is already in use. Renaming to {clipName}.");
+                }
 
-            return clips;
+                clips.Add(CreateClip(tags[i], clipName, layers, frames, sprites, layerIdToGameObject));
+                animationNames.Add(clipName);
+            }
+
+            return clips.ToArray();
         }
 
-        static AnimationClip CreateClip(Tag tag, List<Layer> layers, List<Frame> frames, Sprite[] sprites, Dictionary<int, GameObject> layerIdToGameObject)
+        static AnimationClip CreateClip(Tag tag, string clipName, List<Layer> layers, IReadOnlyList<Frame> frames, Sprite[] sprites, Dictionary<int, GameObject> layerIdToGameObject)
         {
             var animationClip = new AnimationClip()
             {
-                name = tag.name,
+                name = clipName,
                 frameRate = 100f
             };
 
@@ -56,32 +70,34 @@ namespace UnityEditor.U2D.Aseprite
                 if (layerGo.GetComponent<SpriteRenderer>() == null)
                     continue;
 
+                var layerTransform = layerGo.transform;
                 var spriteKeyframes = new List<ObjectReferenceKeyframe>();
                 
                 var cells = layer.cells;
-                var activeFrames = AddCellsToClip(in cells, in tag, in sprites, in frames, ref spriteKeyframes);
+                var activeFrames = AddCellsToClip(cells, in tag, in sprites, frames, ref spriteKeyframes);
 
                 var linkedCells = layer.linkedCells;
-                activeFrames.UnionWith(AddLinkedCellsToClip(in linkedCells, in cells, in tag, in sprites, in frames, ref spriteKeyframes));
+                activeFrames.UnionWith(AddLinkedCellsToClip(linkedCells, in cells, in tag, in sprites, frames, ref spriteKeyframes));
 
                 spriteKeyframes.Sort((x, y) => x.time.CompareTo(y.time));
                 DuplicateLastFrame(ref spriteKeyframes, frames[tag.toFrame - 1]);
 
-                var path = GetGameObjectPath(layerGo.transform);
+                var path = GetTransformPath(layerTransform);
                 var spriteBinding = EditorCurveBinding.PPtrCurve(path, typeof(SpriteRenderer), "m_Sprite");
                 AnimationUtility.SetObjectReferenceCurve(animationClip, spriteBinding, spriteKeyframes.ToArray());
 
-                AddEnabledKeyframes(layerGo, tag, in frames, in activeFrames, in animationClip);
-                AddAnimationEvents(in tag, in frames, animationClip);
+                AddEnabledKeyframes(layerTransform, tag, frames, in activeFrames, in animationClip);
+                AddSortOrderKeyframes(layerTransform, layer, tag, frames, in cells, in animationClip);
+                AddAnimationEvents(in tag, frames, animationClip);
             }
 
             return animationClip;
         }
 
-        static HashSet<int> AddCellsToClip(in List<Cell> cells, in Tag tag, in Sprite[] sprites, in List<Frame> frames, ref List<ObjectReferenceKeyframe> keyFrames)
+        static HashSet<int> AddCellsToClip(IReadOnlyList<Cell> cells, in Tag tag, in Sprite[] sprites, IReadOnlyList<Frame> frames, ref List<ObjectReferenceKeyframe> keyFrames)
         {
             var activeFrames = new HashSet<int>();
-            var startTime = GetTimeFromFrame(in frames, tag.fromFrame);
+            var startTime = GetTimeFromFrame(frames, tag.fromFrame);
             for (var i = 0; i < cells.Count; ++i)
             {
                 var cell = cells[i];
@@ -94,7 +110,7 @@ namespace UnityEditor.U2D.Aseprite
                     continue;
                     
                 var keyframe = new ObjectReferenceKeyframe();
-                var time = GetTimeFromFrame(in frames, cell.frameIndex);
+                var time = GetTimeFromFrame(frames, cell.frameIndex);
                 keyframe.time = time - startTime;
                 keyframe.value = sprite;
                 keyFrames.Add(keyframe);
@@ -104,10 +120,10 @@ namespace UnityEditor.U2D.Aseprite
             return activeFrames;
         }
 
-        static HashSet<int> AddLinkedCellsToClip(in List<LinkedCell> linkedCells, in List<Cell> cells, in Tag tag, in Sprite[] sprites, in List<Frame> frames, ref List<ObjectReferenceKeyframe> keyFrames)
+        static HashSet<int> AddLinkedCellsToClip(IReadOnlyList<LinkedCell> linkedCells, in List<Cell> cells, in Tag tag, in Sprite[] sprites, IReadOnlyList<Frame> frames, ref List<ObjectReferenceKeyframe> keyFrames)
         {
             var activeFrames = new HashSet<int>();
-            var startTime = GetTimeFromFrame(in frames, tag.fromFrame);
+            var startTime = GetTimeFromFrame(frames, tag.fromFrame);
             for (var i = 0; i < linkedCells.Count; ++i)
             {
                 var linkedCell = linkedCells[i];
@@ -125,7 +141,7 @@ namespace UnityEditor.U2D.Aseprite
                     continue;  
                     
                 var keyframe = new ObjectReferenceKeyframe();
-                var time = GetTimeFromFrame(in frames, linkedCell.frameIndex);
+                var time = GetTimeFromFrame(frames, linkedCell.frameIndex);
                 keyframe.time = time - startTime;
                 keyframe.value = sprite;
                 keyFrames.Add(keyframe);  
@@ -147,7 +163,7 @@ namespace UnityEditor.U2D.Aseprite
             keyFrames.Add(duplicatedFrame); 
         }
 
-        static string GetGameObjectPath(Transform transform)
+        static string GetTransformPath(Transform transform)
         {
             var path = transform.name;
             if (transform.name == k_RootName)
@@ -155,25 +171,25 @@ namespace UnityEditor.U2D.Aseprite
             if (transform.parent.name == k_RootName)
                 return path;
             
-            var parentPath = GetGameObjectPath(transform.parent) + "/";
+            var parentPath = GetTransformPath(transform.parent) + "/";
             path = path.Insert(0, parentPath);
             return path;
         }
 
-        static void AddEnabledKeyframes(GameObject layerGo, Tag tag, in List<Frame> frames, in HashSet<int> activeFrames, in AnimationClip animationClip)
+        static void AddEnabledKeyframes(Transform layerTransform, Tag tag, IReadOnlyList<Frame> frames, in HashSet<int> activeFrames, in AnimationClip animationClip)
         {
             if (activeFrames.Count == tag.noOfFrames)
                 return;
             
-            var path = GetGameObjectPath(layerGo.transform);
+            var path = GetTransformPath(layerTransform);
             var enabledBinding = EditorCurveBinding.FloatCurve(path, typeof(SpriteRenderer), "m_Enabled");
             var enabledKeyframes = new List<Keyframe>();
 
             var disabledPrevFrame = false;
-            var startTime = GetTimeFromFrame(in frames, tag.fromFrame);
+            var startTime = GetTimeFromFrame(frames, tag.fromFrame);
             for (var frameIndex = tag.fromFrame; frameIndex < tag.toFrame; ++frameIndex)
             {
-                var time = GetTimeFromFrame(in frames, frameIndex);
+                var time = GetTimeFromFrame(frames, frameIndex);
                 time -= startTime;
 
                 if (!activeFrames.Contains(frameIndex) && !disabledPrevFrame)
@@ -204,7 +220,52 @@ namespace UnityEditor.U2D.Aseprite
             AnimationUtility.SetEditorCurve(animationClip, enabledBinding, animCurve);
         }
 
-        static float GetTimeFromFrame(in List<Frame> frames, int frameIndex)
+        static void AddSortOrderKeyframes(Transform layerTransform, Layer layer, Tag tag, IReadOnlyList<Frame> frames, in List<Cell> cells, in AnimationClip animationClip)
+        {
+            var layerGo = layerTransform.gameObject;
+            var spriteRenderer = layerGo.GetComponent<SpriteRenderer>();
+            if (spriteRenderer == null)
+                return;
+            
+            var sortOrderKeyframes = new List<Keyframe>();
+            var path = GetTransformPath(layerTransform);
+            var sortOrderBinding = EditorCurveBinding.FloatCurve(path, typeof(SpriteRenderer), "m_SortingOrder");
+            
+            var startTime = GetTimeFromFrame(frames, tag.fromFrame);
+            var hasKeyOnFirstFrame = false;
+            for (var i = 0; i < cells.Count; ++i)
+            {
+                var cell = cells[i];
+                if (cell.frameIndex < tag.fromFrame ||
+                    cell.frameIndex >= tag.toFrame)
+                    continue;
+
+                var additiveSortOrder = cell.additiveSortOrder;
+                if (additiveSortOrder == 0)
+                    continue;
+                
+                if (cell.frameIndex == tag.fromFrame)
+                    hasKeyOnFirstFrame = true;
+                
+                var time = GetTimeFromFrame(frames, cell.frameIndex) - startTime;
+                var keyframe = GetIntKeyFrame(layer.index + additiveSortOrder, time);
+                sortOrderKeyframes.Add(keyframe);
+            }
+            
+            if (sortOrderKeyframes.Count == 0)
+                return;
+
+            if (!hasKeyOnFirstFrame)
+            {
+                var firstFrame = GetIntKeyFrame(layer.index, 0f);
+                sortOrderKeyframes.Add(firstFrame);
+            }
+
+            var animCurve = new AnimationCurve(sortOrderKeyframes.ToArray());
+            AnimationUtility.SetEditorCurve(animationClip, sortOrderBinding, animCurve);
+        }
+
+        static float GetTimeFromFrame(IReadOnlyList<Frame> frames, int frameIndex)
         {
             var totalMs = 0;
             for (var i = 0; i < frameIndex; ++i)
@@ -224,11 +285,21 @@ namespace UnityEditor.U2D.Aseprite
             return keyframe;
         }
 
-        static void AddAnimationEvents(in Tag tag, in List<Frame> frames, AnimationClip animationClip)
+        static Keyframe GetIntKeyFrame(int value, float time)
+        {
+            var keyframe = new Keyframe();
+            keyframe.value = value;
+            keyframe.time = time;
+            keyframe.inTangent = float.PositiveInfinity;
+            keyframe.outTangent = float.PositiveInfinity;
+            return keyframe;            
+        }
+
+        static void AddAnimationEvents(in Tag tag, IReadOnlyList<Frame> frames, AnimationClip animationClip)
         {
             var events = new List<AnimationEvent>();
             
-            var startTime = GetTimeFromFrame(in frames, tag.fromFrame);
+            var startTime = GetTimeFromFrame(frames, tag.fromFrame);
             for (var frameIndex = tag.fromFrame; frameIndex < tag.toFrame; ++frameIndex)
             {
                 var frame = frames[frameIndex];

@@ -17,6 +17,13 @@ namespace UnityEditor.U2D.Aseprite
         /// <returns>Returns a parsed representation of the file.</returns>
         public static AsepriteFile ReadFile(string assetPath)
         {
+            var doesFileExist = File.Exists(assetPath);
+            if (!doesFileExist)
+            {
+                Debug.LogError($"File does not exist at path: {assetPath}");
+                return null;
+            }
+            
             var fileStream = new FileStream(assetPath, FileMode.Open, FileAccess.Read);
             var binaryReader = new BinaryReader(fileStream);
 
@@ -42,7 +49,7 @@ namespace UnityEditor.U2D.Aseprite
 
         static void ReadFrames(in BinaryReader reader, ref AsepriteFile file)
         {
-            PaletteChunk paletteChunk = null;
+            var paletteProvider = default(IPaletteProvider);
             
             for (var i = 0; i < file.noOfFrames; ++i)
             {
@@ -60,7 +67,7 @@ namespace UnityEditor.U2D.Aseprite
                     switch (chunkHeader.chunkType)
                     {
                         case ChunkTypes.Cell:
-                            chunk = new CellChunk(chunkHeader.chunkSize, file.colorDepth, paletteChunk, file.alphaPaletteEntry);
+                            chunk = new CellChunk(chunkHeader.chunkSize, file.colorDepth, paletteProvider?.entries, file.alphaPaletteEntry);
                             break;
                         case ChunkTypes.CellExtra:
                             chunk = new CellExtra(chunkHeader.chunkSize);
@@ -79,13 +86,14 @@ namespace UnityEditor.U2D.Aseprite
                             break;                        
                         case ChunkTypes.OldPalette:
                             chunk = new OldPaletteChunk(chunkHeader.chunkSize);
+                            paletteProvider = ((IPaletteProvider)chunk);
                             break;
                         case ChunkTypes.OldPalette2:
                             chunk = new OldPaletteChunk2(chunkHeader.chunkSize);
                             break;
                         case ChunkTypes.Palette:
                             chunk = new PaletteChunk(chunkHeader.chunkSize);
-                            paletteChunk = chunk as PaletteChunk;
+                            paletteProvider = ((IPaletteProvider)chunk);
                             break;
                         case ChunkTypes.Path:
                             chunk = new PathChunk(chunkHeader.chunkSize);
@@ -97,7 +105,7 @@ namespace UnityEditor.U2D.Aseprite
                             chunk = new TagsChunk(chunkHeader.chunkSize);
                             break;
                         case ChunkTypes.Tileset:
-                            chunk = new TilesetChunk(chunkHeader.chunkSize, file.colorDepth, paletteChunk, file.alphaPaletteEntry);
+                            chunk = new TilesetChunk(chunkHeader.chunkSize, file.colorDepth, paletteProvider?.entries, file.alphaPaletteEntry);
                             break;
                         case ChunkTypes.UserData:
                             chunk = new UserDataChunk(chunkHeader.chunkSize);

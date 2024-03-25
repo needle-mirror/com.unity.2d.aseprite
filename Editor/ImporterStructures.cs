@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Unity.Collections;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace UnityEditor.U2D.Aseprite
 {
@@ -80,6 +81,7 @@ namespace UnityEditor.U2D.Aseprite
     {
         [SerializeField] string m_Name;
         [SerializeField] int m_FrameIndex;
+        [SerializeField] int m_AdditiveSortOrder;
         [SerializeField] RectInt m_CellRect;
         [SerializeField] string m_SpriteId;
 
@@ -97,6 +99,11 @@ namespace UnityEditor.U2D.Aseprite
         {
             get => m_FrameIndex;
             set => m_FrameIndex = value;
+        }
+        public int additiveSortOrder
+        {
+            get => m_AdditiveSortOrder;
+            set => m_AdditiveSortOrder = value;
         }
         public RectInt cellRect
         {

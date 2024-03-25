@@ -85,7 +85,7 @@ namespace UnityEditor.U2D.Aseprite
                 
             var sr = gameObject.AddComponent<SpriteRenderer>();
             sr.sprite = sprite;
-            sr.sortingOrder = layer.index;
+            sr.sortingOrder = layer.index + firstCell.additiveSortOrder;
                 
 #if ENABLE_URP
                 if (importSettings.addShadowCasters)

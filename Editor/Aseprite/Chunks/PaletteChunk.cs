@@ -28,7 +28,7 @@ namespace UnityEditor.U2D.Aseprite
     /// <summary>
     /// Parsed representation of an Aseprite Palette chunk.
     /// </summary>
-    public class PaletteChunk : BaseChunk
+    public class PaletteChunk : BaseChunk, IPaletteProvider
     {
         public override ChunkTypes chunkType => ChunkTypes.Palette;
         
