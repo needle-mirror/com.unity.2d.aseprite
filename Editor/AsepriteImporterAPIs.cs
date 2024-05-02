@@ -4,13 +4,13 @@ using UnityEngine;
 
 namespace UnityEditor.U2D.Aseprite
 {
-    public partial class AsepriteImporter 
+    public partial class AsepriteImporter
     {
         /// <summary>
         /// A parsed representation of the Aseprite file.
         /// </summary>
         public AsepriteFile asepriteFile => m_AsepriteFile;
-        
+
         /// <summary>
         /// How the file should be imported.
         /// </summary>
@@ -18,8 +18,8 @@ namespace UnityEditor.U2D.Aseprite
         {
             get => m_AsepriteImporterSettings.fileImportMode;
             set => m_AsepriteImporterSettings.fileImportMode = value;
-        }        
-        
+        }
+
         /// <summary>
         /// Which type of texture are we dealing with here.
         /// </summary>
@@ -38,8 +38,8 @@ namespace UnityEditor.U2D.Aseprite
                 else
                     throw new System.ArgumentException("Invalid value. Valid values are TextureImporterType.Sprite or TextureImporterType.Default");
             }
-        }    
-        
+        }
+
         /// <summary>
         /// Selects Single or Manual import mode for Sprite textures.
         /// </summary>
@@ -58,8 +58,8 @@ namespace UnityEditor.U2D.Aseprite
                 else
                     throw new System.ArgumentException("Invalid value. Valid values are SpriteImportMode.Multiple or SpriteImportMode.Single");
             }
-        }        
-        
+        }
+
         /// <summary>
         /// The number of pixels in the sprite that correspond to one unit in world space.
         /// </summary>
@@ -72,8 +72,8 @@ namespace UnityEditor.U2D.Aseprite
                 m_TextureImporterSettings.spritePixelsPerUnit = newPpu;
                 SetDirty();
             }
-        }        
-        
+        }
+
         /// <summary>
         /// Sets the type of mesh to ge generated for each Sprites.
         /// </summary>
@@ -85,8 +85,8 @@ namespace UnityEditor.U2D.Aseprite
                 m_TextureImporterSettings.spriteMeshType = value;
                 SetDirty();
             }
-        }    
-        
+        }
+
         /// <summary>
         /// If enabled, generates a default physics shape from the outline of the Sprite/s when a physics shape has not been set in the Sprite Editor.
         /// </summary>
@@ -98,8 +98,8 @@ namespace UnityEditor.U2D.Aseprite
                 m_GeneratePhysicsShape = value;
                 SetDirty();
             }
-        }         
-        
+        }
+
         /// <summary>
         /// The number of blank pixels to leave between the edge of the graphic and the mesh.
         /// </summary>
@@ -112,7 +112,7 @@ namespace UnityEditor.U2D.Aseprite
                 SetDirty();
             }
         }
-        
+
         /// <summary>
         /// The canvas size of the source file.
         /// </summary>
@@ -126,7 +126,7 @@ namespace UnityEditor.U2D.Aseprite
             get => m_AsepriteImporterSettings.importHiddenLayers;
             set => m_AsepriteImporterSettings.importHiddenLayers = value;
         }
-        
+
         /// <summary>
         /// The import mode for all layers in the file.
         /// </summary>
@@ -153,8 +153,8 @@ namespace UnityEditor.U2D.Aseprite
             get => m_AsepriteImporterSettings.defaultPivotAlignment;
             set => m_AsepriteImporterSettings.defaultPivotAlignment = value;
         }
-        
-        
+
+
         /// <summary>
         /// Normalized position of the custom pivot.
         /// </summary>
@@ -163,7 +163,7 @@ namespace UnityEditor.U2D.Aseprite
             get => m_AsepriteImporterSettings.customPivotPosition;
             set => m_AsepriteImporterSettings.customPivotPosition = value;
         }
-        
+
         /// <summary>
         /// External padding between each SpriteRect, in pixels.
         /// </summary>
@@ -171,8 +171,8 @@ namespace UnityEditor.U2D.Aseprite
         {
             get => m_AsepriteImporterSettings.mosaicPadding;
             set => m_AsepriteImporterSettings.mosaicPadding = value;
-        }          
-        
+        }
+
         /// <summary>
         /// Internal padding within each SpriteRect, in pixels.
         /// </summary>
@@ -180,7 +180,7 @@ namespace UnityEditor.U2D.Aseprite
         {
             get => m_AsepriteImporterSettings.spritePadding;
             set => m_AsepriteImporterSettings.spritePadding = value;
-        }        
+        }
 
         /// <summary>
         /// Generate a Model Prefab based on the layers of the source asset.
@@ -190,9 +190,9 @@ namespace UnityEditor.U2D.Aseprite
             get => m_AsepriteImporterSettings.generateModelPrefab;
             set => m_AsepriteImporterSettings.generateModelPrefab = value;
         }
-        
+
         /// <summary>
-        /// Add a Sorting Group component to the root of the generated model prefab if it has more than one Sprite Renderer. 
+        /// Add a Sorting Group component to the root of the generated model prefab if it has more than one Sprite Renderer.
         /// </summary>
         public bool addSortingGroup
         {
@@ -202,9 +202,9 @@ namespace UnityEditor.U2D.Aseprite
                 m_AsepriteImporterSettings.addSortingGroup = value;
                 SetDirty();
             }
-        }          
-        
-#if UNITY_2023_1_OR_NEWER        
+        }
+
+#if UNITY_2023_1_OR_NEWER
         /// <summary>
         /// Add Shadow Casters to the generated GameObjects with SpriteRenderers.
         /// </summary>
@@ -216,9 +216,9 @@ namespace UnityEditor.U2D.Aseprite
                 m_AsepriteImporterSettings.addShadowCasters = value;
                 SetDirty();
             }
-        }  
-#endif        
-        
+        }
+#endif
+
         /// <summary>
         /// Generate Animation Clips based on the frame data of the source asset.
         /// </summary>
@@ -226,8 +226,8 @@ namespace UnityEditor.U2D.Aseprite
         {
             get => m_AsepriteImporterSettings.generateAnimationClips;
             set => m_AsepriteImporterSettings.generateAnimationClips = value;
-        }        
-        
+        }
+
         /// <summary>
         /// Texture coordinate wrapping mode.
         /// <br/><br/>Using wrapMode sets the same wrapping mode on all axes. Different per-axis wrap modes can be set using wrapModeU, wrapModeV, wrapModeW. Querying the value returns the U axis wrap mode (same as wrapModeU getter).
@@ -240,8 +240,8 @@ namespace UnityEditor.U2D.Aseprite
                 m_TextureImporterSettings.wrapMode = value;
                 SetDirty();
             }
-        }   
-        
+        }
+
         /// <summary>
         /// Texture U coordinate wrapping mode.
         /// <br/><br/>Controls wrapping mode along texture U (horizontal) axis.
@@ -255,7 +255,7 @@ namespace UnityEditor.U2D.Aseprite
                 SetDirty();
             }
         }
-        
+
         /// <summary>
         /// Texture V coordinate wrapping mode.
         /// <br/><br/>Controls wrapping mode along texture V (vertical) axis.
@@ -269,7 +269,7 @@ namespace UnityEditor.U2D.Aseprite
                 SetDirty();
             }
         }
-        
+
         /// <summary>
         /// Texture W coordinate wrapping mode for Texture3D.
         /// <br/><br/>Controls wrapping mode along texture W (depth, only relevant for Texture3D) axis.
@@ -283,7 +283,7 @@ namespace UnityEditor.U2D.Aseprite
                 SetDirty();
             }
         }
-        
+
         /// <summary>
         /// Filtering mode of the texture.
         /// </summary>
@@ -295,8 +295,8 @@ namespace UnityEditor.U2D.Aseprite
                 m_TextureImporterSettings.filterMode = value;
                 SetDirty();
             }
-        }   
-        
+        }
+
         /// <summary>
         /// Anisotropic filtering level of the texture.
         /// </summary>
@@ -308,9 +308,9 @@ namespace UnityEditor.U2D.Aseprite
                 m_TextureImporterSettings.aniso = value;
                 SetDirty();
             }
-        }       
-        
-#if UNITY_2022_2_OR_NEWER        
+        }
+
+#if UNITY_2022_2_OR_NEWER
         /// <summary>
         /// Whether this texture stores data in sRGB (also called gamma) color space.
         /// </summary>
@@ -322,9 +322,9 @@ namespace UnityEditor.U2D.Aseprite
                 m_TextureImporterSettings.sRGBTexture = value;
                 SetDirty();
             }
-        }  
+        }
 #endif
-        
+
         /// <summary>
         /// Mip map bias of the texture.
         /// </summary>
@@ -337,7 +337,7 @@ namespace UnityEditor.U2D.Aseprite
                 SetDirty();
             }
         }
-        
+
         /// <summary>
         /// Generate Mip Maps.
         /// <br/><br/>Select this to enable mip-map generation. Mipmaps are smaller versions of the Texture that get used when the Texture is very small on screen.
@@ -351,7 +351,7 @@ namespace UnityEditor.U2D.Aseprite
                 SetDirty();
             }
         }
-        
+
         /// <summary>
         /// Mip level where texture is faded out completely.
         /// </summary>
@@ -364,7 +364,7 @@ namespace UnityEditor.U2D.Aseprite
                 SetDirty();
             }
         }
-        
+
         /// <summary>
         /// Mip level where texture begins to fade out.
         /// </summary>
@@ -377,7 +377,7 @@ namespace UnityEditor.U2D.Aseprite
                 SetDirty();
             }
         }
-        
+
         /// <summary>
         /// Enable mipmap streaming for the texture.
         /// <br/><br/>Only load larger mipmaps as needed to render the current game cameras. Requires texture streaming to be enabled in quality settings.
@@ -417,7 +417,7 @@ namespace UnityEditor.U2D.Aseprite
                 SetDirty();
             }
         }
-        
+
         /// <summary>
         /// Enables or disables coverage-preserving alpha mipmapping.
         /// <br/><br/>Enable this to rescale the alpha values of computed mipmaps so coverage is preserved. This means a higher percentage of pixels passes the alpha test and lower mipmap levels do not become more transparent. This is disabled by default (set to false).
@@ -430,8 +430,8 @@ namespace UnityEditor.U2D.Aseprite
                 m_TextureImporterSettings.mipMapsPreserveCoverage = value;
                 SetDirty();
             }
-        }  
-        
+        }
+
         /// <summary>
         /// Retrieves the platform settings used by the importer for a given build target.
         /// </summary>
@@ -440,8 +440,8 @@ namespace UnityEditor.U2D.Aseprite
         public TextureImporterPlatformSettings GetImporterPlatformSettings(BuildTarget buildTarget)
         {
             return TextureImporterUtilities.GetPlatformTextureSettings(buildTarget, in m_PlatformSettings);
-        }        
-        
+        }
+
         /// <summary>
         /// Sets the platform settings used by the importer for a given build target.
         /// </summary>
@@ -451,9 +451,9 @@ namespace UnityEditor.U2D.Aseprite
             SetPlatformTextureSettings(setting);
             SetDirty();
         }
-        
+
         /// <summary>
-        /// Structure used for Aseprite Import Events. 
+        /// Structure used for Aseprite Import Events.
         /// </summary>
         public readonly struct ImportEventArgs
         {
@@ -472,12 +472,12 @@ namespace UnityEditor.U2D.Aseprite
                 this.context = context;
             }
         }
-        
+
         public delegate void AsepriteImportEventHandler(ImportEventArgs args);
-        
+
         /// <summary>
         /// Event that is fired at the last step of the Aseprite import process.
         /// </summary>
-        public AsepriteImportEventHandler OnPostAsepriteImport { get; set; }        
+        public AsepriteImportEventHandler OnPostAsepriteImport { get; set; }
     }
 }

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor.Build;
 using System;
@@ -26,7 +26,7 @@ namespace UnityEditor.U2D.Aseprite.Common
     internal class TexturePlatformSettings : BaseTextureImportPlatformSettings
     {
         [SerializeField]
-        TextureImportPlatformSettingsData m_Data = new ();
+        TextureImportPlatformSettingsData m_Data = new();
         ITexturePlatformSettingsDataProvider m_DataProvider;
         Func<BaseTextureImportPlatformSettings> DefaultImportSettings;
 
@@ -220,7 +220,7 @@ namespace UnityEditor.U2D.Aseprite.Common
 
             //Show platform settings
             using var changed = new EditorGUI.ChangeCheckScope();
-            
+
             BaseTextureImportPlatformSettings.ShowPlatformSpecificSettings(m_PlatformSettings.ConvertAll<BaseTextureImportPlatformSettings>(x => x as BaseTextureImportPlatformSettings), selectedPage);
             // Doing it this way is slow, but it ensure Presets get updated correctly whenever the UI is being changed.
             if (changed.changed)

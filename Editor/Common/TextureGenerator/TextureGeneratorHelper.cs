@@ -70,7 +70,7 @@ namespace UnityEditor.U2D.Aseprite.Common
         public bool containsAlpha { get; set; }
         public bool hdr { get; set; }
 
-        public SecondarySpriteTexture[] secondaryTextures { get { return m_SecondaryTextures;} set { m_SecondaryTextures = value; } }
+        public SecondarySpriteTexture[] secondaryTextures { get { return m_SecondaryTextures; } set { m_SecondaryTextures = value; } }
 
         void ITextureSettings.FillTextureGenerationSettings(ref TextureGenerationSettings settings)
         {
@@ -242,14 +242,14 @@ namespace UnityEditor.U2D.Aseprite.Common
             get { return m_Filter; }
             set { m_Filter = value; }
         }
-        
+
         [SerializeField]
         float m_Bias;
         public float bias
         {
             get { return m_Bias; }
             set { m_Bias = value; }
-        }        
+        }
 
         [SerializeField]
         bool m_BorderMipmap;
@@ -290,7 +290,7 @@ namespace UnityEditor.U2D.Aseprite.Common
             get { return m_FadeDistanceEnd; }
             set { m_FadeDistanceEnd = value; }
         }
-        
+
         [SerializeField]
         bool m_StreamingMipmaps;
         public bool streamingMipmaps
@@ -298,14 +298,14 @@ namespace UnityEditor.U2D.Aseprite.Common
             get { return m_StreamingMipmaps; }
             set { m_StreamingMipmaps = value; }
         }
-        
+
         [SerializeField]
         int m_StreamingMipmapsPriority;
         public int streamingMipmapsPriority
         {
             get { return m_StreamingMipmapsPriority; }
             set { m_StreamingMipmapsPriority = value; }
-        }        
+        }
 
         public TextureMipmapSettings()
         {
@@ -327,7 +327,7 @@ namespace UnityEditor.U2D.Aseprite.Common
             this.fadeDistanceStart = fadeDistanceStart;
             this.fadeDistanceEnd = fadeDistanceEnd;
             this.streamingMipmaps = streamingMipmaps;
-            this.streamingMipmapsPriority = streamingMipmapsPriority;            
+            this.streamingMipmapsPriority = streamingMipmapsPriority;
         }
 
         void ITextureSettings.FillTextureGenerationSettings(ref TextureGenerationSettings settings)
@@ -341,7 +341,7 @@ namespace UnityEditor.U2D.Aseprite.Common
             settings.textureImporterSettings.mipmapFadeDistanceEnd = fadeDistanceEnd;
             settings.textureImporterSettings.mipMapsPreserveCoverage = preserveCoverage;
             settings.textureImporterSettings.streamingMipmaps = streamingMipmaps;
-            settings.textureImporterSettings.streamingMipmapsPriority = streamingMipmapsPriority;            
+            settings.textureImporterSettings.streamingMipmapsPriority = streamingMipmapsPriority;
         }
     }
 
@@ -600,7 +600,7 @@ namespace UnityEditor.U2D.Aseprite.Common
             ts.fadeDistanceEnd = settings.mipmapFadeDistanceEnd;
             ts.preserveCoverage = settings.mipMapsPreserveCoverage;
             ts.streamingMipmaps = settings.streamingMipmaps;
-            ts.streamingMipmapsPriority = settings.streamingMipmapsPriority;            
+            ts.streamingMipmapsPriority = settings.streamingMipmapsPriority;
             return ts;
         }
 

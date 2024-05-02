@@ -12,7 +12,7 @@ namespace UnityEditor.U2D.Aseprite
     {
         public AsepriteImporter dataProvider;
     }
-    
+
     internal class SpriteBoneDataProvider : AsepriteDataProvider, ISpriteBoneDataProvider
     {
         public List<SpriteBone> GetBones(GUID guid)
@@ -96,7 +96,7 @@ namespace UnityEditor.U2D.Aseprite
         {
             var sprite = dataProvider.GetSpriteData(guid);
             if (sprite != null)
-                ((SpriteMetaData)sprite).spriteOutline = data.Select(x => new SpriteOutline() {outline = x}).ToList();
+                ((SpriteMetaData)sprite).spriteOutline = data.Select(x => new SpriteOutline() { outline = x }).ToList();
         }
 
         public float GetTessellationDetail(GUID guid)

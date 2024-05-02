@@ -12,7 +12,7 @@ namespace UnityEditor.U2D.Aseprite
         public void Init(AsepriteImporter importer, IList<TextureImporterPlatformSettings> platformSettingsNeeded)
         {
             var importerPlatformSettings = importer.GetAllPlatformSettings();
-            
+
             for (var i = 0; i < importerPlatformSettings.Length; ++i)
             {
                 var tip = importerPlatformSettings[i];
@@ -23,7 +23,7 @@ namespace UnityEditor.U2D.Aseprite
                     platformSettings.Add(tip);
                 }
             }
-            
+
             for (var i = 0; i < platformSettingsNeeded.Count; ++i)
             {
                 var ps = platformSettingsNeeded[i];
@@ -35,5 +35,5 @@ namespace UnityEditor.U2D.Aseprite
                 }
             }
         }
-    }    
+    }
 }

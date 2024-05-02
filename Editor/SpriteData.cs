@@ -19,7 +19,7 @@ namespace UnityEditor.U2D.Aseprite
         public float tessellationDetail;
         public Vector2Int uvTransform = Vector2Int.zero;
 
-        public SpriteMetaData() {}
+        public SpriteMetaData() { }
 
         public SpriteMetaData(SpriteRect sr)
         {

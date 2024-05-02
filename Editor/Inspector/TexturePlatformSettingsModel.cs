@@ -86,7 +86,7 @@ namespace UnityEditor.U2D.Aseprite
             (int)TextureImporterFormat.PVRTC_RGBA2,
             (int)TextureImporterFormat.PVRTC_RGB4,
             (int)TextureImporterFormat.PVRTC_RGBA4,
-            
+
             (int)TextureImporterFormat.ASTC_4x4,
             (int)TextureImporterFormat.ASTC_5x5,
             (int)TextureImporterFormat.ASTC_6x6,
@@ -124,7 +124,7 @@ namespace UnityEditor.U2D.Aseprite
 
             (int)TextureImporterFormat.ETC_RGB4,
             (int)TextureImporterFormat.ETC2_RGBA8,
-            
+
             (int)TextureImporterFormat.ASTC_4x4,
             (int)TextureImporterFormat.ASTC_5x5,
             (int)TextureImporterFormat.ASTC_6x6,
@@ -176,7 +176,7 @@ namespace UnityEditor.U2D.Aseprite
             (int)TextureImporterFormat.ARGB16,
             (int)TextureImporterFormat.RGBA32,
         };
-        
+
         static readonly int[] k_TextureFormatsValueDefault =
         {
             (int)TextureImporterFormat.DXT1,
@@ -196,7 +196,7 @@ namespace UnityEditor.U2D.Aseprite
             (int)TextureImporterFormat.BC6H,
             (int)TextureImporterFormat.BC7,
         };
-        
+
         static readonly int[] k_TextureFormatsValueSingleChannel =
         {
             (int)TextureImporterFormat.Alpha8,
@@ -290,7 +290,7 @@ namespace UnityEditor.U2D.Aseprite
                     return "RGB + 1-bit Alpha Compressed ETC2 4 bits";
                 case TextureImporterFormat.ETC2_RGBA8:
                     return "RGBA Compressed ETC2 8 bits";
-                
+
                 case TextureImporterFormat.ASTC_4x4:
                     return "RGB(A) Compressed ASTC 4 x 4 block";
                 case TextureImporterFormat.ASTC_5x5:

@@ -6,7 +6,7 @@ namespace UnityEditor.U2D.Aseprite
     {
         const string k_BackgroundImportKey = UserSettings.settingsUniqueKey + "ImportSettings.backgroundImport";
         static readonly GUIContent k_BackgroundImportLabel = EditorGUIUtility.TrTextContent("Background import", "Enable asset import when the Unity Editor is in the background.");
-        
+
         public static bool backgroundImport
         {
             get => EditorPrefs.GetBool(k_BackgroundImportKey, true);

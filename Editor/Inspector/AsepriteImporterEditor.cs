@@ -80,12 +80,12 @@ namespace UnityEditor.U2D.Aseprite
         TexturePlatformSettingsHelper m_TexturePlatformSettingsHelper;
         VisualElement[] m_InspectorUI;
         int m_ActiveEditorIndex = 0;
-        
+
         bool ITexturePlatformSettingsDataProvider.textureTypeHasMultipleDifferentValues => m_TextureType.hasMultipleDifferentValues;
         TextureImporterType ITexturePlatformSettingsDataProvider.textureType => (TextureImporterType)m_TextureType.intValue;
         SpriteImportMode ITexturePlatformSettingsDataProvider.spriteImportMode => spriteImportMode;
 
-        FileImportModes fileImportMode => (FileImportModes) m_FileImportMode.intValue;
+        FileImportModes fileImportMode => (FileImportModes)m_FileImportMode.intValue;
         SpriteImportMode spriteImportMode => (SpriteImportMode)m_SpriteMode.intValue;
 
         AnimationClip m_DefaultClip;
@@ -94,7 +94,7 @@ namespace UnityEditor.U2D.Aseprite
         string[] m_AssetPaths;
 
         /// <summary>
-        /// The SerializedProperty of an array of TextureImporterPlatformSettings. 
+        /// The SerializedProperty of an array of TextureImporterPlatformSettings.
         /// </summary>
         public SerializedProperty platformSettingsArray => m_PlatformSettingsArrProp;
 
@@ -130,7 +130,7 @@ namespace UnityEditor.U2D.Aseprite
         void CacheSerializedProperties()
         {
             m_GeneratePhysicsShape = serializedObject.FindProperty("m_GeneratePhysicsShape");
-            
+
             var textureImporterSettingsSP = serializedObject.FindProperty("m_TextureImporterSettings");
             m_TextureType = textureImporterSettingsSP.FindPropertyRelative("m_TextureType");
             m_TextureShape = textureImporterSettingsSP.FindPropertyRelative("m_TextureShape");
@@ -162,9 +162,9 @@ namespace UnityEditor.U2D.Aseprite
             m_Aniso = textureImporterSettingsSP.FindPropertyRelative("m_Aniso");
             m_WrapU = textureImporterSettingsSP.FindPropertyRelative("m_WrapU");
             m_WrapV = textureImporterSettingsSP.FindPropertyRelative("m_WrapV");
-            m_WrapW = textureImporterSettingsSP.FindPropertyRelative("m_WrapW");   
+            m_WrapW = textureImporterSettingsSP.FindPropertyRelative("m_WrapW");
             m_PlatformSettingsArrProp = extraDataSerializedObject.FindProperty("platformSettings");
-            
+
             var asepriteImporterSettings = serializedObject.FindProperty("m_AsepriteImporterSettings");
             m_FileImportMode = asepriteImporterSettings.FindPropertyRelative("m_FileImportMode");
             m_ImportHiddenLayers = asepriteImporterSettings.FindPropertyRelative("m_ImportHiddenLayers");
@@ -179,11 +179,11 @@ namespace UnityEditor.U2D.Aseprite
             m_AddSortingGroup = asepriteImporterSettings.FindPropertyRelative("m_AddSortingGroup");
             m_AddShadowCasters = asepriteImporterSettings.FindPropertyRelative("m_AddShadowCasters");
             m_GenerateAnimationClips = asepriteImporterSettings.FindPropertyRelative("m_GenerateAnimationClips");
-            
+
             var prevAsepriteImporterSettings = serializedObject.FindProperty("m_PreviousAsepriteImporterSettings");
             m_PrevGenerateAnimationClips = prevAsepriteImporterSettings.FindPropertyRelative("m_GenerateAnimationClips");
 
-            m_TexturePlatformSettingsHelper = new TexturePlatformSettingsHelper(this);            
+            m_TexturePlatformSettingsHelper = new TexturePlatformSettingsHelper(this);
         }
 
         void SetupInspectorUI()
@@ -204,14 +204,14 @@ namespace UnityEditor.U2D.Aseprite
                 ReadableGUI,
                 MipMapGUI
             };
-            m_AdvancedInspectorGUI.Add(TextureImporterType.Default, advancedGUIAction);    
-            
-            m_InspectorUI = new []
+            m_AdvancedInspectorGUI.Add(TextureImporterType.Default, advancedGUIAction);
+
+            m_InspectorUI = new[]
             {
                 SetupSpriteActorContainer()
-            };     
+            };
             m_ActiveEditorIndex = Mathf.Max(EditorPrefs.GetInt(this.GetType().Name + "ActiveEditorIndex", 0), 0);
-            m_ActiveEditorIndex %= m_InspectorUI.Length;            
+            m_ActiveEditorIndex %= m_InspectorUI.Length;
         }
 
         VisualElement SetupSpriteActorContainer()
@@ -251,8 +251,8 @@ namespace UnityEditor.U2D.Aseprite
                 tooltip = styles.fileImportMode.tooltip
             };
             importModeField.Bind(serializedObject);
-            foldOut.Add(importModeField);     
-            
+            foldOut.Add(importModeField);
+
             var ppuField = new PropertyField(m_SpritePixelsToUnits, styles.spritePixelsPerUnit.text)
             {
                 tooltip = styles.spritePixelsPerUnit.tooltip
@@ -286,15 +286,15 @@ namespace UnityEditor.U2D.Aseprite
             foldOut.Add(physicsShapeField);
 
             SetupSpriteEditorButton(foldOut);
-            
+
             var paddingElement = new VisualElement()
             {
                 name = "PaddingElement"
             };
             paddingElement.AddToClassList(k_PaddingElementUssClass);
-            foldOut.Add(paddingElement);            
+            foldOut.Add(paddingElement);
         }
-        
+
         void SetupSpriteEditorButton(VisualElement root)
         {
             var spriteEditorBtn = new Button()
@@ -380,7 +380,7 @@ namespace UnityEditor.U2D.Aseprite
                 }
             }).Every(100);
             foldOut.Add(pivotSpaceField);
-            
+
             var pivotAlignmentPopup = new PopupField<string>(s_Styles.spriteAlignmentOptions, m_DefaultPivotAlignment.intValue)
             {
                 label = s_Styles.defaultPivotAlignment.text,
@@ -421,14 +421,14 @@ namespace UnityEditor.U2D.Aseprite
                 }
             }).Every(100);
             foldOut.Add(customPivotField);
-            
+
             var mosaicPaddingField = new PropertyField(m_MosaicPadding, styles.mosaicPadding.text)
             {
                 tooltip = styles.mosaicPadding.tooltip
             };
             mosaicPaddingField.Bind(serializedObject);
-            foldOut.Add(mosaicPaddingField);            
-            
+            foldOut.Add(mosaicPaddingField);
+
             var spritePaddingField = new PropertyField(m_SpritePadding, styles.spritePadding.text)
             {
                 tooltip = styles.spritePadding.tooltip
@@ -459,8 +459,8 @@ namespace UnityEditor.U2D.Aseprite
             var isUrpEnabled = true;
 #else
             var isUrpEnabled = false;
-#endif             
-            
+#endif
+
             var foldOut = new Foldout()
             {
                 text = styles.generateAssetsHeaderText.text,
@@ -499,7 +499,7 @@ namespace UnityEditor.U2D.Aseprite
             {
                 isSortingEnabled = m_GenerateModelPrefab.boolValue;
                 if (sortingGroupField.enabledSelf != isSortingEnabled)
-                    sortingGroupField.SetEnabled(isSortingEnabled);  
+                    sortingGroupField.SetEnabled(isSortingEnabled);
             }).Every(100);
             foldOut.Add(sortingGroupField);
 
@@ -516,7 +516,7 @@ namespace UnityEditor.U2D.Aseprite
             {
                 areShadowsEnabled = isUrpEnabled && m_GenerateModelPrefab.boolValue;
                 if (shadowCasterField.enabledSelf != areShadowsEnabled)
-                    shadowCasterField.SetEnabled(areShadowsEnabled);  
+                    shadowCasterField.SetEnabled(areShadowsEnabled);
             }).Every(100);
             foldOut.Add(shadowCasterField);
 #endif
@@ -527,17 +527,17 @@ namespace UnityEditor.U2D.Aseprite
             };
             generateClipsField.Bind(serializedObject);
             foldOut.Add(generateClipsField);
-            
+
             SetupAnimationAssetsButton(foldOut);
-            
+
             var paddingElement = new VisualElement()
             {
                 name = "PaddingElement"
             };
             paddingElement.AddToClassList(k_PaddingElementUssClass);
-            foldOut.Add(paddingElement);            
+            foldOut.Add(paddingElement);
         }
-        
+
         void SetupAnimationAssetsButton(VisualElement root)
         {
             var isEnabled = m_ImporterTargets.Length == 1 &&
@@ -555,7 +555,7 @@ namespace UnityEditor.U2D.Aseprite
                             m_DefaultClip != null &&
                             m_GenerateAnimationClips.boolValue;
                 if (assetsBtn.enabledSelf != isEnabled)
-                    assetsBtn.SetEnabled(isEnabled);  
+                    assetsBtn.SetEnabled(isEnabled);
             }).Every(100);
             assetsBtn.clicked += () =>
             {
@@ -596,13 +596,13 @@ namespace UnityEditor.U2D.Aseprite
             {
                 serializedObject.Update();
                 extraDataSerializedObject.Update();
-                
+
                 EditorGUI.BeginChangeCheck();
 
                 // Wrap mode
                 var isVolume = false;
                 WrapModePopup(m_WrapU, m_WrapV, m_WrapW, isVolume, ref m_ShowPerAxisWrapModes);
-                
+
                 // Display warning about repeat wrap mode on restricted npot emulation
                 if (m_NPOTScale.intValue == (int)TextureImporterNPOTScale.None &&
                     (m_WrapU.intValue == (int)TextureWrapMode.Repeat || m_WrapV.intValue == (int)TextureWrapMode.Repeat) &&
@@ -670,7 +670,7 @@ namespace UnityEditor.U2D.Aseprite
                 serializedObject.ApplyModifiedProperties();
                 extraDataSerializedObject.ApplyModifiedProperties();
             });
-            foldOut.Add(imguiContainer);         
+            foldOut.Add(imguiContainer);
         }
 
         void SetupPlatformSettingsContainer(VisualElement root)
@@ -688,12 +688,12 @@ namespace UnityEditor.U2D.Aseprite
             var imguiContainer = new IMGUIContainer(() =>
             {
                 serializedObject.Update();
-                extraDataSerializedObject.Update();                
-                
+                extraDataSerializedObject.Update();
+
                 GUILayout.Space(5);
                 m_TexturePlatformSettingsHelper.ShowPlatformSpecificSettings();
                 GUILayout.Space(5);
-                
+
                 serializedObject.ApplyModifiedProperties();
                 extraDataSerializedObject.ApplyModifiedProperties();
             });
@@ -704,9 +704,9 @@ namespace UnityEditor.U2D.Aseprite
         {
             if (m_TextureType.hasMultipleDifferentValues)
                 return;
-            if (!m_AdvancedInspectorGUI.ContainsKey((TextureImporterType) m_TextureType.intValue))
+            if (!m_AdvancedInspectorGUI.ContainsKey((TextureImporterType)m_TextureType.intValue))
                 return;
-            
+
             var foldOut = new Foldout()
             {
                 text = styles.advancedHeaderText.text,
@@ -721,12 +721,12 @@ namespace UnityEditor.U2D.Aseprite
             {
                 serializedObject.Update();
                 extraDataSerializedObject.Update();
-                
-                foreach (var action in m_AdvancedInspectorGUI[(TextureImporterType) m_TextureType.intValue])
+
+                foreach (var action in m_AdvancedInspectorGUI[(TextureImporterType)m_TextureType.intValue])
                 {
                     action();
                 }
-                
+
                 serializedObject.ApplyModifiedProperties();
                 extraDataSerializedObject.ApplyModifiedProperties();
             });
@@ -737,7 +737,7 @@ namespace UnityEditor.U2D.Aseprite
         {
             if (m_ImporterTargets.Length > 1)
                 return;
-            
+
             var importerPath = m_AssetPaths[0];
             var gameObject = AssetDatabase.LoadAssetAtPath<GameObject>(importerPath);
 
@@ -759,7 +759,7 @@ namespace UnityEditor.U2D.Aseprite
         {
             if (m_ModelPreviewer == null)
                 return;
-        
+
             m_ModelPreviewer.Dispose();
             m_ModelPreviewer = null;
         }
@@ -781,7 +781,7 @@ namespace UnityEditor.U2D.Aseprite
         /// Override for AssetImporter.extraDataType
         /// </summary>
         protected override Type extraDataType => typeof(AsepriteImporterEditorExternalData);
-        
+
         /// <summary>
         /// Override for AssetImporter.InitializeExtraDataInstance
         /// </summary>
@@ -797,7 +797,7 @@ namespace UnityEditor.U2D.Aseprite
                 extraData.Init(importer, platformSettingsNeeded);
             }
         }
-        
+
         /// <summary>
         /// Implementation of virtual method CreateInspectorGUI.
         /// </summary>
@@ -808,7 +808,7 @@ namespace UnityEditor.U2D.Aseprite
             {
                 name = "Root"
             };
-            
+
             var styleSheet = EditorGUIUtility.Load("packages/com.unity.2d.aseprite/Editor/Assets/UI/AsepriteImporterStyleSheet.uss") as StyleSheet;
             m_RootVisualElement.styleSheets.Add(styleSheet);
 
@@ -819,10 +819,10 @@ namespace UnityEditor.U2D.Aseprite
             m_RootVisualElement.Add(m_InspectorSettingsView);
 
             ShowInspectorTab(m_ActiveEditorIndex);
-            
+
             return m_RootVisualElement;
-        }   
-        
+        }
+
         /// <summary>
         /// Implementation of AssetImporterEditor.OnDisable
         /// </summary>
@@ -830,12 +830,12 @@ namespace UnityEditor.U2D.Aseprite
         {
             base.OnDisable();
             DisposePreview();
-            
-            if(m_RootVisualElement != null)
+
+            if (m_RootVisualElement != null)
                 m_RootVisualElement.Clear();
         }
 
-#if UNITY_2023_2_OR_NEWER
+#if UNITY_2022_3_OR_NEWER
         /// <summary>
         /// Implementation of AssetImporterEditor.DiscardChanges.
         /// </summary>
@@ -843,7 +843,7 @@ namespace UnityEditor.U2D.Aseprite
         {
             base.DiscardChanges();
             m_TexturePlatformSettingsHelper = new TexturePlatformSettingsHelper(this);
-        } 
+        }
 #else
         /// <summary>
         /// Implementation of AssetImporterEditor.ResetValues.
@@ -852,8 +852,8 @@ namespace UnityEditor.U2D.Aseprite
         {
             base.ResetValues();
             m_TexturePlatformSettingsHelper = new TexturePlatformSettingsHelper(this);
-        }    
-#endif    
+        }
+#endif
 
         void ShowInspectorTab(int tab)
         {
@@ -868,7 +868,7 @@ namespace UnityEditor.U2D.Aseprite
         public override void SaveChanges()
         {
             ApplyTexturePlatformSettings();
-            
+
             serializedObject.ApplyModifiedProperties();
             extraDataSerializedObject.ApplyModifiedProperties();
             base.SaveChanges();
@@ -964,8 +964,8 @@ namespace UnityEditor.U2D.Aseprite
             {
                 wrapProperty.intValue = (int)wrap;
             }
-        }     
-        
+        }
+
         static bool IsAnyTextureObjectUsingPerAxisWrapMode(UnityEngine.Object[] objects, bool isVolumeTexture)
         {
             foreach (var o in objects)
@@ -1015,7 +1015,7 @@ namespace UnityEditor.U2D.Aseprite
         {
             ToggleFromInt(m_sRGBTexture, styles.sRGBTexture);
         }
-        
+
         void AlphaHandlingGUI()
         {
             EditorGUI.showMixedValue = m_AlphaSource.hasMultipleDifferentValues;
@@ -1034,19 +1034,19 @@ namespace UnityEditor.U2D.Aseprite
                 ToggleFromInt(m_AlphaIsTransparency, styles.alphaIsTransparency);
             }
         }
-        
+
         void POTScaleGUI()
         {
             using (new EditorGUI.DisabledScope(m_IsPowerOfTwo || m_TextureType.intValue == (int)TextureImporterType.Sprite))
             {
                 EnumPopup(m_NPOTScale, typeof(TextureImporterNPOTScale), styles.npot);
             }
-        }      
-        
+        }
+
         void ReadableGUI()
         {
             ToggleFromInt(m_IsReadable, styles.readWrite);
-        }        
+        }
 
         void MipMapGUI()
         {
@@ -1057,7 +1057,7 @@ namespace UnityEditor.U2D.Aseprite
                 EditorGUI.indentLevel++;
                 ToggleFromInt(m_BorderMipMap, styles.borderMipMaps);
 
-#if ENABLE_TEXTURE_STREAMING                
+#if ENABLE_TEXTURE_STREAMING
                 ToggleFromInt(m_StreamingMipmaps, styles.streamingMipMaps);
                 if (m_StreamingMipmaps.boolValue && !m_StreamingMipmaps.hasMultipleDifferentValues)
                 {
@@ -1070,8 +1070,8 @@ namespace UnityEditor.U2D.Aseprite
                     }
                     EditorGUI.indentLevel--;
                 }
-#endif                
-                
+#endif
+
                 m_MipMapMode.intValue = EditorGUILayout.Popup(styles.mipMapFilter, m_MipMapMode.intValue, styles.mipMapFilterOptions);
 
                 ToggleFromInt(m_MipMapsPreserveCoverage, styles.mipMapsPreserveCoverage);
@@ -1111,7 +1111,7 @@ namespace UnityEditor.U2D.Aseprite
             ApplyTexturePlatformSettings();
             InternalEditorBridge.ApplySpriteEditorWindow();
             base.Apply();
-            
+
             if (m_ModelPreviewer != null)
             {
                 m_ModelPreviewer.Dispose();
@@ -1121,7 +1121,7 @@ namespace UnityEditor.U2D.Aseprite
 
         void ApplyTexturePlatformSettings()
         {
-            for(var i = 0; i < targets.Length && i < extraDataTargets.Length; ++i)
+            for (var i = 0; i < targets.Length && i < extraDataTargets.Length; ++i)
             {
                 var asepriteImporter = (AsepriteImporter)targets[i];
                 var externalData = (AsepriteImporterEditorExternalData)extraDataTargets[i];
@@ -1143,7 +1143,7 @@ namespace UnityEditor.U2D.Aseprite
                 return true;
 
             return m_TexturePlatformSettingsHelper.HasModified();
-        }        
+        }
 
         /// <summary>
         /// Implementation of ITexturePlatformSettingsDataProvider.GetTargetCount.
@@ -1238,7 +1238,7 @@ namespace UnityEditor.U2D.Aseprite
         {
             return sp.FindPropertyRelative("m_Name").stringValue;
         }
-        
+
         TextureImporterSettings GetSerializedPropertySettings(TextureImporterSettings settings)
         {
             if (!m_AlphaSource.hasMultipleDifferentValues)
@@ -1255,7 +1255,7 @@ namespace UnityEditor.U2D.Aseprite
                 settings.streamingMipmaps = m_StreamingMipmaps.intValue > 0;
             if (!m_StreamingMipmapsPriority.hasMultipleDifferentValues)
                 settings.streamingMipmapsPriority = m_StreamingMipmapsPriority.intValue;
-#endif            
+#endif
 
             if (!m_MipMapsPreserveCoverage.hasMultipleDifferentValues)
                 settings.mipMapsPreserveCoverage = m_MipMapsPreserveCoverage.intValue > 0;
@@ -1382,16 +1382,16 @@ namespace UnityEditor.U2D.Aseprite
             }
             return false;
         }
-        
+
         class Styles
         {
-            readonly GUIContent textureShape2D = new ("2D, Texture is 2D.");
-            readonly  GUIContent textureShapeCube = new ("Cube", "Texture is a Cubemap.");
-            public readonly Dictionary<TextureImporterShape, GUIContent[]> textureShapeOptionsDictionnary = new ();
-            public readonly Dictionary<TextureImporterShape, int[]> textureShapeValuesDictionnary = new ();
+            readonly GUIContent textureShape2D = new("2D, Texture is 2D.");
+            readonly GUIContent textureShapeCube = new("Cube", "Texture is a Cubemap.");
+            public readonly Dictionary<TextureImporterShape, GUIContent[]> textureShapeOptionsDictionnary = new();
+            public readonly Dictionary<TextureImporterShape, int[]> textureShapeValuesDictionnary = new();
 
 
-            public readonly GUIContent filterMode = new ("Filter Mode");
+            public readonly GUIContent filterMode = new("Filter Mode");
             public readonly GUIContent[] filterModeOptions =
             {
                 new ("Point (no filter)"),
@@ -1399,11 +1399,11 @@ namespace UnityEditor.U2D.Aseprite
                 new ("Trilinear")
             };
 
-            public readonly GUIContent mipmapFadeOutToggle = new ("Fadeout Mip Maps");
-            public readonly GUIContent mipmapFadeOut = new ("Fade Range");
-            public readonly GUIContent readWrite = new ("Read/Write Enabled", "Enable to be able to access the raw pixel data from code.");
+            public readonly GUIContent mipmapFadeOutToggle = new("Fadeout Mip Maps");
+            public readonly GUIContent mipmapFadeOut = new("Fade Range");
+            public readonly GUIContent readWrite = new("Read/Write Enabled", "Enable to be able to access the raw pixel data from code.");
 
-            public readonly GUIContent alphaSource = new ("Alpha Source", "How is the alpha generated for the imported texture.");
+            public readonly GUIContent alphaSource = new("Alpha Source", "How is the alpha generated for the imported texture.");
             public readonly GUIContent[] alphaSourceOptions =
             {
                 new ("None", "No Alpha will be used."),
@@ -1417,55 +1417,55 @@ namespace UnityEditor.U2D.Aseprite
                 (int)TextureImporterAlphaSource.FromGrayScale,
             };
 
-            public readonly GUIContent generateMipMaps = new ("Generate Mip Maps");
-            public readonly GUIContent sRGBTexture = new ("sRGB (Color Texture)", "Texture content is stored in gamma space. Non-HDR color textures should enable this flag (except if used for IMGUI).");
-            public readonly GUIContent borderMipMaps = new ("Border Mip Maps");
-#if ENABLE_TEXTURE_STREAMING            
+            public readonly GUIContent generateMipMaps = new("Generate Mip Maps");
+            public readonly GUIContent sRGBTexture = new("sRGB (Color Texture)", "Texture content is stored in gamma space. Non-HDR color textures should enable this flag (except if used for IMGUI).");
+            public readonly GUIContent borderMipMaps = new("Border Mip Maps");
+#if ENABLE_TEXTURE_STREAMING
             public readonly GUIContent streamingMipMaps = EditorGUIUtility.TrTextContent("Mip Streaming", "Only load larger mipmaps as needed to render the current game cameras. Requires texture streaming to be enabled in quality settings.");
             public readonly GUIContent streamingMipmapsPriority = EditorGUIUtility.TrTextContent("Priority", "Mipmap streaming priority when there's contention for resources. Positive numbers represent higher priority. Valid range is -128 to 127.");
-#endif            
-            public readonly GUIContent mipMapsPreserveCoverage = new ("Mip Maps Preserve Coverage", "The alpha channel of generated Mip Maps will preserve coverage during the alpha test.");
-            public readonly GUIContent alphaTestReferenceValue = new ("Alpha Cutoff Value", "The reference value used during the alpha test. Controls Mip Map coverage.");
-            public readonly GUIContent mipMapFilter = new ("Mip Map Filtering");
+#endif
+            public readonly GUIContent mipMapsPreserveCoverage = new("Mip Maps Preserve Coverage", "The alpha channel of generated Mip Maps will preserve coverage during the alpha test.");
+            public readonly GUIContent alphaTestReferenceValue = new("Alpha Cutoff Value", "The reference value used during the alpha test. Controls Mip Map coverage.");
+            public readonly GUIContent mipMapFilter = new("Mip Map Filtering");
             public readonly GUIContent[] mipMapFilterOptions =
             {
                 new ("Box"),
                 new ("Kaiser"),
             };
-            public readonly GUIContent npot = new ("Non Power of 2", "How non-power-of-two textures are scaled on import.");
-            
+            public readonly GUIContent npot = new("Non Power of 2", "How non-power-of-two textures are scaled on import.");
+
             public readonly List<string> spriteMeshTypeOptions = new()
             {
                 L10n.Tr("Full Rect"),
                 L10n.Tr("Tight"),
             };
-            
-            public readonly GUIContent fileImportMode = new ("Import Mode", "How the file should be imported.");
-            public readonly GUIContent spritePixelsPerUnit = new ("Pixels Per Unit", "How many pixels in the sprite correspond to one unit in the world.");
-            public readonly GUIContent spriteMeshType = new ("Mesh Type", "Type of sprite mesh to generate.");
-            public readonly GUIContent generatePhysicsShape = new ("Generate Physics Shape", "Generates a default physics shape from the outline of the Sprite/s when a physics shape has not been set in the Sprite Editor.");
 
-            public readonly GUIContent warpNotSupportWarning = new ("Graphics device doesn't support Repeat wrap mode on NPOT textures. Falling back to Clamp.");
-            public readonly GUIContent anisoLevelLabel = new ("Aniso Level");
-            public readonly GUIContent anisotropicDisableInfo = new ("Anisotropic filtering is disabled for all textures in Quality Settings.");
-            public readonly GUIContent anisotropicForceEnableInfo = new ("Anisotropic filtering is enabled for all textures in Quality Settings.");
-            public readonly GUIContent unappliedSettingsDialogTitle = new ("Unapplied import settings");
-            public readonly GUIContent unappliedSettingsDialogContent = new ("Unapplied import settings for \'{0}\'.\nApply and continue to sprite editor or cancel.");
-            public readonly GUIContent applyButtonLabel = new ("Apply");
-            public readonly GUIContent cancelButtonLabel = new ("Cancel");
-            public readonly GUIContent spriteEditorButtonLabel = new ("Open Sprite Editor");
-            public readonly GUIContent alphaIsTransparency = new ("Alpha Is Transparency", "If the provided alpha channel is transparency, enable this to pre-filter the color to avoid texture filtering artifacts. This is not supported for HDR textures.");
-            
-            public readonly GUIContent advancedHeaderText = new ("Advanced", "Show advanced settings.");
+            public readonly GUIContent fileImportMode = new("Import Mode", "How the file should be imported.");
+            public readonly GUIContent spritePixelsPerUnit = new("Pixels Per Unit", "How many pixels in the sprite correspond to one unit in the world.");
+            public readonly GUIContent spriteMeshType = new("Mesh Type", "Type of sprite mesh to generate.");
+            public readonly GUIContent generatePhysicsShape = new("Generate Physics Shape", "Generates a default physics shape from the outline of the Sprite/s when a physics shape has not been set in the Sprite Editor.");
 
-            public readonly GUIContent platformSettingsHeaderText  = new GUIContent("Platform Settings");
+            public readonly GUIContent warpNotSupportWarning = new("Graphics device doesn't support Repeat wrap mode on NPOT textures. Falling back to Clamp.");
+            public readonly GUIContent anisoLevelLabel = new("Aniso Level");
+            public readonly GUIContent anisotropicDisableInfo = new("Anisotropic filtering is disabled for all textures in Quality Settings.");
+            public readonly GUIContent anisotropicForceEnableInfo = new("Anisotropic filtering is enabled for all textures in Quality Settings.");
+            public readonly GUIContent unappliedSettingsDialogTitle = new("Unapplied import settings");
+            public readonly GUIContent unappliedSettingsDialogContent = new("Unapplied import settings for \'{0}\'.\nApply and continue to sprite editor or cancel.");
+            public readonly GUIContent applyButtonLabel = new("Apply");
+            public readonly GUIContent cancelButtonLabel = new("Cancel");
+            public readonly GUIContent spriteEditorButtonLabel = new("Open Sprite Editor");
+            public readonly GUIContent alphaIsTransparency = new("Alpha Is Transparency", "If the provided alpha channel is transparency, enable this to pre-filter the color to avoid texture filtering artifacts. This is not supported for HDR textures.");
+
+            public readonly GUIContent advancedHeaderText = new("Advanced", "Show advanced settings.");
+
+            public readonly GUIContent platformSettingsHeaderText = new GUIContent("Platform Settings");
 
             public readonly GUIContent[] platformSettingsSelection;
 
-            public readonly GUIContent wrapModeLabel = new ("Wrap Mode");
-            public readonly GUIContent wrapU = new ("U axis");
-            public readonly GUIContent wrapV = new ("V axis");
-            public readonly GUIContent wrapW = new ("W axis");
+            public readonly GUIContent wrapModeLabel = new("Wrap Mode");
+            public readonly GUIContent wrapU = new("U axis");
+            public readonly GUIContent wrapV = new("V axis");
+            public readonly GUIContent wrapW = new("W axis");
 
 
             public readonly GUIContent[] wrapModeContents =
@@ -1518,12 +1518,12 @@ namespace UnityEditor.U2D.Aseprite
             public readonly GUIContent addSortingGroup = EditorGUIUtility.TrTextContent("Sorting Group", "Add a Sorting Group component to the root of the generated model prefab if it has more than one Sprite Renderer.");
             public readonly GUIContent addShadowCasters = EditorGUIUtility.TrTextContent("Shadow Casters", "Add Shadow Casters on all GameObjects with SpriteRenderer. Note: The Universal Rendering Pipeline package has to be installed.");
             public readonly GUIContent generateAnimationClips = EditorGUIUtility.TrTextContent("Animation Clips", "Generate Animation Clips based on the frame and tag data from the Aseprite file.");
-            
+
             public readonly GUIContent generalHeaderText = EditorGUIUtility.TrTextContent("General", "General settings.");
-            public readonly GUIContent layerImportHeaderText = EditorGUIUtility.TrTextContent("Layer Import","Layer Import settings.");
-            public readonly GUIContent generateAssetsHeaderText = EditorGUIUtility.TrTextContent("Generate Assets","Generated assets settings.");
-            public readonly GUIContent textureHeaderText = EditorGUIUtility.TrTextContent("Texture","Texture settings.");
-            
+            public readonly GUIContent layerImportHeaderText = EditorGUIUtility.TrTextContent("Layer Import", "Layer Import settings.");
+            public readonly GUIContent generateAssetsHeaderText = EditorGUIUtility.TrTextContent("Generate Assets", "Generated assets settings.");
+            public readonly GUIContent textureHeaderText = EditorGUIUtility.TrTextContent("Texture", "Texture settings.");
+
             public readonly GUIContent exportAnimationAssetsText = EditorGUIUtility.TrTextContent("Export Animation Assets");
             public readonly GUIContent exportAnimationInfoText = EditorGUIUtility.TrTextContent("To enable the Export Animation Assets button, make sure to first Apply the changes.");
 
@@ -1574,37 +1574,37 @@ namespace UnityEditor.U2D.Aseprite
             readonly SavedBool m_TextureFoldout;
             readonly SavedBool m_PlatformSettingsFoldout;
 
-            public bool generalFoldout 
+            public bool generalFoldout
             {
                 get => m_GeneralFoldout.value;
                 set => m_GeneralFoldout.value = value;
             }
-            
-            public bool layerImportFoldout 
+
+            public bool layerImportFoldout
             {
                 get => m_LayerImportFoldout.value;
                 set => m_LayerImportFoldout.value = value;
             }
-            
-            public bool generateAssetFoldout 
+
+            public bool generateAssetFoldout
             {
                 get => m_GenerateAssetFoldout.value;
                 set => m_GenerateAssetFoldout.value = value;
             }
-            
-            public bool advancedFoldout 
+
+            public bool advancedFoldout
             {
                 get => m_AdvancedFoldout.value;
                 set => m_AdvancedFoldout.value = value;
-            }     
-            
-            public bool textureFoldout 
+            }
+
+            public bool textureFoldout
             {
                 get => m_TextureFoldout.value;
                 set => m_TextureFoldout.value = value;
-            }   
-            
-            public bool platformSettingsFoldout 
+            }
+
+            public bool platformSettingsFoldout
             {
                 get => m_PlatformSettingsFoldout.value;
                 set => m_PlatformSettingsFoldout.value = value;
@@ -1646,7 +1646,7 @@ namespace UnityEditor.U2D.Aseprite
                 {
                     get
                     {
-                        Load(); 
+                        Load();
                         return m_Value;
                     }
                     set

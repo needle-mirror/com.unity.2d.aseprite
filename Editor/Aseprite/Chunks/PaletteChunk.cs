@@ -23,15 +23,15 @@ namespace UnityEditor.U2D.Aseprite
         /// Color value.
         /// </summary>
         public Color32 color { get; private set; }
-    }    
-    
+    }
+
     /// <summary>
     /// Parsed representation of an Aseprite Palette chunk.
     /// </summary>
     public class PaletteChunk : BaseChunk, IPaletteProvider
     {
         public override ChunkTypes chunkType => ChunkTypes.Palette;
-        
+
         /// <summary>
         /// Number of entries in the palette.
         /// </summary>
@@ -51,13 +51,13 @@ namespace UnityEditor.U2D.Aseprite
         PaletteEntry[] m_Entries;
 
         internal PaletteChunk(uint chunkSize) : base(chunkSize) { }
-        
+
         protected override void InternalRead(BinaryReader reader)
         {
             noOfEntries = reader.ReadUInt32();
             firstColorIndex = reader.ReadUInt32();
             lastColorIndex = reader.ReadUInt32();
-            
+
             // Reserved bytes
             for (var i = 0; i < 8; ++i)
                 reader.ReadByte();

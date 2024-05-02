@@ -10,19 +10,19 @@ namespace UnityEditor.U2D.Aseprite
         public static void Normal(in Color32 prevOutColor, in Color32 inColor, out Color32 outColor)
         {
             var inAlpha = inColor.a / 255f;
-            
+
             outColor = new Color32
             {
-                a = (byte) (inColor.a + prevOutColor.a * (1f - inAlpha))
+                a = (byte)(inColor.a + prevOutColor.a * (1f - inAlpha))
             };
 
             var prevAlpha = (prevOutColor.a * (1f - inAlpha)) / 255f;
             var premultiplyAlpha = outColor.a > 0 ? 255f / outColor.a : 1f;
-            outColor.r = (byte) ((inColor.r * inAlpha + prevOutColor.r * prevAlpha) * premultiplyAlpha);
-            outColor.g = (byte) ((inColor.g * inAlpha + prevOutColor.g * prevAlpha) * premultiplyAlpha);
-            outColor.b = (byte) ((inColor.b * inAlpha + prevOutColor.b * prevAlpha) * premultiplyAlpha);
+            outColor.r = (byte)((inColor.r * inAlpha + prevOutColor.r * prevAlpha) * premultiplyAlpha);
+            outColor.g = (byte)((inColor.g * inAlpha + prevOutColor.g * prevAlpha) * premultiplyAlpha);
+            outColor.b = (byte)((inColor.b * inAlpha + prevOutColor.b * prevAlpha) * premultiplyAlpha);
         }
-        
+
         [BurstCompile]
         public static void Darken(in Color32 prevOutColor, in Color32 inColor, out Color32 outColor)
         {
@@ -44,7 +44,7 @@ namespace UnityEditor.U2D.Aseprite
 
             Normal(in prevOutColor, in darken, out outColor);
         }
-        
+
         [BurstCompile]
         public static void Multiply(in Color32 prevOutColor, in Color32 inColor, out Color32 outColor)
         {
@@ -65,8 +65,8 @@ namespace UnityEditor.U2D.Aseprite
             };
 
             Normal(in prevOutColor, in multiply, out outColor);
-        }      
-        
+        }
+
         [BurstCompile]
         public static void ColorBurn(in Color32 prevOutColor, in Color32 inColor, out Color32 outColor)
         {
@@ -97,11 +97,11 @@ namespace UnityEditor.U2D.Aseprite
             prevVal = (byte)(255 - prevVal);
             if (prevVal >= inVal)
                 return 0;
-            
+
             var div = DivideUnsignedByte(prevVal, inVal);
             return (byte)(255 - div);
-        }   
-        
+        }
+
         [BurstCompile]
         public static void Lighten(in Color32 prevOutColor, in Color32 inColor, out Color32 outColor)
         {
@@ -123,7 +123,7 @@ namespace UnityEditor.U2D.Aseprite
 
             Normal(in prevOutColor, in lighten, out outColor);
         }
-        
+
         [BurstCompile]
         public static void Screen(in Color32 prevOutColor, in Color32 inColor, out Color32 outColor)
         {
@@ -144,15 +144,15 @@ namespace UnityEditor.U2D.Aseprite
 
             var screen = new Color32
             {
-                r = (byte) ((inColor.r + prevOutColor.r) - multiply.r),
-                g = (byte) ((inColor.g + prevOutColor.g) - multiply.g),
-                b = (byte) ((inColor.b + prevOutColor.b) - multiply.b),
+                r = (byte)((inColor.r + prevOutColor.r) - multiply.r),
+                g = (byte)((inColor.g + prevOutColor.g) - multiply.g),
+                b = (byte)((inColor.b + prevOutColor.b) - multiply.b),
                 a = inColor.a
             };
 
             Normal(in prevOutColor, in screen, out outColor);
-        }        
-        
+        }
+
         [BurstCompile]
         public static void ColorDodge(in Color32 prevOutColor, in Color32 inColor, out Color32 outColor)
         {
@@ -173,8 +173,8 @@ namespace UnityEditor.U2D.Aseprite
             };
 
             Normal(in prevOutColor, in burn, out outColor);
-        }   
-     
+        }
+
         [BurstCompile]
         static byte DodgeChannel(byte prevVal, byte inVal)
         {
@@ -201,15 +201,15 @@ namespace UnityEditor.U2D.Aseprite
 
             var addition = new Color32
             {
-                r = (byte) Mathf.Min(inColor.r + prevOutColor.r, 255),
-                g = (byte) Mathf.Min(inColor.g + prevOutColor.g, 255),
-                b = (byte) Mathf.Min(inColor.b + prevOutColor.b, 255),
+                r = (byte)Mathf.Min(inColor.r + prevOutColor.r, 255),
+                g = (byte)Mathf.Min(inColor.g + prevOutColor.g, 255),
+                b = (byte)Mathf.Min(inColor.b + prevOutColor.b, 255),
                 a = inColor.a
             };
 
             Normal(in prevOutColor, in addition, out outColor);
         }
-        
+
         [BurstCompile]
         public static void Overlay(in Color32 prevOutColor, in Color32 inColor, out Color32 outColor)
         {
@@ -231,15 +231,15 @@ namespace UnityEditor.U2D.Aseprite
 
             Normal(in prevOutColor, in overlay, out outColor);
         }
-        
+
         [BurstCompile]
         static byte HardLightChannel(byte valA, byte valB)
         {
             if (valB < 128)
-                return MultiplyUnsignedByte(valA, (byte) (valB << 1));
+                return MultiplyUnsignedByte(valA, (byte)(valB << 1));
             return ScreenUnsignedByte(valA, (byte)((valB << 1) - 255));
-        }        
-        
+        }
+
         [BurstCompile]
         public static void SoftLight(in Color32 prevOutColor, in Color32 inColor, out Color32 outColor)
         {
@@ -279,9 +279,9 @@ namespace UnityEditor.U2D.Aseprite
             else
                 final = valA + (2f * valB - 1f) * (valC - valA);
 
-            return (byte)(final * 255f + 0.5f);           
+            return (byte)(final * 255f + 0.5f);
         }
-        
+
         [BurstCompile]
         public static void HardLight(in Color32 prevOutColor, in Color32 inColor, out Color32 outColor)
         {
@@ -303,7 +303,7 @@ namespace UnityEditor.U2D.Aseprite
 
             Normal(in prevOutColor, in overlay, out outColor);
         }
-        
+
         [BurstCompile]
         public static void Difference(in Color32 prevOutColor, in Color32 inColor, out Color32 outColor)
         {
@@ -314,7 +314,7 @@ namespace UnityEditor.U2D.Aseprite
                 outColor = inColor;
                 return;
             }
-            
+
             var difference = new Color32
             {
                 r = DifferenceChannel(prevOutColor.r, inColor.r),
@@ -324,8 +324,8 @@ namespace UnityEditor.U2D.Aseprite
             };
 
             Normal(in prevOutColor, in difference, out outColor);
-        }     
-        
+        }
+
         [BurstCompile]
         static byte DifferenceChannel(byte valA, byte valB)
         {
@@ -353,14 +353,14 @@ namespace UnityEditor.U2D.Aseprite
 
             Normal(in prevOutColor, in exclusion, out outColor);
         }
-        
+
         [BurstCompile]
         static byte ExclusionChannel(byte valA, byte valB)
         {
             var valC = MultiplyUnsignedByte(valA, valB);
             return (byte)(valA + valB - 2 * valC);
-        }        
-        
+        }
+
         [BurstCompile]
         public static void Subtract(in Color32 prevOutColor, in Color32 inColor, out Color32 outColor)
         {
@@ -371,18 +371,18 @@ namespace UnityEditor.U2D.Aseprite
                 outColor = inColor;
                 return;
             }
-            
+
             var subtract = new Color32
             {
-                r = (byte) Mathf.Max(prevOutColor.r - inColor.r, 0),
-                g = (byte) Mathf.Max(prevOutColor.g - inColor.g, 0),
-                b = (byte) Mathf.Max(prevOutColor.b - inColor.b, 0),
+                r = (byte)Mathf.Max(prevOutColor.r - inColor.r, 0),
+                g = (byte)Mathf.Max(prevOutColor.g - inColor.g, 0),
+                b = (byte)Mathf.Max(prevOutColor.b - inColor.b, 0),
                 a = inColor.a
             };
 
             Normal(in prevOutColor, in subtract, out outColor);
-        }   
-        
+        }
+
         [BurstCompile]
         public static void Divide(in Color32 prevOutColor, in Color32 inColor, out Color32 outColor)
         {
@@ -442,15 +442,15 @@ namespace UnityEditor.U2D.Aseprite
 
             var hue = new Color32()
             {
-                r = (byte) Mathf.RoundToInt(r * 255f),
-                g = (byte) Mathf.RoundToInt(g * 255f),
-                b = (byte) Mathf.RoundToInt(b * 255f),
+                r = (byte)Mathf.RoundToInt(r * 255f),
+                g = (byte)Mathf.RoundToInt(g * 255f),
+                b = (byte)Mathf.RoundToInt(b * 255f),
                 a = inColor.a
             };
 
             Normal(in prevOutColor, in hue, out outColor);
-        }  
-        
+        }
+
         [BurstCompile]
         public static void Saturation(in Color32 prevOutColor, in Color32 inColor, out Color32 outColor)
         {
@@ -461,12 +461,12 @@ namespace UnityEditor.U2D.Aseprite
                 outColor = inColor;
                 return;
             }
-            
+
             var r = inColor.r / 255f;
             var g = inColor.g / 255f;
             var b = inColor.b / 255f;
             var s = GetSaturation(r, g, b);
-            
+
             r = prevOutColor.r / 255f;
             g = prevOutColor.g / 255f;
             b = prevOutColor.b / 255f;
@@ -477,15 +477,15 @@ namespace UnityEditor.U2D.Aseprite
 
             var saturation = new Color32()
             {
-                r = (byte) Mathf.RoundToInt(r * 255f),
-                g = (byte) Mathf.RoundToInt(g * 255f),
-                b = (byte) Mathf.RoundToInt(b * 255f),
+                r = (byte)Mathf.RoundToInt(r * 255f),
+                g = (byte)Mathf.RoundToInt(g * 255f),
+                b = (byte)Mathf.RoundToInt(b * 255f),
                 a = inColor.a
             };
 
             Normal(in prevOutColor, in saturation, out outColor);
         }
-        
+
         [BurstCompile]
         public static void ColorBlend(in Color32 prevOutColor, in Color32 inColor, out Color32 outColor)
         {
@@ -496,29 +496,29 @@ namespace UnityEditor.U2D.Aseprite
                 outColor = inColor;
                 return;
             }
-            
+
             var r = prevOutColor.r / 255f;
             var g = prevOutColor.g / 255f;
             var b = prevOutColor.b / 255f;
             var l = GetLuminosity(r, g, b);
-            
+
             r = inColor.r / 255f;
             g = inColor.g / 255f;
             b = inColor.b / 255f;
-            
+
             SetLuminosity(ref r, ref g, ref b, l);
 
             var color = new Color32()
             {
-                r = (byte) Mathf.RoundToInt(r * 255f),
-                g = (byte) Mathf.RoundToInt(g * 255f),
-                b = (byte) Mathf.RoundToInt(b * 255f),
+                r = (byte)Mathf.RoundToInt(r * 255f),
+                g = (byte)Mathf.RoundToInt(g * 255f),
+                b = (byte)Mathf.RoundToInt(b * 255f),
                 a = inColor.a
             };
 
             Normal(in prevOutColor, in color, out outColor);
         }
-        
+
         [BurstCompile]
         public static void Luminosity(in Color32 prevOutColor, in Color32 inColor, out Color32 outColor)
         {
@@ -529,23 +529,23 @@ namespace UnityEditor.U2D.Aseprite
                 outColor = inColor;
                 return;
             }
-            
+
             var r = inColor.r / 255f;
             var g = inColor.g / 255f;
             var b = inColor.b / 255f;
             var l = GetLuminosity(r, g, b);
-            
+
             r = prevOutColor.r / 255f;
             g = prevOutColor.g / 255f;
             b = prevOutColor.b / 255f;
-            
-            SetLuminosity(ref r, ref g, ref b, l);            
+
+            SetLuminosity(ref r, ref g, ref b, l);
 
             var luminosity = new Color32()
             {
-                r = (byte) Mathf.RoundToInt(r * 255f),
-                g = (byte) Mathf.RoundToInt(g * 255f),
-                b = (byte) Mathf.RoundToInt(b * 255f),
+                r = (byte)Mathf.RoundToInt(r * 255f),
+                g = (byte)Mathf.RoundToInt(g * 255f),
+                b = (byte)Mathf.RoundToInt(b * 255f),
                 a = inColor.a
             };
 
@@ -558,7 +558,7 @@ namespace UnityEditor.U2D.Aseprite
             const uint oneHalf = 0x80;
             const int gShift = 8;
             var valC = (int)((valA * valB) + oneHalf);
-            return (byte) (((valC >> gShift) + valC) >> gShift);
+            return (byte)(((valC >> gShift) + valC) >> gShift);
         }
 
         [BurstCompile]
@@ -566,7 +566,7 @@ namespace UnityEditor.U2D.Aseprite
         {
             return (byte)(valB + valA - MultiplyUnsignedByte(valB, valA));
         }
-        
+
         [BurstCompile]
         static byte DivideUnsignedByte(byte valA, byte valB)
         {
@@ -586,15 +586,15 @@ namespace UnityEditor.U2D.Aseprite
             ref var mid = ref MidRef(ref r, ref g, ref b);
             ref var max = ref MaxRef(ref r, ref MaxRef(ref g, ref b));
 
-            if (max > min) 
+            if (max > min)
             {
                 mid = ((mid - min) * s) / (max - min);
                 max = s;
             }
             else
                 mid = max = 0;
-            
-            min = 0f;            
+
+            min = 0f;
         }
 
         [BurstCompile]
@@ -604,7 +604,7 @@ namespace UnityEditor.U2D.Aseprite
                 return ref a;
             return ref b;
         }
-        
+
         [BurstCompile]
         static ref float MinRef(ref float a, ref float b)
         {
@@ -625,7 +625,7 @@ namespace UnityEditor.U2D.Aseprite
                     return ref c;
                 return ref a;
             }
-            if (!(b > c)) 
+            if (!(b > c))
                 return ref b;
             if (c > a)
                 return ref c;
@@ -646,8 +646,8 @@ namespace UnityEditor.U2D.Aseprite
             g += d;
             b += d;
             ClipColor(ref r, ref g, ref b);
-        }  
-        
+        }
+
         [BurstCompile]
         static void ClipColor(ref float r, ref float g, ref float b)
         {
@@ -655,17 +655,19 @@ namespace UnityEditor.U2D.Aseprite
             var n = Mathf.Min(r, Mathf.Min(g, b));
             var x = Mathf.Max(r, Mathf.Max(g, b));
 
-            if (n < 0) {
+            if (n < 0)
+            {
                 r = l + (((r - l) * l) / (l - n));
                 g = l + (((g - l) * l) / (l - n));
                 b = l + (((b - l) * l) / (l - n));
             }
 
-            if (x > 1) {
+            if (x > 1)
+            {
                 r = l + (((r - l) * (1 - l)) / (x - l));
                 g = l + (((g - l) * (1 - l)) / (x - l));
                 b = l + (((b - l) * (1 - l)) / (x - l));
             }
-        }        
+        }
     }
 }

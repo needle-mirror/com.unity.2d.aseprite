@@ -40,7 +40,7 @@ namespace UnityEditor.U2D.Aseprite
                 ++index;
             }
         }
-        
+
         static string SanitizeName(string name)
         {
             name = name.Replace('\0', ' ');
@@ -80,9 +80,9 @@ namespace UnityEditor.U2D.Aseprite
                     if (chunk.chunkType == ChunkTypes.Palette)
                         PaletteToDisk(chunk as PaletteChunk);
                 }
-            }            
+            }
         }
-        
+
         static void PaletteToDisk(PaletteChunk palette)
         {
             var noOfEntries = palette.noOfEntries;
@@ -105,20 +105,20 @@ namespace UnityEditor.U2D.Aseprite
                 if (paletteEntry < palette.noOfEntries)
                     buffer[i] = palette.entries[paletteEntry].color;
             }
-            
+
             SaveToPng(buffer, width, height);
         }
-        
+
         public static string SaveToPng(NativeArray<Color32> buffer, int width, int height)
         {
             return SaveToPng(buffer.ToArray(), width, height);
         }
-        
+
         static string SaveToPng(Color32[] buffer, int width, int height)
         {
             if (width == 0 || height == 0)
                 return "No .png generated.";
-            
+
             var texture2D = new Texture2D(width, height);
             texture2D.SetPixels32(buffer);
             var png = texture2D.EncodeToPNG();
@@ -126,7 +126,7 @@ namespace UnityEditor.U2D.Aseprite
             var fileStream = System.IO.File.Create(path);
             fileStream.Write(png);
             fileStream.Close();
-            
+
             UnityEngine.Object.DestroyImmediate(texture2D);
 
             return path;
@@ -135,7 +135,7 @@ namespace UnityEditor.U2D.Aseprite
         public static void ExportAnimationAssets(AsepriteImporter[] importers, bool exportClips, bool exportController)
         {
             var savePath = EditorUtility.SaveFolderPanel(
-                "Export Animation Assets", 
+                "Export Animation Assets",
                 Application.dataPath, "");
 
             ExportAnimationAssets(savePath, importers, exportClips, exportController);
@@ -145,7 +145,7 @@ namespace UnityEditor.U2D.Aseprite
         {
             if (string.IsNullOrEmpty(savePath))
                 return;
-            
+
             for (var i = 0; i < importers.Length; ++i)
             {
                 var importedObjectPath = importers[i].assetPath;
@@ -155,12 +155,12 @@ namespace UnityEditor.U2D.Aseprite
                     clips = ExportAnimationClips(importedObjectPath, savePath);
                 else
                     clips = GetAllClipsFromController(importedObjectPath);
-                
+
                 if (exportController)
                     ExportAnimatorController(importers[i], clips, savePath);
             }
         }
-        
+
         static AnimationClip[] ExportAnimationClips(string importedObjectPath, string path)
         {
             var relativePath = FileUtil.GetProjectRelativePath(path);
@@ -190,13 +190,13 @@ namespace UnityEditor.U2D.Aseprite
         static void ExportAnimatorController(AsepriteImporter importer, AnimationClip[] clips, string path)
         {
             var relativePath = FileUtil.GetProjectRelativePath(path);
-            
+
             var importedObjectPath = importer.assetPath;
             var fileName = System.IO.Path.GetFileNameWithoutExtension(importedObjectPath);
 
             var controllerPath = $"{relativePath}/{fileName}.controller";
             var controller = AnimatorController.CreateAnimatorControllerAtPath(controllerPath);
-            
+
             for (var i = 0; i < clips.Length; ++i)
                 controller.AddMotion(clips[i]);
         }
@@ -209,7 +209,7 @@ namespace UnityEditor.U2D.Aseprite
             var scaleX = canvasSize.x / (float)cellRect.width;
             var scaleY = canvasSize.y / (float)cellRect.height;
             var halfSpritePadding = spritePadding / 2f;
-            
+
             var pivot = new Vector2((cellRect.x - halfSpritePadding) / (float)canvasSize.x, (cellRect.y - halfSpritePadding) / (float)canvasSize.y);
             pivot *= -1f;
 
@@ -218,43 +218,43 @@ namespace UnityEditor.U2D.Aseprite
                 alignmentPos = customPivot;
             else
                 alignmentPos = PivotAlignmentToVector(alignment);
-            
+
             pivot.x += alignmentPos.x;
             pivot.y += alignmentPos.y;
-            
+
             pivot.x *= scaleX;
             pivot.y *= scaleY;
-            
+
             return pivot;
         }
 
         public static Vector2 PivotAlignmentToVector(SpriteAlignment alignment)
         {
             switch (alignment)
-            { 
-                    case SpriteAlignment.Center:
-                        return new Vector2(0.5f, 0.5f);
-                    case SpriteAlignment.TopLeft:
-                        return new Vector2(0f, 1f);
-                    case SpriteAlignment.TopCenter:
-                        return new Vector2(0.5f, 1f);
-                    case SpriteAlignment.TopRight:
-                        return new Vector2(1f, 1f);
-                    case SpriteAlignment.LeftCenter:
-                        return new Vector2(0f, 0.5f);
-                    case SpriteAlignment.RightCenter:
-                        return new Vector2(1f, 0.5f);
-                    case SpriteAlignment.BottomLeft:
-                        return new Vector2(0f, 0f);
-                    case SpriteAlignment.BottomCenter:
-                        return new Vector2(0.5f, 0f);
-                    case SpriteAlignment.BottomRight:
-                        return new Vector2(1f, 0f);
-                    default:
-                        return new Vector2(0f, 0f);
+            {
+                case SpriteAlignment.Center:
+                    return new Vector2(0.5f, 0.5f);
+                case SpriteAlignment.TopLeft:
+                    return new Vector2(0f, 1f);
+                case SpriteAlignment.TopCenter:
+                    return new Vector2(0.5f, 1f);
+                case SpriteAlignment.TopRight:
+                    return new Vector2(1f, 1f);
+                case SpriteAlignment.LeftCenter:
+                    return new Vector2(0f, 0.5f);
+                case SpriteAlignment.RightCenter:
+                    return new Vector2(1f, 0.5f);
+                case SpriteAlignment.BottomLeft:
+                    return new Vector2(0f, 0f);
+                case SpriteAlignment.BottomCenter:
+                    return new Vector2(0.5f, 0f);
+                case SpriteAlignment.BottomRight:
+                    return new Vector2(1f, 0f);
+                default:
+                    return new Vector2(0f, 0f);
             }
         }
-        
+
         public static string GetCellName(string baseName, int frameIndex, int noOfFrames)
         {
             if (noOfFrames == 1)
@@ -279,13 +279,13 @@ namespace UnityEditor.U2D.Aseprite
             var isVisible = (layer.layerFlags & LayerFlags.Visible) != 0;
             if (!isVisible)
                 return false;
-            
+
             if (layer.parentIndex != -1)
                 isVisible = IsLayerVisible(layer.parentIndex, in layers);
             return isVisible;
         }
 
-#if !UNITY_2023_1_OR_NEWER        
+#if !UNITY_2023_1_OR_NEWER
         public static bool IsEqual(this RectInt rectA, RectInt rectB)
         {
             return rectA.x == rectB.x &&
@@ -293,6 +293,6 @@ namespace UnityEditor.U2D.Aseprite
                    rectA.width == rectB.width &&
                    rectA.height == rectB.height;
         }
-#endif        
+#endif
     }
 }

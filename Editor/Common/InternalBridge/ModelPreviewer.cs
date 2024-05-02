@@ -22,21 +22,21 @@ namespace UnityEditor.U2D.Aseprite.Common
         List<float> m_FrameTimings;
         int m_ClipIndex = 0;
         SpriteRenderer[] m_Renderers;
-        
+
         Texture m_Texture;
         GameObject m_PreviewObject;
 
         GUIContent[] m_ClipNames;
         int[] m_ClipIndices;
 
-        public ModelPreviewer(GameObject assetPrefab, AnimationClip[] clips) 
+        public ModelPreviewer(GameObject assetPrefab, AnimationClip[] clips)
         {
             m_RenderUtility = new PreviewRenderUtility();
             m_RenderUtility.camera.fieldOfView = 30f;
-            
+
             m_PreviewObject = m_RenderUtility.InstantiatePrefabInScene(assetPrefab);
             m_RenderUtility.AddManagedGameObject(m_PreviewObject);
-            
+
             m_Renderers = m_PreviewObject.GetComponentsInChildren<SpriteRenderer>();
             m_RenderableBounds = GetRenderableBounds(m_Renderers);
 
@@ -54,11 +54,11 @@ namespace UnityEditor.U2D.Aseprite.Common
             m_Clips = clips;
 
             var clipInfos = m_Animator.GetCurrentAnimatorClipInfo(0);
-            
+
             var defaultClipName = string.Empty;
             if (clipInfos.Length > 0)
                 defaultClipName = clipInfos[0].clip.name;
-            
+
             m_ClipNames = new GUIContent[m_Clips.Length];
             m_ClipIndices = new int[m_Clips.Length];
             for (var i = 0; i < m_ClipNames.Length; ++i)
@@ -90,7 +90,7 @@ namespace UnityEditor.U2D.Aseprite.Common
             }
 
             m_FrameTimings = new List<float>(timeSet.Count);
-            foreach(var time in timeSet)
+            foreach (var time in timeSet)
                 m_FrameTimings.Add(time);
             m_FrameTimings.Sort();
             // Remove the final frame time, as we add it on generation
@@ -121,9 +121,9 @@ namespace UnityEditor.U2D.Aseprite.Common
             if (m_SelectedClip != null)
                 UpdateAnimation(isRepainting);
             UpdateActorSize();
-            
+
             GUI.DrawTexture(r, m_Texture, ScaleMode.StretchToFill, false);
-            
+
             if (m_SelectedClip != null)
                 DrawTimeControlGUI(m_PreviewRect);
             else
@@ -134,9 +134,9 @@ namespace UnityEditor.U2D.Aseprite.Common
         {
             if (!isRepainting || m_PreviewObject == null)
                 return;
-         
+
             m_TimeControl.loop = true;
-            
+
             m_Animator.Play(m_SelectedClip.name, 0, m_TimeControl.normalizedTime);
             m_Animator.Update(m_TimeControl.deltaTime);
         }
@@ -152,7 +152,7 @@ namespace UnityEditor.U2D.Aseprite.Common
                 y = Mathf.RoundToInt(bounds.size.y * ppu)
             };
         }
-        
+
         void DrawTimeControlGUI(Rect rect)
         {
             const float kSliderWidth = 150f;
@@ -172,14 +172,14 @@ namespace UnityEditor.U2D.Aseprite.Common
             sliderControlRect.xMin = sliderControlRect.xMax - kSliderWidth + kSpacing;
 
             m_TimeControl.DoTimeControl(timeControlRect);
-            
+
             EditorGUI.BeginChangeCheck();
             m_ClipIndex = EditorGUI.IntPopup(sliderControlRect, m_ClipIndex, m_ClipNames, m_ClipIndices);
             if (EditorGUI.EndChangeCheck())
             {
                 SelectClipFromIndex(m_ClipIndex);
             }
-            
+
             DrawInfoText(rect);
         }
 
@@ -197,7 +197,7 @@ namespace UnityEditor.U2D.Aseprite.Common
             }
 
             text += $"{m_ActorSize.x}x{m_ActorSize.y}";
-            
+
             EditorGUI.DropShadowLabel(rect, text);
         }
 
@@ -210,7 +210,7 @@ namespace UnityEditor.U2D.Aseprite.Common
                     break;
                 frame++;
             }
-            
+
             // Remove one to get the frame number start from 0
             return frame - 1;
         }
@@ -239,24 +239,24 @@ namespace UnityEditor.U2D.Aseprite.Common
                 renderBound.center -= localPos;
                 return renderBound;
             }
-            
+
             var bounds = new Bounds();
             foreach (var rendererComponents in renderers)
             {
                 var renderBound = rendererComponents.bounds;
                 if (bounds.extents == Vector3.zero)
                     bounds = renderBound;
-                else if(rendererComponents.enabled)
+                else if (rendererComponents.enabled)
                     bounds.Encapsulate(renderBound);
             }
             return bounds;
         }
-        
+
         public void Dispose()
         {
             if (m_Disposed)
                 return;
-            
+
             m_RenderUtility.Cleanup();
             Object.DestroyImmediate(m_PreviewObject);
             m_PreviewObject = null;

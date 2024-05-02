@@ -1,5 +1,5 @@
 /// .ase & .aseprite file format specs:
-/// https://github.com/aseprite/aseprite/blob/main/docs/ase-file-specs.md    
+/// https://github.com/aseprite/aseprite/blob/main/docs/ase-file-specs.md
 
 using System;
 using System.Collections.ObjectModel;
@@ -34,9 +34,9 @@ namespace UnityEditor.U2D.Aseprite
         /// Color depth (bits per pixel).
         /// </summary>
         public ushort colorDepth { get; private set; }
-        
+
         internal uint flags { get; private set; }
-        
+
         /// <summary>
         /// Time per frame in milliseconds.
         /// </summary>
@@ -53,7 +53,7 @@ namespace UnityEditor.U2D.Aseprite
         /// <summary>
         /// Pixel width (pixel ratio is "pixel width/pixel height").
         /// If this or pixel height field is zero, pixel ratio is 1:1.
-        /// </summary> 
+        /// </summary>
         public byte pixelWidth { get; private set; }
         /// <summary>
         /// Pixel height (pixel ratio is "pixel width/pixel height").
@@ -86,7 +86,7 @@ namespace UnityEditor.U2D.Aseprite
         {
             var streamLength = reader.BaseStream.Length;
             Assert.IsTrue(streamLength >= 128, "File is too small to be a valid Aseprite file.");
-            
+
             fileSize = reader.ReadUInt32();
             var misc0 = reader.ReadUInt16();
             noOfFrames = reader.ReadUInt16();
@@ -108,9 +108,9 @@ namespace UnityEditor.U2D.Aseprite
             gridPosY = reader.ReadInt16();
             gridWidth = reader.ReadUInt16();
             gridHeight = reader.ReadUInt16();
-            
+
             Assert.IsTrue(misc0 == 0xA5E0, "Unexpected file content. The file is most likely corrupt.");
-            
+
             // Unused 84 bytes
             for (var i = 0; i < 84; ++i)
                 reader.ReadByte();

@@ -10,17 +10,17 @@ namespace UnityEditor.U2D.Aseprite
         /// <summary>
         /// No color profile (as in old .aseprite files).
         /// </summary>
-        NoProfile   = 0,
+        NoProfile = 0,
         /// <summary>
         /// use sRGB.
         /// </summary>
-        sRGB        = 1,
+        sRGB = 1,
         /// <summary>
-        /// use the embedded ICC profile. 
+        /// use the embedded ICC profile.
         /// </summary>
-        ICC         = 2
-    }    
-    
+        ICC = 2
+    }
+
     /// <summary>
     /// Parsed representation of an Aseprite ColorProfile chunk.
     /// </summary>
@@ -41,7 +41,7 @@ namespace UnityEditor.U2D.Aseprite
         /// Fixed gamma (1.0 = linear).
         /// </summary>
         public float gamma { get; private set; }
-        
+
         internal ColorProfileChunk(uint chunkSize) : base(chunkSize) { }
 
         protected override void InternalRead(BinaryReader reader)

@@ -9,13 +9,13 @@ namespace UnityEditor.U2D.Aseprite
         SpriteImportMode ISpriteEditorDataProvider.spriteImportMode => spriteImportModeToUse;
         UnityEngine.Object ISpriteEditorDataProvider.targetObject => targetObject;
         internal UnityEngine.Object targetObject => this;
-        
+
         /// <summary>
         /// Implementation for ISpriteEditorDataProvider.pixelsPerUnit.
         /// </summary>
         float ISpriteEditorDataProvider.pixelsPerUnit => pixelsPerUnit;
         internal float pixelsPerUnit => m_TextureImporterSettings.spritePixelsPerUnit;
-        
+
         /// <summary>
         /// Implementation for ISpriteEditorDataProvider.GetDataProvider.
         /// </summary>
@@ -24,8 +24,8 @@ namespace UnityEditor.U2D.Aseprite
         T ISpriteEditorDataProvider.GetDataProvider<T>()
         {
             return GetDataProvider<T>();
-        }   
-        
+        }
+
         internal T GetDataProvider<T>() where T : class
         {
             if (typeof(T) == typeof(ISpriteBoneDataProvider))
@@ -54,8 +54,8 @@ namespace UnityEditor.U2D.Aseprite
             }
             else
                 return this as T;
-        }     
-        
+        }
+
         /// <summary>
         /// Implementation for ISpriteEditorDataProvider.HasDataProvider.
         /// </summary>
@@ -64,8 +64,8 @@ namespace UnityEditor.U2D.Aseprite
         bool ISpriteEditorDataProvider.HasDataProvider(System.Type type)
         {
             return HasDataProvider(type);
-        }  
-        
+        }
+
         internal bool HasDataProvider(System.Type type)
         {
             if (type == typeof(ISpriteBoneDataProvider) ||
@@ -80,7 +80,7 @@ namespace UnityEditor.U2D.Aseprite
             else
                 return type.IsAssignableFrom(GetType());
         }
-        
+
         /// <summary>
         /// Implementation for ISpriteEditorDataProvider.Apply.
         /// </summary>
@@ -88,17 +88,17 @@ namespace UnityEditor.U2D.Aseprite
         {
             Apply();
         }
-        
+
         /// <summary>
         /// Implementation for ISpriteEditorDataProvider.InitSpriteEditorDataProvider.
         /// </summary>
         void ISpriteEditorDataProvider.InitSpriteEditorDataProvider()
         {
             InitSpriteEditorDataProvider();
-        } 
-        
-        void InitSpriteEditorDataProvider() {}
-        
+        }
+
+        void InitSpriteEditorDataProvider() { }
+
         /// <summary>
         /// Implementation for ISpriteEditorDataProvider.GetSpriteRects.
         /// </summary>
@@ -107,7 +107,7 @@ namespace UnityEditor.U2D.Aseprite
         {
             return GetSpriteRects();
         }
-        
+
         internal SpriteRect[] GetSpriteRects()
         {
             if (spriteImportModeToUse == SpriteImportMode.Multiple)
@@ -122,8 +122,8 @@ namespace UnityEditor.U2D.Aseprite
                 }
             }
             return new[] { new SpriteMetaData(m_SingleSpriteImportData[0]) };
-        }   
-        
+        }
+
         /// <summary>
         /// Implementation for ISpriteEditorDataProvider.SetSpriteRects.
         /// </summary>
@@ -131,8 +131,8 @@ namespace UnityEditor.U2D.Aseprite
         void ISpriteEditorDataProvider.SetSpriteRects(SpriteRect[] spriteRects)
         {
             SetSpriteRects(spriteRects);
-        }        
-        
+        }
+
         internal void SetSpriteRects(SpriteRect[] spriteRects)
         {
             var spriteImportData = GetSpriteImportData();
@@ -170,6 +170,6 @@ namespace UnityEditor.U2D.Aseprite
                     spriteImportData[0] = new SpriteMetaData(spriteRects[0]);
                 }
             }
-        }         
+        }
     }
 }

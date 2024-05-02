@@ -20,16 +20,16 @@ namespace UnityEditor.U2D.Aseprite
         [InitializeOnLoadMethod]
         static void Setup()
         {
-            
+
             Cleanup();
-            
+
             EditorApplication.update += OnUpdate;
             if (ImportSettings.backgroundImport)
                 SetupWatcher();
 
             s_LastSettingsValue = ImportSettings.backgroundImport;
         }
-        
+
         static void Cleanup()
         {
             EditorApplication.update -= OnUpdate;
@@ -39,9 +39,9 @@ namespace UnityEditor.U2D.Aseprite
 
         static void OnUpdate()
         {
-            if (EditorApplication.isCompiling) 
+            if (EditorApplication.isCompiling)
                 return;
-            if (EditorApplication.isUpdating) 
+            if (EditorApplication.isUpdating)
                 return;
 
             CheckForSettingsUpdate();
@@ -57,15 +57,15 @@ namespace UnityEditor.U2D.Aseprite
                 SetupWatcher();
             else
                 StopWatchers();
-            
+
             s_LastSettingsValue = ImportSettings.backgroundImport;
         }
-        
+
         static void SetupWatcher()
         {
             if (Application.isBatchMode)
                 return;
-            
+
             ThreadPool.QueueUserWorkItem(MonitorDirectory, k_AssetsPath);
         }
 
@@ -90,7 +90,7 @@ namespace UnityEditor.U2D.Aseprite
             watcher.Renamed += OnChangeDetected;
             return watcher;
         }
-        
+
         static void OnChangeDetected(object sender, FileSystemEventArgs e)
         {
             var extension = Path.GetExtension(e.FullPath);
@@ -117,7 +117,7 @@ namespace UnityEditor.U2D.Aseprite
 
         static void CheckForChange()
         {
-            if (!s_HasChange) 
+            if (!s_HasChange)
                 return;
             // If the editor is already focused, skip forced import.
             if (UnityEditorInternal.InternalEditorUtility.isApplicationActive)
@@ -127,13 +127,13 @@ namespace UnityEditor.U2D.Aseprite
             }
             if (Application.isPlaying)
                 return;
-            
+
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport & ImportAssetOptions.ForceUpdate);
 
             var relativePaths = new List<string>(s_AssetsFullPath.Count);
             for (var i = 0; i < s_AssetsFullPath.Count; ++i)
                 relativePaths.Add(FileUtil.GetProjectRelativePath(s_AssetsFullPath[i]));
-            
+
             AssetDatabase.ForceReserializeAssets(relativePaths);
             InternalEditorBridge.RefreshInspectors();
 

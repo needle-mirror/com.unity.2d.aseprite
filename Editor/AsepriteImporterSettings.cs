@@ -12,7 +12,7 @@ namespace UnityEditor.U2D.Aseprite
             get => m_FileImportMode;
             set => m_FileImportMode = value;
         }
-        
+
         [SerializeField] bool m_ImportHiddenLayers;
         public bool importHiddenLayers
         {
@@ -40,14 +40,14 @@ namespace UnityEditor.U2D.Aseprite
             get => m_DefaultPivotAlignment;
             set => m_DefaultPivotAlignment = value;
         }
-        
+
         [SerializeField] Vector2 m_CustomPivotPosition;
         public Vector2 customPivotPosition
         {
             get => m_CustomPivotPosition;
             set => m_CustomPivotPosition = value;
         }
-        
+
         [SerializeField] uint m_MosaicPadding;
         public uint mosaicPadding
         {
@@ -75,13 +75,13 @@ namespace UnityEditor.U2D.Aseprite
             get => m_GenerateAnimationClips;
             set => m_GenerateAnimationClips = value;
         }
-        
+
         [SerializeField] bool m_AddSortingGroup;
         public bool addSortingGroup
         {
             get => m_AddSortingGroup;
             set => m_AddSortingGroup = value;
-        }        
+        }
 
         [SerializeField] bool m_AddShadowCasters;
         public bool addShadowCasters

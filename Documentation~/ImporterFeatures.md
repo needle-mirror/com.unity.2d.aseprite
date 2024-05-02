@@ -19,7 +19,7 @@ The Aseprite Importer is available after you import a .ase/.aseprite file into y
 
 ### General
 ![](images/Ase-General-section.png)
-<table>    
+<table>
   <thead>
     <tr>
       <th colspan="1"><strong>Property</strong></th>
@@ -38,7 +38,7 @@ The Aseprite Importer is available after you import a .ase/.aseprite file into y
     <tr>
       <td><strong>Animated Sprite</strong></td>
       <td>The file is imported with animation in mind. Animation assets are generated and attached to a model prefab on import.</td>
-    </tr> 
+    </tr>
     <tr>
       <td rowspan="1"><strong>Pixels Per Unit</strong></td>
       <td colspan="2">Sets the number of pixels that equals one Unity unit.</td>
@@ -64,7 +64,7 @@ The Aseprite Importer is available after you import a .ase/.aseprite file into y
 
 ### Layer import
 ![](images/Ase-LayerImport-section.png)
-<table>    
+<table>
   <thead>
     <tr>
       <th colspan="1"><strong>Property</strong></th>
@@ -103,21 +103,21 @@ The Aseprite Importer is available after you import a .ase/.aseprite file into y
     <tr>
       <td rowspan="1"><strong>Pivot Alignment</strong></td>
       <td colspan="2">How a Sprite's graphic rectangle is aligned with its pivot point. This property is set <b>Bottom</b> by default.</td>
-    </tr>   
+    </tr>
     <tr>
       <td rowspan="1"><strong>Mosaic Padding</strong></td>
       <td colspan="2">External padding between each SpriteRect. This property is set <b>4</b> pixels by default.</td>
-    </tr>  
+    </tr>
     <tr>
       <td rowspan="1"><strong>Sprite Padding</strong></td>
       <td colspan="2">Internal padding within each SpriteRect. This property is set <b>0</b> pixels by default.</td>
-    </tr>      
+    </tr>
   </tbody>
 </table>
 
 ### Generate assets
 ![](images/Ase-GenerateAssets-section.png)
-<table>    
+<table>
   <thead>
     <tr>
       <th colspan="1"><strong>Property</strong></th>
@@ -132,7 +132,7 @@ The Aseprite Importer is available after you import a .ase/.aseprite file into y
     <tr>
       <td rowspan="1"><strong>Sorting Group</strong></td>
       <td colspan="2">Add a Sorting Group component to the root of the generated model prefab if it has more than one Sprite Renderer. This property is set to <b>True</b> by default.</td>
-    </tr>    
+    </tr>
     <tr>
       <td rowspan="1"><strong>Shadow Casters</strong></td>
       <td colspan="2">Enable this property to add Shadow Casters to all GameObjects with a SpriteRenderer. This property is set to <b>False</b> by default. Note that this checkbox is only available in Unity 2023.1 and newer.</td>
@@ -140,11 +140,11 @@ The Aseprite Importer is available after you import a .ase/.aseprite file into y
     <tr>
       <td rowspan="1"><strong>Animation Clips</strong></td>
       <td colspan="2">Enable this property to generate Animation Clips based on the frame data in the file. Every tag in Aseprite generates one Animation Clip. If no tag is present, one Animation Clip is generated which covers all frames in the file. The Animation speed is based on the Constant Frame Rate defined in Aseprite. The length is based on the number of frames included in the tag/file. This property is set to <b>True</b> by default.</td>
-    </tr>   
+    </tr>
     <tr>
       <td rowspan="1"><strong>Export Animation Assets</strong></td>
       <td colspan="2">The Animator Controller and the Animation Clips are generated as Read Only assets. This option can be used to export editable versions of these assets.</td>
-    </tr>        
+    </tr>
   </tbody>
 </table>
 
@@ -153,7 +153,7 @@ The Aseprite Importer Preferences can be found at <b>Unity > Settings > 2D > Ase
 
 ![](images/Ase-Preferences.png) <br/>Aseprite Importer Preferences
 
-<table>    
+<table>
   <thead>
     <tr>
       <th colspan="1"><strong>Property</strong></th>
@@ -164,6 +164,6 @@ The Aseprite Importer Preferences can be found at <b>Unity > Settings > 2D > Ase
     <tr>
       <td rowspan="1"><strong>Background import</strong></td>
       <td colspan="2">Enable this property to enable asset import when the Unity Editor is in the background. This property is set to <b>True</b> by default.</td>
-    </tr>    
+    </tr>
   </tbody>
 </table>

@@ -10,15 +10,15 @@ namespace UnityEditor.U2D.Aseprite
     [Flags]
     public enum TileSetFlags
     {
-        IncludesLinkToExternal = 1, 
-        IncludesTilesInFile = 2, 
+        IncludesLinkToExternal = 1,
+        IncludesTilesInFile = 2,
         Misc = 4,
-    }     
-    
+    }
+
     /// <summary>
     /// Parsed representation of an Aseprite Tileset chunk.
     /// </summary>
-    /// <note>Not supported yet.</note> 
+    /// <note>Not supported yet.</note>
     public class TilesetChunk : BaseChunk
     {
         public override ChunkTypes chunkType => ChunkTypes.Tileset;
@@ -26,13 +26,13 @@ namespace UnityEditor.U2D.Aseprite
         /// <summary>
         /// The ID of the tileset.
         /// </summary>
-        public uint tileSetId  { get; private set; }
+        public uint tileSetId { get; private set; }
         /// <summary>
-        /// Flags to define where data for a tileset is stored. 
+        /// Flags to define where data for a tileset is stored.
         /// </summary>
         public TileSetFlags tileSetFlags { get; private set; }
         /// <summary>
-        /// The number of tiles in the tileset. 
+        /// The number of tiles in the tileset.
         /// </summary>
         public uint noOfTiles { get; private set; }
         /// <summary>
@@ -66,12 +66,12 @@ namespace UnityEditor.U2D.Aseprite
             noOfTiles = reader.ReadUInt32();
             width = reader.ReadUInt16();
             height = reader.ReadUInt16();
-            
+
             var baseIndex = reader.ReadInt16();
             var reservedBytes = reader.ReadBytes(14);
 
             tileSetName = AsepriteUtilities.ReadString(reader);
-            
+
             // Not supported yet.
             if ((tileSetFlags & TileSetFlags.IncludesLinkToExternal) != 0)
             {
@@ -82,9 +82,9 @@ namespace UnityEditor.U2D.Aseprite
             {
                 var compressedDataLength = (int)reader.ReadUInt32();
                 var decompressedData = AsepriteUtilities.ReadAndDecompressedData(reader, compressedDataLength);
-                
+
                 var image = AsepriteUtilities.GenerateImageData(m_ColorDepth, decompressedData, m_PaletteEntries, m_AlphaPaletteEntry);
-                
+
                 // Disposing for now.
                 image.Dispose();
             }

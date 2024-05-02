@@ -102,7 +102,7 @@ namespace UnityEditor.U2D.Aseprite.Common
         static ImagePackNode InternalPack(RectInt[] rects, int padding, bool requireSquarePOT)
         {
             if (rects == null || rects.Length == 0)
-                return new ImagePackNode() { rect = new RectInt(0, 0, 0, 0)};
+                return new ImagePackNode() { rect = new RectInt(0, 0, 0, 0) };
             var sortedRects = new ImagePackRect[rects.Length];
             for (var i = 0; i < rects.Length; ++i)
             {
@@ -123,7 +123,7 @@ namespace UnityEditor.U2D.Aseprite.Common
             {
                 if (!root.Insert(sortedRects[i], padding)) // we can't fit
                 {
-                    int newWidth = root.rect.width , newHeight = root.rect.height;
+                    int newWidth = root.rect.width, newHeight = root.rect.height;
                     if (root.rect.width < root.rect.height)
                     {
                         newWidth = (int)NextPowerOfTwo((ulong)root.rect.width + 1);
@@ -144,11 +144,11 @@ namespace UnityEditor.U2D.Aseprite.Common
             }
             return root;
         }
-        
+
         public static void Blit(NativeArray<Color32> buffer, RectInt[] blitToArea, int bufferBytesPerRow, NativeArray<Color32>[] originalBuffer, RectInt[] blitFromArea, int[] bytesPerRow, int padding)
         {
             UnityEngine.Profiling.Profiler.BeginSample("Blit");
-            
+
             for (var bufferIndex = 0; bufferIndex < blitToArea.Length && bufferIndex < originalBuffer.Length && bufferIndex < blitFromArea.Length; ++bufferIndex)
             {
                 var fromArea = new int4(blitFromArea[bufferIndex].x, blitFromArea[bufferIndex].y, blitFromArea[bufferIndex].width, blitFromArea[bufferIndex].height);
@@ -156,9 +156,9 @@ namespace UnityEditor.U2D.Aseprite.Common
 
                 unsafe
                 {
-                    var originalBufferPtr = (Color32*) originalBuffer[bufferIndex].GetUnsafeReadOnlyPtr();
-                    var outputBufferPtr = (Color32*) buffer.GetUnsafePtr();
-                    BurstedBlit(originalBufferPtr, in fromArea, in toArea, bytesPerRow[bufferIndex], bufferBytesPerRow, outputBufferPtr);   
+                    var originalBufferPtr = (Color32*)originalBuffer[bufferIndex].GetUnsafeReadOnlyPtr();
+                    var outputBufferPtr = (Color32*)buffer.GetUnsafePtr();
+                    BurstedBlit(originalBufferPtr, in fromArea, in toArea, bytesPerRow[bufferIndex], bufferBytesPerRow, outputBufferPtr);
                 }
             }
 

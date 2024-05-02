@@ -36,21 +36,21 @@ namespace UnityEditor.U2D.Aseprite
             frameDuration = reader.ReadUInt16();
             var misc1 = reader.ReadByte();
             var misc2 = reader.ReadByte();
-            var chunkCount = reader.ReadUInt32();  
-            
+            var chunkCount = reader.ReadUInt32();
+
             Assert.IsTrue(misc0 == 0xF1FA, "Reading mismatch.");
-            
+
             this.chunkCount = chunkCount != 0 ? chunkCount : legacyChunkCount;
             m_Chunks = new BaseChunk[this.chunkCount];
         }
-        
+
         internal void SetChunkData(int index, BaseChunk data)
         {
             if (index < 0 || index >= m_Chunks.Length)
                 return;
             m_Chunks[index] = data;
-        }    
-        
+        }
+
         public void Dispose()
         {
             for (var i = 0; i < m_Chunks.Length; ++i)

@@ -17,7 +17,7 @@ namespace UnityEditor.U2D.Aseprite
                         deflateStream.CopyTo(decompressedStream);
                     }
                 }
-        
+
                 decompressedData = decompressedStream.ToArray();
             }
             return decompressedData;

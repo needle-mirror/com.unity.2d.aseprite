@@ -12,11 +12,11 @@ namespace UnityEditor.U2D.Aseprite
         Reverse = 1,
         PingPong = 2,
         PingPongReverse = 3,
-    }    
-    
+    }
+
     /// <summary>
     /// Parsed representation of an Aseprite Tag data.
-    /// </summary>    
+    /// </summary>
     public class TagData
     {
         /// <summary>
@@ -43,11 +43,11 @@ namespace UnityEditor.U2D.Aseprite
         /// The name of the tag.
         /// </summary>
         public string name { get; set; }
-    }    
-    
+    }
+
     /// <summary>
     /// Parsed representation of an Aseprite Tags chunk.
-    /// </summary>    
+    /// </summary>
     public class TagsChunk : BaseChunk
     {
         public override ChunkTypes chunkType => ChunkTypes.Tags;
@@ -79,9 +79,9 @@ namespace UnityEditor.U2D.Aseprite
                 m_TagData[i] = new TagData();
                 m_TagData[i].fromFrame = reader.ReadUInt16();
                 m_TagData[i].toFrame = reader.ReadUInt16();
-                m_TagData[i].loopDirection = (LoopAnimationDirection) reader.ReadByte();
+                m_TagData[i].loopDirection = (LoopAnimationDirection)reader.ReadByte();
                 m_TagData[i].noOfRepeats = reader.ReadUInt16();
-                
+
                 // Not in use bytes
                 for (var m = 0; m < 6; ++m)
                     reader.ReadByte();
@@ -89,7 +89,7 @@ namespace UnityEditor.U2D.Aseprite
                 for (var m = 0; m < 3; ++m)
                     reader.ReadByte();
                 reader.ReadByte();
-                
+
                 m_TagData[i].name = AsepriteUtilities.ReadString(reader);
             }
         }

@@ -16,7 +16,7 @@ namespace UnityEditor.U2D.Aseprite
             SpriteMetaData[] sprites,
             in List<TextureImporterPlatformSettings> allPlatformSettings,
             in TextureImporterSettings textureImporterSettings,
-            string spritePackingTag, 
+            string spritePackingTag,
             SecondarySpriteTexture[] secondarySpriteTextures)
         {
             if (!imageData.IsCreated || imageData.Length == 0)
@@ -38,7 +38,7 @@ namespace UnityEditor.U2D.Aseprite
                 var textureMipmapSettings = textureImporterSettings.ExtractTextureMipmapSettings();
                 var textureCubemapSettings = textureImporterSettings.ExtractTextureCubemapSettings();
                 var textureWrapSettings = textureImporterSettings.ExtractTextureWrapSettings();
-                
+
                 switch (textureImporterSettings.textureType)
                 {
                     case TextureImporterType.Default:
@@ -58,10 +58,10 @@ namespace UnityEditor.U2D.Aseprite
                         textureSpriteSettings.spriteSheetData = new SpriteImportData[sprites.Length];
                         textureSettings.npotScale = TextureImporterNPOTScale.None;
                         textureSettings.secondaryTextures = secondarySpriteTextures;
-                        
+
                         for (var i = 0; i < sprites.Length; ++i)
                             textureSpriteSettings.spriteSheetData[i] = sprites[i];
-                        
+
                         output = TextureGeneratorHelper.GenerateTextureSprite(imageData, textureWidth, textureHeight, textureSettings, platformSettings, textureSpriteSettings, textureAlphaSettings, textureMipmapSettings, textureWrapSettings);
                         break;
                     case TextureImporterType.Cursor:
@@ -88,9 +88,9 @@ namespace UnityEditor.U2D.Aseprite
             }
             finally
             {
-                UnityEngine.Profiling.Profiler.EndSample();    
+                UnityEngine.Profiling.Profiler.EndSample();
             }
-            
+
             return output;
         }
     }

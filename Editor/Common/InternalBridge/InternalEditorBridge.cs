@@ -25,12 +25,12 @@ namespace UnityEditor.U2D.Aseprite.Common
         }
 
         public static void AddManagedGameObject(this PreviewRenderUtility scene, GameObject go) => scene.AddManagedGO(go);
-        
-        public static void RefreshInspectors() => InspectorWindow.RefreshInspectors(); 
-        
+
+        public static void RefreshInspectors() => InspectorWindow.RefreshInspectors();
+
         public static void GenerateOutlineFromSprite(Sprite sprite, float detail, byte alphaTolerance, bool holeDetection, out Vector2[][] paths)
         {
             UnityEditor.Sprites.SpriteUtility.GenerateOutlineFromSprite(sprite, detail, alphaTolerance, holeDetection, out paths);
-        }        
+        }
     }
 }

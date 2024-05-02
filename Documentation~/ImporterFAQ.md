@@ -1,7 +1,7 @@
 # Frequently asked questions
 
 ## How to combine multiple sprite sheets into one?
-You can make use of Sprite Atlases to combine multiple sprite sheets into a single texture. Read more about Sprite Atlas [here](https://docs.unity3d.com/2021.3/Documentation/Manual/class-SpriteAtlas.html). Combining multiple sprite sheets into one is a good way to reduce the draw calls in a scene.  
+You can make use of Sprite Atlases to combine multiple sprite sheets into a single texture. Read more about Sprite Atlas [here](https://docs.unity3d.com/2021.3/Documentation/Manual/class-SpriteAtlas.html). Combining multiple sprite sheets into one is a good way to reduce the draw calls in a scene.
 
 ## Why is my trimmed Aseprite file not trimmed in Unity?
 When modifying the [canvas size](https://www.aseprite.org/docs/canvas/#canvas-size), make sure the **Trim content outside the canvas** checkbox is checked. This way, the stored texture will be cropped to the specified size.
@@ -31,7 +31,7 @@ Follow these steps to add an Animation Event to a frame:
 ![](images/Faq_AddEvents_02.png)
 
 ## How to make changes to an Animator Controller?
-The Aseprite Importer generates an Animator Controller if the Aseprite file contains more than one frame and the **Animation Clip** checkbox is checked in the importer. This Animator Controller is Read Only, meaning that it cannot be changed. 
+The Aseprite Importer generates an Animator Controller if the Aseprite file contains more than one frame and the **Animation Clip** checkbox is checked in the importer. This Animator Controller is Read Only, meaning that it cannot be changed.
 
 ![](images/Faq_AnimController.png)
 
@@ -46,12 +46,12 @@ If you like to have an Animator Controller which you can change, follow these st
 
 ![](images/Faq_ExportPopup.png)
 
-An Animator Controller should now be located in the selected folder. If the Animation Clip checkbox was left unchecked, all the states within the Animator Controller are linked back to the Aseprite file, meaning that the clips will stay up to date with any changes made in Aseprite. 
+An Animator Controller should now be located in the selected folder. If the Animation Clip checkbox was left unchecked, all the states within the Animator Controller are linked back to the Aseprite file, meaning that the clips will stay up to date with any changes made in Aseprite.
 
 Do note that if you add a new [tag](https://www.aseprite.org/docs/tags/) in Aseprite, you need to add the resulting Animation Clip to the exported Animator Controller, as this will not happen automatically.
 
 ## How to inject custom assets on import?
-The Aseprite Importer comes with an event, OnPostAsepriteImport, which is fired at the end of the import process. This event can be used to inject or change the generated assets when importing an Aseprite file. 
+The Aseprite Importer comes with an event, OnPostAsepriteImport, which is fired at the end of the import process. This event can be used to inject or change the generated assets when importing an Aseprite file.
 
 ```CSharp
 using UnityEditor;

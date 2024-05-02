@@ -12,30 +12,30 @@ namespace UnityEditor.U2D.Aseprite
     internal class OldPaletteChunk : BaseChunk, IPaletteProvider
     {
         public override ChunkTypes chunkType => ChunkTypes.OldPalette;
-        
+
         /// <summary>
         /// Array of palette entries.
         /// </summary>
         public ReadOnlyCollection<PaletteEntry> entries => System.Array.AsReadOnly(m_Entries);
-        PaletteEntry[] m_Entries;   
-        
+        PaletteEntry[] m_Entries;
+
         internal OldPaletteChunk(uint chunkSize) : base(chunkSize) { }
 
         protected override void InternalRead(BinaryReader reader)
         {
             var noOfPackets = reader.ReadUInt16();
             var colorEntries = new List<PaletteEntry>();
-            
+
             var colorIndex = 0;
             for (var i = 0; i < noOfPackets; ++i)
             {
                 var noOfColorsToSkip = reader.ReadByte();
                 colorIndex += noOfColorsToSkip;
-                
+
                 int noOfColorsInEntry = reader.ReadByte();
                 if (noOfColorsInEntry == 0)
                     noOfColorsInEntry = 256;
-                
+
                 // If j + colorIndex >= 256 it means that the color chunk is invalid, so we stop reading.
                 for (var j = 0; j < noOfColorsInEntry && (j + colorIndex < 256); ++j)
                 {

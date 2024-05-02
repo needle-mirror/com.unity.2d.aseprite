@@ -46,7 +46,7 @@ namespace UnityEditor.U2D.Aseprite
                     var height = cell.cellRect.height;
                     if (width == 0 || height == 0)
                         continue;
-                    
+
                     if (cellsPerFrame.ContainsKey(cell.frameIndex))
                         cellsPerFrame[cell.frameIndex].Add(cell);
                     else
@@ -63,12 +63,12 @@ namespace UnityEditor.U2D.Aseprite
                     Assert.AreNotEqual(-1, cellIndex, $"Linked Cell: {frameIndex} is linked to cell: {linkedToFrame}, which cannot be found.");
 
                     var cell = cells[cellIndex];
-                    
+
                     var width = cell.cellRect.width;
                     var height = cell.cellRect.height;
                     if (width == 0 || height == 0)
-                        continue;     
-                    
+                        continue;
+
                     if (cellsPerFrame.ContainsKey(frameIndex))
                         cellsPerFrame[frameIndex].Add(cell);
                     else
@@ -98,7 +98,7 @@ namespace UnityEditor.U2D.Aseprite
                         cellRects[i] = cells[i].cellRect;
                         cellBlendModes[i] = cells[i].blendMode;
                     }
-                    
+
                     TextureTasks.MergeTextures(in textures, in cellRects, in cellBlendModes, out var output);
                     var mergedCell = new Cell()
                     {

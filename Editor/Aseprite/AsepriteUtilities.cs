@@ -23,12 +23,12 @@ namespace UnityEditor.U2D.Aseprite
         {
             // 2 bytes of Rfc1950Header that we do not want
             var magicBytes = reader.ReadBytes(2);
-                
+
             var compressedData = reader.ReadBytes(dataLength - 2);
             var decompressedData = Zlib.Decompress(compressedData);
             return decompressedData;
         }
-        
+
         public static NativeArray<Color32> GenerateImageData(ushort colorDepth, byte[] imageData, ReadOnlyCollection<PaletteEntry> paletteEntries, byte alphaPaletteEntry)
         {
             if (colorDepth == 32 || colorDepth == 16)
@@ -36,8 +36,8 @@ namespace UnityEditor.U2D.Aseprite
             if (colorDepth == 8)
                 return ByteToColorArrayUsingPalette(imageData, paletteEntries, alphaPaletteEntry);
             return default;
-        }        
-        
+        }
+
         static NativeArray<Color32> ByteToColorArray(in byte[] data, ushort colorDepth)
         {
             NativeArray<Color32> image = default;
@@ -75,7 +75,7 @@ namespace UnityEditor.U2D.Aseprite
                 return default;
 
             var alphaColor = new Color32(0, 0, 0, 0);
-            
+
             image = new NativeArray<Color32>(data.Length, Allocator.Persistent);
             for (var i = 0; i < image.Length; ++i)
             {

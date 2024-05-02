@@ -9,23 +9,23 @@ namespace UnityEditor.U2D.Aseprite
     internal static class PrefabGeneration
     {
         public static void Generate(
-            AssetImportContext ctx, 
-            TextureGenerationOutput output, 
+            AssetImportContext ctx,
+            TextureGenerationOutput output,
             List<Layer> layers,
             Dictionary<int, GameObject> layerIdToGameObject,
             Vector2Int canvasSize,
             AsepriteImporterSettings importSettings,
-            ref UnityEngine.Object mainAsset, 
+            ref UnityEngine.Object mainAsset,
             out GameObject rootGameObject)
         {
             rootGameObject = new GameObject("Root");
 #if ENABLE_URP
             if (importSettings.addShadowCasters && layers.Count > 1)
-                rootGameObject.AddComponent<UnityEngine.Rendering.Universal.CompositeShadowCaster2D>(); 
+                rootGameObject.AddComponent<UnityEngine.Rendering.Universal.CompositeShadowCaster2D>();
 #endif
             if (importSettings.addSortingGroup && layers.Count > 1)
-                rootGameObject.AddComponent<SortingGroup>(); 
-            
+                rootGameObject.AddComponent<SortingGroup>();
+
             if (layers.Count == 1)
             {
                 layerIdToGameObject.Add(layers[0].index, rootGameObject);
@@ -37,10 +37,10 @@ namespace UnityEditor.U2D.Aseprite
             {
                 var layer = layers[i];
                 SetupLayerGameObject(layer, layerIdToGameObject, output.sprites, importSettings, canvasSize);
-                
+
                 if (layer.parentIndex == -1)
                     continue;
-                
+
                 var parentGo = layerIdToGameObject[layer.parentIndex];
                 layerIdToGameObject[layer.index].transform.parent = parentGo.transform;
             }
@@ -64,14 +64,14 @@ namespace UnityEditor.U2D.Aseprite
                 var go = new GameObject(layer.name);
                 go.transform.parent = root.transform;
                 go.transform.localRotation = Quaternion.identity;
-                
+
                 layerIdToGameObject.Add(layer.index, go);
-            }            
+            }
         }
 
         static void SetupLayerGameObject(
-            Layer layer, 
-            Dictionary<int, GameObject> layerIdToGameObject, 
+            Layer layer,
+            Dictionary<int, GameObject> layerIdToGameObject,
             Sprite[] sprites,
             AsepriteImporterSettings importSettings,
             Vector2Int canvasSize)
@@ -82,14 +82,14 @@ namespace UnityEditor.U2D.Aseprite
             var firstCell = layer.cells[0];
             var gameObject = layerIdToGameObject[layer.index];
             var sprite = Array.Find(sprites, x => x.GetSpriteID() == firstCell.spriteId);
-                
+
             var sr = gameObject.AddComponent<SpriteRenderer>();
             sr.sprite = sprite;
             sr.sortingOrder = layer.index + firstCell.additiveSortOrder;
-                
+
 #if ENABLE_URP
                 if (importSettings.addShadowCasters)
-                    gameObject.AddComponent<UnityEngine.Rendering.Universal.ShadowCaster2D>(); 
+                    gameObject.AddComponent<UnityEngine.Rendering.Universal.ShadowCaster2D>();
 #endif
 
             if (importSettings.defaultPivotSpace == PivotSpaces.Canvas)
@@ -98,7 +98,7 @@ namespace UnityEditor.U2D.Aseprite
             {
                 var cellRect = firstCell.cellRect;
                 var position = new Vector3(cellRect.x, cellRect.y, 0f);
-                    
+
                 var pivot = sprite.pivot;
                 position.x += pivot.x;
                 position.y += pivot.y;
@@ -106,7 +106,7 @@ namespace UnityEditor.U2D.Aseprite
                 var globalPivot = ImportUtilities.PivotAlignmentToVector(importSettings.defaultPivotAlignment);
                 position.x -= (canvasSize.x * globalPivot.x);
                 position.y -= (canvasSize.y * globalPivot.y);
-                    
+
                 position.x /= sprite.pixelsPerUnit;
                 position.y /= sprite.pixelsPerUnit;
 

@@ -11,7 +11,7 @@ namespace UnityEditor.U2D.Aseprite
             get => m_ImportedTextureWidth;
             set => m_ImportedTextureWidth = value;
         }
-        
+
         [SerializeField]
         int m_ImportedTextureHeight;
         public int importedTextureHeight

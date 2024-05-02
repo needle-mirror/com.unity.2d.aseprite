@@ -122,7 +122,7 @@ namespace UnityEditor.U2D.Aseprite
     {
         [SerializeField] int m_FrameIndex;
         [SerializeField] int m_LinkedToFrame;
-        
+
         public int frameIndex
         {
             get => m_FrameIndex;
@@ -198,7 +198,7 @@ namespace UnityEditor.U2D.Aseprite
         /// </summary>
         Canvas,
         /// <summary>
-        /// Local space. This is the normal pivot space. 
+        /// Local space. This is the normal pivot space.
         /// </summary>
         Local
     }

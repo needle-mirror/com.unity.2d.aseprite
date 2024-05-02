@@ -13,8 +13,8 @@ namespace UnityEditor.U2D.Aseprite
             public static readonly string clipsText = L10n.Tr("Animation Clips");
             public static readonly string exportText = L10n.Tr("Export");
             public static readonly string cancelText = L10n.Tr("Cancel");
-        }        
-        
+        }
+
         const string k_SubElementUssClass = "SubElement";
         const string k_ControllerToggleId = "ControllerToggle";
         const string k_ClipsToggleId = "ClipsToggle";
@@ -29,7 +29,7 @@ namespace UnityEditor.U2D.Aseprite
         void Awake()
         {
             titleContent = new GUIContent(Content.titleText);
-            
+
             var size = new Vector2(300f, 110f);
             maxSize = size;
             minSize = size;
@@ -92,7 +92,7 @@ namespace UnityEditor.U2D.Aseprite
             };
             cancelButton.clicked += Close;
             buttonArea.Add(cancelButton);
-            
+
             var exportButton = new Button()
             {
                 text = Content.exportText
@@ -105,7 +105,7 @@ namespace UnityEditor.U2D.Aseprite
                 m_ImporterEditor.SaveChanges();
                 Close();
             };
-            buttonArea.Add(exportButton);            
+            buttonArea.Add(exportButton);
         }
 
         bool GetEditorPrefsBool(string id, bool defaultValue) => EditorPrefs.GetBool(GetType().Name + id, defaultValue);

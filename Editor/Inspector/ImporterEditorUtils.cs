@@ -6,7 +6,7 @@ namespace UnityEditor.U2D.Aseprite
     {
         const string k_DarkSkinUssClass = "asepriteImporter-editor-dark";
         const string k_LightSkinUssClass = "asepriteImporter-editor-light";
-        
+
         public static void AddSkinUssClass(VisualElement element)
         {
             if (EditorGUIUtility.isProSkin)

@@ -33,7 +33,7 @@ namespace UnityEditor.U2D.Aseprite
                 var buffer = cellBuffers[i];
                 TextureTasks.FlipTextureY(ref buffer, cellWidth[i], cellHeight[i]);
                 cellBuffers[i] = buffer;
-            }            
+            }
         }
     }
 }

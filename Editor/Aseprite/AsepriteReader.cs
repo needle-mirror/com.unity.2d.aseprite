@@ -23,7 +23,7 @@ namespace UnityEditor.U2D.Aseprite
                 Debug.LogError($"File does not exist at path: {assetPath}");
                 return null;
             }
-            
+
             var fileStream = new FileStream(assetPath, FileMode.Open, FileAccess.Read);
             var binaryReader = new BinaryReader(fileStream);
 
@@ -50,7 +50,7 @@ namespace UnityEditor.U2D.Aseprite
         static void ReadFrames(in BinaryReader reader, ref AsepriteFile file)
         {
             var paletteProvider = default(IPaletteProvider);
-            
+
             for (var i = 0; i < file.noOfFrames; ++i)
             {
                 var frame = new FrameData();
@@ -77,13 +77,13 @@ namespace UnityEditor.U2D.Aseprite
                             break;
                         case ChunkTypes.ExternalFiles:
                             chunk = new ExternalFilesChunk(chunkHeader.chunkSize);
-                            break;    
+                            break;
                         case ChunkTypes.Layer:
                             chunk = new LayerChunk(chunkHeader.chunkSize);
-                            break;    
+                            break;
                         case ChunkTypes.Mask:
                             chunk = new MaskChunk(chunkHeader.chunkSize);
-                            break;                        
+                            break;
                         case ChunkTypes.OldPalette:
                             chunk = new OldPaletteChunk(chunkHeader.chunkSize);
                             paletteProvider = ((IPaletteProvider)chunk);
@@ -114,18 +114,18 @@ namespace UnityEditor.U2D.Aseprite
                             Debug.LogWarning($"Could not read chunk data with ID: {chunkHeader.chunkType}. Aborting.");
                             return;
                     }
-                    
+
                     var successful = chunk.Read(reader);
                     if (!successful)
                     {
                         frame.SetChunkData(m, new NoneChunk(0));
                         continue;
                     }
-                    
+
                     frame.SetChunkData(m, chunk);
-                    
+
                     if (chunk.chunkType == ChunkTypes.UserData)
-                        AssociateUserDataWithChunk(frame.chunks, m, (UserDataChunk)chunk);   
+                        AssociateUserDataWithChunk(frame.chunks, m, (UserDataChunk)chunk);
                 }
             }
         }

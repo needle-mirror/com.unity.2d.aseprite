@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace UnityEditor.U2D.Aseprite
 {
-#if UNITY_2022_2_OR_NEWER    
+#if UNITY_2022_2_OR_NEWER
     [BurstCompile]
 #endif
     internal static class TextureTasks
@@ -20,19 +20,19 @@ namespace UnityEditor.U2D.Aseprite
                 texture[i] = color;
             }
         }
-        
+
         [BurstCompile]
         public static void FlipTextureY(ref NativeArray<Color32> texture, int width, int height)
         {
             if (width == 0 || height == 0)
                 return;
-            
+
             var outputTexture = new NativeArray<Color32>(texture.Length, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
             for (var y = 0; y < height; ++y)
             {
                 var inRow = ((height - 1) - y) * width;
                 var outRow = y * width;
-                
+
                 for (var x = 0; x < width; ++x)
                 {
                     var inIndex = x + inRow;
@@ -50,7 +50,7 @@ namespace UnityEditor.U2D.Aseprite
             public RectInt rect;
             public NativeArray<Color32> image;
         }
-        
+
         [BurstCompile]
         public static unsafe void MergeTextures(in NativeArray<IntPtr> textures, in NativeArray<RectInt> textureSizes, in NativeArray<BlendModes> blendModes, out MergeOutput output)
         {
@@ -76,7 +76,7 @@ namespace UnityEditor.U2D.Aseprite
                     // If pixel is outside of output texture's Y, move to the next pixel.
                     if (outPosY < 0 || outPosY >= outHeight)
                         continue;
-                    
+
                     // Flip Y position on the input texture, because
                     // Aseprite textures are stored "upside-down"
                     var inRow = ((inHeight - 1) - y) * inWidth;
@@ -164,10 +164,10 @@ namespace UnityEditor.U2D.Aseprite
                     }
                 }
             }
-            
+
             output = new MergeOutput()
             {
-                rect = combinedRect,  
+                rect = combinedRect,
                 image = outputTexture
             };
         }
@@ -182,7 +182,7 @@ namespace UnityEditor.U2D.Aseprite
                 FitRectInsideRect(ref combinedRect, in rectToFitIn);
             }
         }
-        
+
         [BurstCompile]
         static void FitRectInsideRect(ref RectInt baseRect, in RectInt rectToFitIn)
         {
@@ -193,7 +193,7 @@ namespace UnityEditor.U2D.Aseprite
             if (baseRect.xMax < rectToFitIn.xMax)
                 baseRect.xMax = rectToFitIn.xMax;
             if (baseRect.yMax < rectToFitIn.yMax)
-                baseRect.yMax = rectToFitIn.yMax;            
+                baseRect.yMax = rectToFitIn.yMax;
         }
     }
 }

@@ -1,4 +1,9 @@
 # Changelog
+## [1.1.4] - 2024-05-02
+### Fixed
+- Fixed an issue where Sprite Renderers would be hidden after transitioning from one Animation Clip to another.
+- Fixed an issue where generated AnimationClips would be 0.01 seconds too long.
+
 ## [1.1.3] - 2024-03-25
 ### Fixed
 - Fixed an issue where the importer would not parse palette data from the "old palette" chunks.

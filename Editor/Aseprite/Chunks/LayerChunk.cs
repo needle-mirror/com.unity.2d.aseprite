@@ -9,15 +9,15 @@ namespace UnityEditor.U2D.Aseprite
     [Flags]
     public enum LayerFlags
     {
-        Visible = 1, 
-        Editable = 2, 
-        LockMovement = 4, 
-        Background = 8, 
+        Visible = 1,
+        Editable = 2,
+        LockMovement = 4,
+        Background = 8,
         PreferLinkedCels = 16,
         DisplayAsCollapsed = 32,
-        ReferenceLayer = 64        
-    }   
-    
+        ReferenceLayer = 64
+    }
+
     /// <summary>
     /// Layer types.
     /// </summary>
@@ -27,33 +27,33 @@ namespace UnityEditor.U2D.Aseprite
         Group = 1,
         Tilemap = 2
     }
-    
+
     /// <summary>
     /// Layer blend modes.
     /// </summary>
     public enum BlendModes
     {
-        Normal         = 0,
-        Multiply       = 1,
-        Screen         = 2,
-        Overlay        = 3,
-        Darken         = 4,
-        Lighten        = 5,
-        ColorDodge     = 6,
-        ColorBurn      = 7,
-        HardLight      = 8,
-        SoftLight      = 9,
-        Difference     = 10,
-        Exclusion      = 11,
-        Hue            = 12,
-        Saturation     = 13,
-        Color          = 14,
-        Luminosity     = 15,
-        Addition       = 16,
-        Subtract       = 17,
-        Divide         = 18        
-    }    
-    
+        Normal = 0,
+        Multiply = 1,
+        Screen = 2,
+        Overlay = 3,
+        Darken = 4,
+        Lighten = 5,
+        ColorDodge = 6,
+        ColorBurn = 7,
+        HardLight = 8,
+        SoftLight = 9,
+        Difference = 10,
+        Exclusion = 11,
+        Hue = 12,
+        Saturation = 13,
+        Color = 14,
+        Luminosity = 15,
+        Addition = 16,
+        Subtract = 17,
+        Divide = 18
+    }
+
     /// <summary>
     /// Parsed representation of an Aseprite Layer chunk.
     /// </summary>
@@ -87,7 +87,7 @@ namespace UnityEditor.U2D.Aseprite
         /// Tileset index (Only available for Tilemap layers).
         /// </summary>
         public uint tileSetIndex { get; private set; }
-        
+
         internal LayerChunk(uint chunkSize) : base(chunkSize) { }
 
         protected override void InternalRead(BinaryReader reader)
@@ -99,11 +99,11 @@ namespace UnityEditor.U2D.Aseprite
             var defaultLayerHeight = reader.ReadUInt16();
             blendMode = (BlendModes)reader.ReadUInt16();
             opacity = reader.ReadByte();
-            
+
             // Not in use bytes
             for (var i = 0; i < 3; ++i)
                 reader.ReadByte();
-            
+
             name = AsepriteUtilities.ReadString(reader);
             if (layerType == LayerTypes.Tilemap)
                 tileSetIndex = reader.ReadUInt32();

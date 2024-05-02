@@ -18,14 +18,14 @@ namespace UnityEditor.U2D.Aseprite
                 if (obj is AnimationClip clip)
                     animationClips.Add(clip);
             }
-            
+
             if (animationClips.Count == 0)
                 return;
 
             var controller = new AnimatorController();
             controller.name = assetName;
             controller.AddLayer("Base Layer");
-            
+
             foreach (var clip in animationClips)
                 controller.AddMotion(clip);
 
@@ -34,8 +34,8 @@ namespace UnityEditor.U2D.Aseprite
             {
                 var stateMachine = layer.stateMachine;
                 ctx.AddObjectToAsset(stateMachine.name + "_StateMachine", stateMachine);
-                
-                foreach(var state in stateMachine.states)
+
+                foreach (var state in stateMachine.states)
                     ctx.AddObjectToAsset(state.state.name + "_State", state.state);
             }
 
