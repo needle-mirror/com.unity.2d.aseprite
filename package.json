@@ -1,8 +1,8 @@
 {
   "name": "com.unity.2d.aseprite",
-  "version": "1.1.7",
-  "unity": "2021.3",
-  "unityRelease": "15f1",
+  "version": "1.2.0",
+  "unity": "6000.1",
+  "unityRelease": "0a9",
   "displayName": "2D Aseprite Importer",
   "description": "2D Aseprite Importer is a package which enables the import of .aseprite files from the Pixel Art tool Aseprite.",
   "keywords": [
@@ -15,23 +15,24 @@
   "category": "2D",
   "dependencies": {
     "com.unity.2d.sprite": "1.0.0",
+    "com.unity.2d.tilemap": "1.0.0",
     "com.unity.2d.common": "6.0.6",
     "com.unity.mathematics": "1.2.6",
     "com.unity.modules.animation": "1.0.0"
   },
   "relatedPackages": {
-    "com.unity.2d.aseprite.tests": "1.1.5"
+    "com.unity.2d.aseprite.tests": "1.2.0"
   },
   "_upm": {
-    "changelog": "### Fixed\n- Fixed an issue where adding Sprite Bones would cause the Sprites to become corrupt in the importation. (DANB-779)\n- Fixed an issue where the position rect would not get updated after being set in the Sprite Editor.\n- Fixed an issue where the references to sprites would be lost when adding new layers to an Aseprite file. (DANB-782)\n- Fixed an issue where the default compression would be set to \"Normal Quality\" instead of the expected \"Uncompressed\"."
+    "changelog": "### Added\n- Added a new import mode, Tile Set, which imports tile data from Aseprite and generates Unity Tilemap assets on import.\n- Added support for a parameter in the generated animation events.\n- Added a choice on how Animation Events are stored, as individual events or grouped up and listened through `OnAnimationEvent(string)`.\n\n### Fixed\n- Reduced the font size slightly in the importer headers to match other inspector headers in Unity. (DANB-644)\n- Fixed an issue where the Sort Order would not be reset in Animation Clips when making use of the Z-index in Aseprite.\n- Fixed an issue where SpriteRenderers would lose their reference if an Aseprite file's name was changed. (DANB-692)\n- Fixed an issue where adding Sprite Bones would cause the Sprites to become corrupt in the importation. (DANB-779)\n- Fixed an issue where the sprite rect would not get updated after being set in the Sprite Editor.\n- Fixed an issue where the references to sprites would be lost when adding new layers to an Aseprite file. (DANB-782)"
   },
   "upmCi": {
-    "footprint": "6cb06d6f563e17dcf40514bc6cf9e25347b17cf8"
+    "footprint": "bc9e0b4e662d71d42f79b044569a912dba719eca"
   },
-  "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.2d.aseprite@1.1/manual/index.html",
+  "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.2d.aseprite@1.2/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/AsepriteImporter.git",
     "type": "git",
-    "revision": "8dcf77735261b73309daf35e840d591271a7814d"
+    "revision": "3e226c74995478fff91f2e5367dfc8ce77097ec6"
   }
 }

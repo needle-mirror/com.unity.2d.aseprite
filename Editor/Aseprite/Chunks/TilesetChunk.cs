@@ -1,6 +1,8 @@
 using System;
 using System.Collections.ObjectModel;
 using System.IO;
+using Unity.Collections;
+using UnityEngine;
 
 namespace UnityEditor.U2D.Aseprite
 {
@@ -51,6 +53,10 @@ namespace UnityEditor.U2D.Aseprite
         /// The name of the tileset.
         /// </summary>
         public string tileSetName { get; private set; }
+        /// <summary>
+        /// The image data of the tiles.
+        /// </summary>
+        public NativeArray<Color32>[] tileImages { get; private set; }
 
         readonly ushort m_ColorDepth;
         readonly ReadOnlyCollection<PaletteEntry> m_PaletteEntries;
@@ -79,6 +85,8 @@ namespace UnityEditor.U2D.Aseprite
             var reservedBytes = reader.ReadBytes(14);
 
             tileSetName = AsepriteUtilities.ReadString(reader);
+            if (string.IsNullOrEmpty(tileSetName))
+                tileSetName = $"Tileset_{tileSetId}";
 
             // Not supported yet.
             if ((tileSetFlags & TileSetFlags.IncludesLinkToExternal) != 0)
@@ -91,11 +99,38 @@ namespace UnityEditor.U2D.Aseprite
                 var compressedDataLength = (int)reader.ReadUInt32();
                 var decompressedData = AsepriteUtilities.ReadAndDecompressedData(reader, compressedDataLength);
 
-                var image = AsepriteUtilities.GenerateImageData(m_ColorDepth, decompressedData, m_PaletteEntries, m_AlphaPaletteEntry);
+                var tilemapImage = AsepriteUtilities.GenerateImageData(m_ColorDepth, decompressedData, m_PaletteEntries, m_AlphaPaletteEntry);
 
-                // Disposing for now.
-                image.Dispose();
+                tileImages = new NativeArray<Color32>[noOfTiles];
+                for (var i = 0; i < noOfTiles; ++i)
+                {
+                    var tileImage = new NativeArray<Color32>(width * height, Allocator.Persistent);
+                    var tileStartHeight = i * height;
+
+                    for (var m = 0; m < height; ++m)
+                    {
+                        var sourceHeight = (tileStartHeight + m) * width;
+                        var destHeight = m * width;
+                        NativeArray<Color32>.Copy(tilemapImage, sourceHeight, tileImage, destHeight, width);
+                    }
+
+                    tileImages[i] = tileImage;
+                }
+
+                tilemapImage.Dispose();
             }
+        }
+
+        /// <summary>
+        /// Dispose of the image data.
+        /// </summary>
+        public override void Dispose()
+        {
+            if (tileImages == null || tileImages.Length == 0)
+                return;
+
+            for (var i = 0; i < tileImages.Length; ++i)
+                tileImages[i].DisposeIfCreated();
         }
     }
 }

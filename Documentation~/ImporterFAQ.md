@@ -63,6 +63,61 @@ public class MyEventReceiver : MonoBehaviour
 }
 ```
 
+### Add an argument to an event
+
+You can also add one argument to the event. We support the following data types:
+* String
+* Integer
+* Float
+
+To add an argument to an event, add a comma (,) after the event name and then fill in the argument. E.g.
+* **event:MyIntEvent, 123**
+* **event:MyFloatEvent, 1.234f**
+* **event:MyStringEvent, "Hello"**
+
+**Note:** If the Individual Events toggle is unchecked in the Generate Assets settings, arguments will not be available in the event. The only argument used by the general purpose event (OnAnimationEvent) is a string containing the event name from the User Data in Aseprite.
+
+![](images/Faq_AddEvents_03.png)
+
+To receive the event with a parameter, place the following script on the same GameObject as the Animator is located on:
+```CSharp
+using UnityEngine;
+
+public class MyEventReceiver : MonoBehaviour
+{
+    // In our example, we created an event called "MyEventReceiver" with a string parameter. 
+    // This should be changed to the event name and parameter type you specified in Aseprite.
+    private void MyStringEvent(string data)
+    {
+        Debug.Log($"MyStringEvent was called with the data: {data}");
+    }
+}
+```
+
+### Single event receiver for all events
+
+There are times when you prefer to receive all animation events from an Animator in one method. To do this, begin by unchecking the Individual Events toggle in the Aseprite Importer inspector. 
+
+![](images/Faq_ComboEvents_00.png)
+
+By unchecking the Individual Events toggle and pressing Apply, the Aseprite Importer will update the AnimationClips to use the following event string "OnAnimationEvent" for all events. 
+
+To receive the events, place the following script on the same GameObject as the Animator is located on:
+
+```CSharp
+using UnityEngine;
+
+public class MyEventReceiver : MonoBehaviour
+{
+    private void OnAnimationEvent(string eventName)
+    {
+        Debug.Log($"{eventName} was called.");
+    }
+}
+```
+
+**Note:** If the Individual Events toggle is unchecked in the Generate Assets settings, arguments will not be available in the event. The only argument used by the general purpose event (OnAnimationEvent) is a string containing the event name from the User Data in Aseprite.
+
 ## How to make changes to an Animator Controller?
 The Aseprite Importer generates an Animator Controller if the Aseprite file contains more than one frame, and the **Animation Clip** checkbox is checked in the importer. This Animator Controller is Read-Only, meaning that it cannot be changed.
 

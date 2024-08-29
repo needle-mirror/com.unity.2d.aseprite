@@ -90,6 +90,20 @@ namespace UnityEditor.U2D.Aseprite
             set => m_AddShadowCasters = value;
         }
 
+        [SerializeField] bool m_GenerateIndividualEvents;
+        public bool generateIndividualEvents
+        {
+            get => m_GenerateIndividualEvents;
+            set => m_GenerateIndividualEvents = value;
+        }
+        
+        [SerializeField] bool m_GenerateSpriteAtlas;
+        public bool generateSpriteAtlas
+        {
+            get => m_GenerateSpriteAtlas;
+            set => m_GenerateSpriteAtlas = value;
+        }        
+
         public bool IsDefault()
         {
             return !m_ImportHiddenLayers &&
@@ -99,7 +113,9 @@ namespace UnityEditor.U2D.Aseprite
                    !m_GenerateModelPrefab &&
                    !m_GenerateAnimationClips &&
                    !m_AddSortingGroup &&
-                   !m_AddShadowCasters;
+                   !m_AddShadowCasters &&
+                   !m_GenerateIndividualEvents &&
+                   !m_GenerateSpriteAtlas;
         }
     }
 }

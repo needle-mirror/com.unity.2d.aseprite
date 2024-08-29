@@ -13,11 +13,11 @@ namespace UnityEditor.U2D.Aseprite
             NativeArray<Color32> imageData,
             int textureWidth,
             int textureHeight,
-            SpriteMetaData[] sprites,
-            IReadOnlyList<TextureImporterPlatformSettings> allPlatformSettings,
+            in SpriteMetaData[] sprites,
+            in List<TextureImporterPlatformSettings> allPlatformSettings,
             in TextureImporterSettings textureImporterSettings,
             string spritePackingTag,
-            SecondarySpriteTexture[] secondarySpriteTextures)
+            in SecondarySpriteTexture[] secondarySpriteTextures)
         {
             if (!imageData.IsCreated || imageData.Length == 0)
                 return new TextureGenerationOutput();
@@ -26,7 +26,7 @@ namespace UnityEditor.U2D.Aseprite
             UnityEngine.Profiling.Profiler.BeginSample("ImportTexture");
             try
             {
-                var platformSettings = PlatformSettingsUtilities.GetPlatformTextureSettings(ctx.selectedBuildTarget, allPlatformSettings);
+                var platformSettings = PlatformSettingsUtilities.GetPlatformTextureSettings(ctx.selectedBuildTarget, in allPlatformSettings);
 
                 var textureSettings = textureImporterSettings.ExtractTextureSettings();
                 textureSettings.assetPath = ctx.assetPath;

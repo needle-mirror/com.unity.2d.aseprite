@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Unity.Collections;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -148,17 +149,17 @@ namespace UnityEditor.U2D.Aseprite
     internal class Frame
     {
         int m_Duration;
-        string[] m_EventStrings;
+        (string, object)[] m_EventData;
 
         public int duration
         {
             get => m_Duration;
             set => m_Duration = value;
         }
-        public string[] eventStrings
+        public (string, object)[] eventData
         {
-            get => m_EventStrings;
-            set => m_EventStrings = value;
+            get => m_EventData;
+            set => m_EventData = value;
         }
     }
 
@@ -173,6 +174,76 @@ namespace UnityEditor.U2D.Aseprite
         public bool isRepeating => noOfRepeats == 0;
     }
 
+    [Serializable]
+    internal class TileSet
+    {
+        [SerializeField] uint m_Id;
+        [SerializeField] string m_Name;
+        [SerializeField] int2 m_TileSize;
+        [SerializeField] List<Tile> m_Tiles = new List<Tile>();
+        [SerializeField] int m_Guid;
+
+        public uint id
+        {
+            get => m_Id;
+            set => m_Id = value;
+        }
+        
+        public string name
+        {
+            get => m_Name;
+            set => m_Name = value;
+        }
+        public int2 tileSize
+        {
+            get => m_TileSize;
+            set => m_TileSize = value;
+        }
+        public List<Tile> tiles
+        {
+            get => m_Tiles;
+            set => m_Tiles = value;
+        }
+        public int guid
+        {
+            get => m_Guid;
+            set => m_Guid = value;
+        }
+        
+        public static int GenerateGuid(TileSet tileSet)
+        {
+            var hash = tileSet.name.GetHashCode();
+            hash = (hash * 397) ^ tileSet.id.GetHashCode();
+            return hash;
+        }        
+    }
+
+    [Serializable]
+    internal struct Tile
+    {
+        [NonSerialized] public NativeArray<Color32> image;
+
+        [SerializeField] int2 m_Size;
+        [SerializeField] string m_Name;
+        [SerializeField] string m_SpriteId;
+
+        public string name
+        {
+            get => m_Name;
+            set => m_Name = value;
+        }
+        public int2 size
+        {
+            get => m_Size;
+            set => m_Size = value;
+        }
+        public GUID spriteId
+        {
+            get => new GUID(m_SpriteId);
+            set => m_SpriteId = value.ToString();
+        }
+    }
+
     /// <summary>
     /// Import modes for the file.
     /// </summary>
@@ -182,6 +253,8 @@ namespace UnityEditor.U2D.Aseprite
         SpriteSheet = 0,
         /// <summary>The file is imported with animation in mind. Animation assets are generated and attached to a model prefab on import.</summary>
         AnimatedSprite = 1,
+        /// <summary>he importer finds all tile data in the file and generates Unity Tilemap assets on import.</summary>
+        TileSet = 2
     }
 
     /// <summary>

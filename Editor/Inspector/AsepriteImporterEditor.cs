@@ -19,6 +19,9 @@ namespace UnityEditor.U2D.Aseprite
         const string k_PaddingElementUssClass = "PaddingElement";
         const string k_SubElementUssClass = "SubElement";
 
+        // This number is in milliseconds. 
+        const long k_PollForChangesInternal = 50;
+
         SerializedProperty m_GeneratePhysicsShape;
         SerializedProperty m_TextureType;
         SerializedProperty m_TextureShape;
@@ -68,6 +71,8 @@ namespace UnityEditor.U2D.Aseprite
         SerializedProperty m_AddShadowCasters;
         SerializedProperty m_GenerateAnimationClips;
         SerializedProperty m_PrevGenerateAnimationClips;
+        SerializedProperty m_GenerateIndividualEvents;
+        SerializedProperty m_GenerateSpriteAtlas;
 
         VisualElement m_RootVisualElement;
         VisualElement m_InspectorSettingsView;
@@ -179,6 +184,8 @@ namespace UnityEditor.U2D.Aseprite
             m_AddSortingGroup = asepriteImporterSettings.FindPropertyRelative("m_AddSortingGroup");
             m_AddShadowCasters = asepriteImporterSettings.FindPropertyRelative("m_AddShadowCasters");
             m_GenerateAnimationClips = asepriteImporterSettings.FindPropertyRelative("m_GenerateAnimationClips");
+            m_GenerateIndividualEvents = asepriteImporterSettings.FindPropertyRelative("m_GenerateIndividualEvents");
+            m_GenerateSpriteAtlas = asepriteImporterSettings.FindPropertyRelative("m_GenerateSpriteAtlas");
 
             var prevAsepriteImporterSettings = serializedObject.FindProperty("m_PreviousAsepriteImporterSettings");
             m_PrevGenerateAnimationClips = prevAsepriteImporterSettings.FindPropertyRelative("m_GenerateAnimationClips");
@@ -378,7 +385,7 @@ namespace UnityEditor.U2D.Aseprite
                     pivotSpaceField.visible = shouldShow;
                     pivotSpaceField.EnableInClassList(k_HiddenElementUssClass, !shouldShow);
                 }
-            }).Every(100);
+            }).Every(k_PollForChangesInternal);
             foldOut.Add(pivotSpaceField);
 
             var pivotAlignmentPopup = new PopupField<string>(s_Styles.spriteAlignmentOptions, m_DefaultPivotAlignment.intValue)
@@ -400,7 +407,7 @@ namespace UnityEditor.U2D.Aseprite
                     pivotAlignmentPopup.visible = shouldShow;
                     pivotAlignmentPopup.EnableInClassList(k_HiddenElementUssClass, !shouldShow);
                 }
-            }).Every(100);
+            }).Every(k_PollForChangesInternal);
             foldOut.Add(pivotAlignmentPopup);
 
             var shouldShow = (SpriteAlignment)pivotAlignmentPopup.index == SpriteAlignment.Custom;
@@ -419,7 +426,7 @@ namespace UnityEditor.U2D.Aseprite
                     customPivotField.visible = isShowing;
                     customPivotField.EnableInClassList(k_HiddenElementUssClass, !isShowing);
                 }
-            }).Every(100);
+            }).Every(k_PollForChangesInternal);
             foldOut.Add(customPivotField);
 
             var mosaicPaddingField = new PropertyField(m_MosaicPadding, styles.mosaicPadding.text)
@@ -442,7 +449,7 @@ namespace UnityEditor.U2D.Aseprite
                     spritePaddingField.visible = isShowing;
                     spritePaddingField.EnableInClassList(k_HiddenElementUssClass, !isShowing);
                 }
-            }).Every(100);
+            }).Every(k_PollForChangesInternal);
             foldOut.Add(spritePaddingField);
 
             var paddingElement = new VisualElement()
@@ -455,12 +462,7 @@ namespace UnityEditor.U2D.Aseprite
 
         void SetupGenerateAssetContainer(VisualElement root)
         {
-#if ENABLE_URP
-            var isUrpEnabled = true;
-#else
-            var isUrpEnabled = false;
-#endif
-
+            // Generate Assets foldout
             var foldOut = new Foldout()
             {
                 text = styles.generateAssetsHeaderText.text,
@@ -471,22 +473,69 @@ namespace UnityEditor.U2D.Aseprite
             foldOut.RegisterValueChangedCallback(_ => { m_EditorFoldOutState.generateAssetFoldout = foldOut.value; });
             foldOut.schedule.Execute(() =>
             {
-                var shouldShow = fileImportMode == FileImportModes.AnimatedSprite;
+                var shouldShow = fileImportMode is FileImportModes.AnimatedSprite; //or FileImportModes.TileSet;
                 if (foldOut.visible != shouldShow)
                 {
                     foldOut.visible = shouldShow;
                     foldOut.EnableInClassList(k_HiddenElementUssClass, !shouldShow);
                 }
-            }).Every(100);
+            }).Every(k_PollForChangesInternal);
             root.Add(foldOut);
 
+            var animatedSpritesParent = new VisualElement();
+            animatedSpritesParent.schedule.Execute(() =>
+            {
+                var shouldShow = fileImportMode is FileImportModes.AnimatedSprite;
+                if (animatedSpritesParent.visible != shouldShow)
+                {
+                    animatedSpritesParent.visible = shouldShow;
+                    animatedSpritesParent.EnableInClassList(k_HiddenElementUssClass, !shouldShow);
+                }
+            }).Every(k_PollForChangesInternal);
+            foldOut.Add(animatedSpritesParent);
+            SetupGenerateAssetsForAnimatedSprites(animatedSpritesParent);
+
+            /*
+            var tileSetParent = new VisualElement();
+            tileSetParent.schedule.Execute(() =>
+            {
+                var shouldShow = fileImportMode is FileImportModes.TileSet;
+                if (tileSetParent.visible != shouldShow)
+                {
+                    tileSetParent.visible = shouldShow;
+                    tileSetParent.EnableInClassList(k_HiddenElementUssClass, !shouldShow);
+                }
+            }).Every(k_PollForChangesInternal);            
+            foldOut.Add(tileSetParent);
+            SetupGeneratedAssetsForTileSet(tileSetParent);
+            */
+
+            // Footer element
+            var paddingElement = new VisualElement()
+            {
+                name = "PaddingElement"
+            };
+            paddingElement.AddToClassList(k_PaddingElementUssClass);
+            foldOut.Add(paddingElement);
+        }
+
+        void SetupGenerateAssetsForAnimatedSprites(VisualElement parent)
+        {
+#if ENABLE_URP
+            const bool isUrpEnabled = true;
+#else
+            const bool isUrpEnabled = false;
+#endif
+            
+            // Generate model prefab toggle
             var generateModelField = new PropertyField(m_GenerateModelPrefab, styles.generateModelPrefab.text)
             {
                 tooltip = styles.generateModelPrefab.tooltip
             };
             generateModelField.Bind(serializedObject);
-            foldOut.Add(generateModelField);
+            parent.Add(generateModelField);
 
+            // Add "sorting group"-component
             var isSortingEnabled = m_GenerateModelPrefab.boolValue;
             var sortingGroupField = new PropertyField(m_AddSortingGroup, styles.addSortingGroup.text)
             {
@@ -500,10 +549,10 @@ namespace UnityEditor.U2D.Aseprite
                 isSortingEnabled = m_GenerateModelPrefab.boolValue;
                 if (sortingGroupField.enabledSelf != isSortingEnabled)
                     sortingGroupField.SetEnabled(isSortingEnabled);
-            }).Every(100);
-            foldOut.Add(sortingGroupField);
-
-#if UNITY_2023_1_OR_NEWER
+            }).Every(k_PollForChangesInternal);
+            parent.Add(sortingGroupField);
+            
+            // Add "shadow caster"-component
             var areShadowsEnabled = isUrpEnabled && m_GenerateModelPrefab.boolValue;
             var shadowCasterField = new PropertyField(m_AddShadowCasters, styles.addShadowCasters.text)
             {
@@ -517,25 +566,45 @@ namespace UnityEditor.U2D.Aseprite
                 areShadowsEnabled = isUrpEnabled && m_GenerateModelPrefab.boolValue;
                 if (shadowCasterField.enabledSelf != areShadowsEnabled)
                     shadowCasterField.SetEnabled(areShadowsEnabled);
-            }).Every(100);
-            foldOut.Add(shadowCasterField);
-#endif
+            }).Every(k_PollForChangesInternal);
+            parent.Add(shadowCasterField);
 
+            // Generate animation clips toggle
             var generateClipsField = new PropertyField(m_GenerateAnimationClips, styles.generateAnimationClips.text)
             {
                 tooltip = styles.generateAnimationClips.tooltip
             };
             generateClipsField.Bind(serializedObject);
-            foldOut.Add(generateClipsField);
-
-            SetupAnimationAssetsButton(foldOut);
-
-            var paddingElement = new VisualElement()
+            parent.Add(generateClipsField);
+            
+            // Generate individual animation events toggle
+            var isIndividualEventsEnabled = m_GenerateAnimationClips.boolValue;
+            var generateIndividualEventsField = new PropertyField(m_GenerateIndividualEvents, styles.generateIndividualEvents.text)
             {
-                name = "PaddingElement"
+                tooltip = styles.generateIndividualEvents.tooltip
             };
-            paddingElement.AddToClassList(k_PaddingElementUssClass);
-            foldOut.Add(paddingElement);
+            generateIndividualEventsField.Bind(serializedObject);
+            generateIndividualEventsField.AddToClassList(k_SubElementUssClass);
+            generateIndividualEventsField.SetEnabled(isIndividualEventsEnabled);
+            generateIndividualEventsField.schedule.Execute(() =>
+            {
+                isIndividualEventsEnabled = m_GenerateAnimationClips.boolValue;
+                if (generateIndividualEventsField.enabledSelf != isIndividualEventsEnabled)
+                    generateIndividualEventsField.SetEnabled(isIndividualEventsEnabled);
+            }).Every(k_PollForChangesInternal);
+            parent.Add(generateIndividualEventsField);            
+
+            SetupAnimationAssetsButton(parent);
+        }
+
+        void SetupGeneratedAssetsForTileSet(VisualElement parent)
+        {
+            var generateSpriteAtlasField = new PropertyField(m_GenerateSpriteAtlas, styles.generateSpriteAtlas.text)
+            {
+                tooltip = styles.generateSpriteAtlas.tooltip
+            };
+            generateSpriteAtlasField.Bind(serializedObject);
+            parent.Add(generateSpriteAtlasField);           
         }
 
         void SetupAnimationAssetsButton(VisualElement root)
@@ -556,7 +625,7 @@ namespace UnityEditor.U2D.Aseprite
                             m_GenerateAnimationClips.boolValue;
                 if (assetsBtn.enabledSelf != isEnabled)
                     assetsBtn.SetEnabled(isEnabled);
-            }).Every(100);
+            }).Every(k_PollForChangesInternal);
             assetsBtn.clicked += () =>
             {
                 var window = EditorWindow.GetWindow<ExportAssetsPopup>();
@@ -576,7 +645,7 @@ namespace UnityEditor.U2D.Aseprite
                     helpBox.visible = isVisible;
                     helpBox.EnableInClassList(k_HiddenElementUssClass, !isVisible);
                 }
-            }).Every(100);
+            }).Every(k_PollForChangesInternal);
             root.Add(helpBox);
         }
 
@@ -747,7 +816,9 @@ namespace UnityEditor.U2D.Aseprite
                 m_ModelPreviewer = null;
             }
 
-            if (gameObject != null && gameObject.GetComponent<Animator>() != null)
+            if (gameObject != null &&
+            m_ImporterTargets[0].importMode == FileImportModes.AnimatedSprite &&
+            gameObject.GetComponent<Animator>())
             {
                 var clips = GetAllAnimationClips(importerPath);
                 m_ModelPreviewer = new ModelPreviewer(gameObject, clips);
@@ -834,8 +905,7 @@ namespace UnityEditor.U2D.Aseprite
             if (m_RootVisualElement != null)
                 m_RootVisualElement.Clear();
         }
-
-#if UNITY_2022_3_OR_NEWER
+        
         /// <summary>
         /// Implementation of AssetImporterEditor.DiscardChanges.
         /// </summary>
@@ -844,24 +914,13 @@ namespace UnityEditor.U2D.Aseprite
             base.DiscardChanges();
             m_TexturePlatformSettingsHelper = new TexturePlatformSettingsHelper(this);
         }
-#else
-        /// <summary>
-        /// Implementation of AssetImporterEditor.ResetValues.
-        /// </summary>
-        protected override void ResetValues()
-        {
-            base.ResetValues();
-            m_TexturePlatformSettingsHelper = new TexturePlatformSettingsHelper(this);
-        }
-#endif
 
         void ShowInspectorTab(int tab)
         {
             m_InspectorSettingsView.Clear();
             m_InspectorSettingsView.Add(m_InspectorUI[tab]);
         }
-
-#if UNITY_2022_2_OR_NEWER
+        
         /// <summary>
         /// Implementation of AssetImporterEditor.SaveChanges.
         /// </summary>
@@ -873,13 +932,6 @@ namespace UnityEditor.U2D.Aseprite
             extraDataSerializedObject.ApplyModifiedProperties();
             base.SaveChanges();
         }
-#else
-        internal void SaveChanges()
-        {
-            ApplyTexturePlatformSettings();
-            ApplyAndImport();
-        }
-#endif
 
         // showPerAxisWrapModes is state of whether "Per-Axis" mode should be active in the main dropdown.
         // It is set automatically if wrap modes in UVW are different, or if user explicitly picks "Per-Axis" option -- when that one is picked,
@@ -1518,6 +1570,9 @@ namespace UnityEditor.U2D.Aseprite
             public readonly GUIContent addSortingGroup = EditorGUIUtility.TrTextContent("Sorting Group", "Add a Sorting Group component to the root of the generated model prefab if it has more than one Sprite Renderer.");
             public readonly GUIContent addShadowCasters = EditorGUIUtility.TrTextContent("Shadow Casters", "Add Shadow Casters on all GameObjects with SpriteRenderer. Note: The Universal Rendering Pipeline package has to be installed.");
             public readonly GUIContent generateAnimationClips = EditorGUIUtility.TrTextContent("Animation Clips", "Generate Animation Clips based on the frame and tag data from the Aseprite file.");
+            public readonly GUIContent generateIndividualEvents = EditorGUIUtility.TrTextContent("Individual Events", "Events will be generated with their own method name. If disabled, all events will be received by the method `OnAnimationEvent(string)`.");
+            
+            public readonly GUIContent generateSpriteAtlas = EditorGUIUtility.TrTextContent("Sprite Atlas", "Generate a Sprite Atlas to contain the created texture. This is to remove any gaps between tiles when drawing a tile map.");
 
             public readonly GUIContent generalHeaderText = EditorGUIUtility.TrTextContent("General", "General settings.");
             public readonly GUIContent layerImportHeaderText = EditorGUIUtility.TrTextContent("Layer Import", "Layer Import settings.");

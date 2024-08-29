@@ -7,6 +7,7 @@ namespace UnityEditor.U2D.Aseprite
     internal static class AnimationClipGeneration
     {
         const string k_RootName = "Root";
+        const string k_CombinedEventName = "OnAnimationEvent";
 
         public static AnimationClip[] Generate(string assetName,
             IReadOnlyList<Sprite> sprites,
@@ -14,7 +15,8 @@ namespace UnityEditor.U2D.Aseprite
             IReadOnlyList<Layer> layers,
             IReadOnlyList<Frame> frames,
             List<Tag> tags,
-            Dictionary<int, GameObject> layerIdToGameObject)
+            Dictionary<int, GameObject> layerIdToGameObject,
+            bool generateIndividualEvents)
         {
             var noOfFrames = file.noOfFrames;
             if (tags.Count == 0)
@@ -54,7 +56,7 @@ namespace UnityEditor.U2D.Aseprite
                     Debug.LogWarning($"The animation clip name {tags[i].name} is already in use. Renaming to {clipName}.");
                 }
 
-                var clip = CreateClip(tags[i], clipName, layers, layersWithDisabledRenderer, layersWithCustomSortingOrder, frames, sprites, layerIdToGameObject);
+                var clip = CreateClip(tags[i], clipName, layers, layersWithDisabledRenderer, layersWithCustomSortingOrder, frames, sprites, layerIdToGameObject, generateIndividualEvents);
                 clips.Add(clip);
                 animationNames.Add(clipName);
             }
@@ -138,7 +140,8 @@ namespace UnityEditor.U2D.Aseprite
             IReadOnlyCollection<Layer> layersWithCustomSorting, 
             IReadOnlyList<Frame> frames, 
             IReadOnlyList<Sprite> sprites, 
-            IReadOnlyDictionary<int, GameObject> layerIdToGameObject)
+            IReadOnlyDictionary<int, GameObject> layerIdToGameObject,
+            bool generateIndividualEvents)
         {
             var animationClip = new AnimationClip()
             {
@@ -181,7 +184,7 @@ namespace UnityEditor.U2D.Aseprite
 
                 AddEnabledKeyframes(layerTransform, tag, frames, doesLayerDisableRenderer, activeFrames, animationClip);
                 AddSortOrderKeyframes(layerTransform, layer, tag, frames, cells, doesLayerHaveCustomSorting, animationClip);
-                AddAnimationEvents(tag, frames, animationClip);
+                AddAnimationEvents(tag, frames, animationClip, generateIndividualEvents);
             }
 
             return animationClip;
@@ -397,7 +400,7 @@ namespace UnityEditor.U2D.Aseprite
             return keyframe;
         }
 
-        static void AddAnimationEvents(Tag tag, IReadOnlyList<Frame> frames, AnimationClip animationClip)
+        static void AddAnimationEvents(Tag tag, IReadOnlyList<Frame> frames, AnimationClip animationClip, bool generateIndividualEvents)
         {
             var events = new List<AnimationEvent>();
 
@@ -405,18 +408,60 @@ namespace UnityEditor.U2D.Aseprite
             for (var frameIndex = tag.fromFrame; frameIndex < tag.toFrame; ++frameIndex)
             {
                 var frame = frames[frameIndex];
-                if (frame.eventStrings.Length == 0)
+                if (frame.eventData.Length == 0)
                     continue;
 
                 var frameTime = GetTimeFromFrame(frames, frameIndex);
-                var eventStrings = frame.eventStrings;
-                for (var m = 0; m < eventStrings.Length; ++m)
+                var eventData = frame.eventData;
+                for (var m = 0; m < eventData.Length; ++m)
                 {
-                    events.Add(new AnimationEvent()
+                    if (generateIndividualEvents)
                     {
-                        time = frameTime - startTime,
-                        functionName = eventStrings[m]
-                    });
+                        var functionName = eventData[m].Item1;
+                        switch (eventData[m].Item2)
+                        {
+                            case int intParameter:
+                                events.Add(new AnimationEvent()
+                                {
+                                    time = frameTime - startTime,
+                                    functionName = functionName,
+                                    intParameter = intParameter
+                                });
+                                break;
+                            case float floatParameter:
+                                events.Add(new AnimationEvent()
+                                {
+                                    time = frameTime - startTime,
+                                    functionName = functionName,
+                                    floatParameter = floatParameter
+                                });
+                                break;
+                            case string stringParameter:
+                                events.Add(new AnimationEvent()
+                                {
+                                    time = frameTime - startTime,
+                                    functionName = functionName,
+                                    stringParameter = stringParameter,
+                                });
+                                break;
+                            default:
+                                events.Add(new AnimationEvent()
+                                {
+                                    time = frameTime - startTime,
+                                    functionName = functionName,
+                                });
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        events.Add(new AnimationEvent()
+                        {
+                            time = frameTime - startTime,
+                            functionName = k_CombinedEventName,
+                            stringParameter = eventData[m].Item1,
+                        });
+                    }
                 }
             }
 

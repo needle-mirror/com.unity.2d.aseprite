@@ -25,7 +25,12 @@ This page highlights which Aseprite feature the Aseprite Importer supports/does 
 - [Layer groups](https://www.aseprite.org/docs/layer-group/)
     - The importer respects the visibility mode selected for the group. If a group is hidden, underlying layers will not be imported by default.
     - Layer groups will be generated in the prefab hierarchy if the import mode is set to **Individual layers**.
+- User data
+    - The user data field in Cells can be used to inject events to a generated Animation Clip. Read more [here](./ImporterFAQ.md#how-to-add-events-to-animation-clips).
+
+**Misc**
+- [Tilemaps](https://www.aseprite.org/docs/tilemap/)
+    - When importing tile data, select **Import Mode: Tile Set**. This will tell Unity to generate [Tile assets](https://docs.unity3d.com/Manual/Tilemap-TileAsset.html) for each Aseprite Tile, and a [Tile Palette](https://docs.unity3d.com/Manual/Tilemap-Palette.html) to store them all in.
 
 ## Unsupported features
 - [Slices](https://www.aseprite.org/docs/slices/)
-- [Tilemaps](https://www.aseprite.org/docs/tilemap/)

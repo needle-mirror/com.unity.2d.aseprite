@@ -11,6 +11,7 @@ The Aseprite Importer sets the following default settings to the generated textu
 - <b>Filter mode:</b> Point
 - <b>Compression:</b> None
 - <b>Generate Mip Maps:</b> False
+- <b>Texture Max Size:</b> 16384
 
 ## Aseprite Importer Inspector properties
 The Aseprite Importer is available after you import a .ase/.aseprite file into your Project.
@@ -28,7 +29,7 @@ The Aseprite Importer is available after you import a .ase/.aseprite file into y
   </thead>
   <tbody>
     <tr>
-      <td rowspan="3"><strong>Import Mode</strong></td>
+      <td rowspan="4"><strong>Import Mode</strong></td>
       <td colspan="2">How the file should be imported. This is set to <b>Animated Sprite</b> by default.</td>
     </tr>
     <tr>
@@ -39,6 +40,10 @@ The Aseprite Importer is available after you import a .ase/.aseprite file into y
       <td><strong>Animated Sprite</strong></td>
       <td>The file is imported with animation in mind. Animation assets are generated and attached to a model prefab on import.</td>
     </tr>
+        <tr>
+      <td><strong>Tile Set</strong></td>
+      <td>The importer finds all tile data in the file and generates Unity Tilemap assets on import.</td>
+    </tr>    
     <tr>
       <td rowspan="1"><strong>Pixels Per Unit</strong></td>
       <td colspan="2">Set the number of pixels that equals one Unity unit.</td>
@@ -115,8 +120,8 @@ The Aseprite Importer is available after you import a .ase/.aseprite file into y
   </tbody>
 </table>
 
-### Generate assets
-![](images/Ase-GenerateAssets-section.png)
+### Generate assets (For Animated Sprites)
+![](images/Ase-GenerateAssets-section-animated.png)
 <table>
   <thead>
     <tr>
@@ -141,6 +146,10 @@ The Aseprite Importer is available after you import a .ase/.aseprite file into y
       <td rowspan="1"><strong>Animation Clips</strong></td>
       <td colspan="2">Enable this property to generate Animation Clips based on the frame data in the file. Every tag in Aseprite generates one Animation Clip. If no tag is present, one Animation Clip is generated which covers all frames in the file. The Animation speed is based on the Constant Frame Rate defined in Aseprite. The length is based on the number of frames included in the tag/file. This property is set to <b>True</b> by default.</td>
     </tr>
+    <tr>
+      <td rowspan="1"><strong>Individual Events</strong></td>
+      <td colspan="2">Enable this property to let Animation Events be generated with their own method names. If disabled, all events will be received by the method `OnAnimationEvent(string)`. This property is set to <b>True</b> by default.</td>
+    </tr>    
     <tr>
       <td rowspan="1"><strong>Export Animation Assets</strong></td>
       <td colspan="2">The Animator Controller and the Animation Clips are generated as Read-Only assets. This option can be used to export editable versions of these assets.</td>

@@ -36,6 +36,28 @@ namespace UnityEditor.U2D.Aseprite
         }
     }
 
+    internal class SpriteFrameEditCapabilityDataProvider : AsepriteDataProvider, ISpriteFrameEditCapability
+    {
+        static EditCapability k_DefaultEditCapability = new EditCapability(EEditCapability.EditPivot);
+        static EditCapability k_SpriteSheetCapabilities = new EditCapability(EEditCapability.All);
+
+    public EditCapability GetEditCapability()
+        {
+            switch (dataProvider.importMode)
+            {
+                case FileImportModes.SpriteSheet:
+                    return k_SpriteSheetCapabilities;
+                default:
+                    return k_DefaultEditCapability;
+            }
+        }
+
+        public void SetEditCapability(EditCapability editCapability)
+        {
+
+        }
+    }
+
     internal class TextureDataProvider : AsepriteDataProvider, ITextureDataProvider
     {
         Texture2D m_ReadableTexture;

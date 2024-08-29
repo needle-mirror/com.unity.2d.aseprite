@@ -203,8 +203,7 @@ namespace UnityEditor.U2D.Aseprite
                 SetDirty();
             }
         }
-
-#if UNITY_2023_1_OR_NEWER
+        
         /// <summary>
         /// Add Shadow Casters to the generated GameObjects with SpriteRenderers.
         /// </summary>
@@ -217,7 +216,6 @@ namespace UnityEditor.U2D.Aseprite
                 SetDirty();
             }
         }
-#endif
 
         /// <summary>
         /// Generate Animation Clips based on the frame data of the source asset.
@@ -227,6 +225,24 @@ namespace UnityEditor.U2D.Aseprite
             get => m_AsepriteImporterSettings.generateAnimationClips;
             set => m_AsepriteImporterSettings.generateAnimationClips = value;
         }
+
+        /// <summary>
+        /// Events will be generated with their own method name. If disabled, all events will be received by the method `OnAnimationEvent(string)`.
+        /// </summary>
+        public bool generateIndividualEvents
+        {
+            get => m_AsepriteImporterSettings.generateIndividualEvents;
+            set => m_AsepriteImporterSettings.generateIndividualEvents = value;
+        }
+        
+        /// <summary>
+        /// Generate a Sprite Atlas to contain the created texture. This is only available when importing a Tile Set.
+        /// </summary>
+        public bool generateSpriteAtlas
+        {
+            get => m_AsepriteImporterSettings.generateSpriteAtlas;
+            set => m_AsepriteImporterSettings.generateSpriteAtlas = value;
+        }        
 
         /// <summary>
         /// Texture coordinate wrapping mode.
@@ -309,8 +325,7 @@ namespace UnityEditor.U2D.Aseprite
                 SetDirty();
             }
         }
-
-#if UNITY_2022_2_OR_NEWER
+        
         /// <summary>
         /// Whether this texture stores data in sRGB (also called gamma) color space.
         /// </summary>
@@ -323,7 +338,6 @@ namespace UnityEditor.U2D.Aseprite
                 SetDirty();
             }
         }
-#endif
 
         /// <summary>
         /// Mip map bias of the texture.
@@ -393,7 +407,7 @@ namespace UnityEditor.U2D.Aseprite
         }
 
         /// <summary>
-        /// Mipmap streaming priority when there's contention for resources. Positive numbers represent higher priority. Valid range is -128 to 127.
+        /// Mipmap streaming priority when there's contention for resources. Positive numbers represent higher priority. The valid range is -128 to 127.
         /// </summary>
         public int streamingMipmapsPriority
         {
@@ -439,7 +453,7 @@ namespace UnityEditor.U2D.Aseprite
         /// <returns>TextureImporterPlatformSettings used for importing the texture for the build target.</returns>
         public TextureImporterPlatformSettings GetImporterPlatformSettings(BuildTarget buildTarget)
         {
-            return PlatformSettingsUtilities.GetPlatformTextureSettings(buildTarget, m_PlatformSettings);
+            return PlatformSettingsUtilities.GetPlatformTextureSettings(buildTarget, in m_PlatformSettings);
         }
 
         /// <summary>

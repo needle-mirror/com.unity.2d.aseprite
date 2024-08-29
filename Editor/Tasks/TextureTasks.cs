@@ -1,14 +1,13 @@
 using System;
 using Unity.Burst;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
 using UnityEngine;
 
 namespace UnityEditor.U2D.Aseprite
 {
-#if UNITY_2022_2_OR_NEWER
     [BurstCompile]
-#endif
     internal static class TextureTasks
     {
         [BurstCompile]
@@ -23,12 +22,12 @@ namespace UnityEditor.U2D.Aseprite
         }
 
         [BurstCompile]
-        public static void FlipTextureY(ref NativeArray<Color32> texture, in int2 size)
+        public static unsafe void FlipTextureY(Color32* texturePtr, int length, in int2 size)
         {
             if (size.x == 0 || size.y == 0)
                 return;
 
-            var outputTexture = new NativeArray<Color32>(texture.Length, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
+            var outputTexture = new NativeArray<Color32>(length, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
             for (var y = 0; y < size.y; ++y)
             {
                 var inRow = ((size.y - 1) - y) * size.x;
@@ -38,12 +37,12 @@ namespace UnityEditor.U2D.Aseprite
                 {
                     var inIndex = x + inRow;
                     var outIndex = x + outRow;
-                    outputTexture[outIndex] = texture[inIndex];
+                    outputTexture[outIndex] = texturePtr[inIndex];
                 }
             }
-
-            texture.DisposeIfCreated();
-            texture = outputTexture;
+            
+            UnsafeUtility.MemCpy(texturePtr, outputTexture.GetUnsafePtr(), length * sizeof(Color32));
+            outputTexture.Dispose();
         }
 
         public struct MergeOutput

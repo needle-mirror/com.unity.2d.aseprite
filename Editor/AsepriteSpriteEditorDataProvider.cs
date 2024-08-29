@@ -51,6 +51,10 @@ namespace UnityEditor.U2D.Aseprite
             {
                 return new SecondaryTextureDataProvider() { dataProvider = this } as T;
             }
+            if (typeof(T) == typeof(ISpriteFrameEditCapability))
+            {
+                return new SpriteFrameEditCapabilityDataProvider() { dataProvider = this } as T;
+            }            
             else
                 return this as T;
         }
@@ -122,6 +126,15 @@ namespace UnityEditor.U2D.Aseprite
                             }
                             return spriteRects;
                         }
+                    case FileImportModes.TileSet:
+                        {
+                            var spriteRects = new SpriteRect[m_TileSetImportData.Count];
+                            for (var i = 0; i < spriteRects.Length; i++)
+                            {
+                                spriteRects[i] = new SpriteMetaData(m_TileSetImportData[i]);
+                            }
+                            return spriteRects;
+                        }                    
                     case FileImportModes.AnimatedSprite:
                     default:
                         {

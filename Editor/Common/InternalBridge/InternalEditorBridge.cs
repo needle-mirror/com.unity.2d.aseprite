@@ -1,4 +1,6 @@
+using UnityEditor.AssetImporters;
 using UnityEngine;
+using UnityEngine.U2D;
 
 namespace UnityEditor.U2D.Aseprite.Common
 {
@@ -31,6 +33,13 @@ namespace UnityEditor.U2D.Aseprite.Common
         public static void GenerateOutlineFromSprite(Sprite sprite, float detail, byte alphaTolerance, bool holeDetection, out Vector2[][] paths)
         {
             UnityEditor.Sprites.SpriteUtility.GenerateOutlineFromSprite(sprite, detail, alphaTolerance, holeDetection, out paths);
+        }
+
+        public static void SetSpriteAtlasToV2(SpriteAtlas atlas) => atlas.SetV2();
+
+        public static void RegisterAndPackSpriteAtlas(SpriteAtlas atlas, AssetImportContext ctx, AssetImporter importer, ScriptablePacker packer)
+        {
+            atlas.RegisterAndPackAtlas(ctx, importer, packer);
         }
     }
 }

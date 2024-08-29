@@ -1,20 +1,17 @@
 # Changelog
+## [1.2.0] - 2024-08-29
+### Added
+- Added a new import mode, Tile Set, which imports tile data from Aseprite and generates Unity Tilemap assets on import.
+- Added support for a parameter in the generated animation events.
+- Added a choice on how Animation Events are stored, as individual events or grouped up and listened through `OnAnimationEvent(string)`.
 
-## [1.1.7] - 2024-11-12
 ### Fixed
-- Fixed an issue where adding Sprite Bones would cause the Sprites to become corrupt in the importation. (DANB-779)
-- Fixed an issue where the position rect would not get updated after being set in the Sprite Editor.
-- Fixed an issue where the references to sprites would be lost when adding new layers to an Aseprite file. (DANB-782)
-- Fixed an issue where the default compression would be set to "Normal Quality" instead of the expected "Uncompressed".
-
-## [1.1.6] - 2024-08-30
-### Fixed
-- Fixed an issue where SpriteRenderers would lose their reference if an Aseprite file's name was changed. (DANB-692)
-
-## [1.1.5] - 2024-06-19
-### Fixed
-- Reduced the font size slightly in the importer headers to match other inspector headers in Unity. (DANB-644) 
+- Reduced the font size slightly in the importer headers to match other inspector headers in Unity. (DANB-644)
 - Fixed an issue where the Sort Order would not be reset in Animation Clips when making use of the Z-index in Aseprite.
+- Fixed an issue where SpriteRenderers would lose their reference if an Aseprite file's name was changed. (DANB-692)
+- Fixed an issue where adding Sprite Bones would cause the Sprites to become corrupt in the importation. (DANB-779)
+- Fixed an issue where the sprite rect would not get updated after being set in the Sprite Editor.
+- Fixed an issue where the references to sprites would be lost when adding new layers to an Aseprite file. (DANB-782)
 
 ## [1.1.4] - 2024-05-02
 ### Fixed

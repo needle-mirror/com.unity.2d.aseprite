@@ -4,6 +4,7 @@
     "references": [
         "Unity.InternalAPIEditorBridge.001",
         "Unity.2D.Sprite.Editor",
+        "Unity.2D.Tilemap.Editor",
         "Unity.2D.Aseprite.Common",
         "Unity.Burst",
         "Unity.Mathematics",
