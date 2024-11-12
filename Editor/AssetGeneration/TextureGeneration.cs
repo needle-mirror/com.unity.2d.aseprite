@@ -26,7 +26,7 @@ namespace UnityEditor.U2D.Aseprite
             UnityEngine.Profiling.Profiler.BeginSample("ImportTexture");
             try
             {
-                var platformSettings = TextureImporterPlatformUtilities.GetPlatformTextureSettings(ctx.selectedBuildTarget, allPlatformSettings);
+                var platformSettings = PlatformSettingsUtilities.GetPlatformTextureSettings(ctx.selectedBuildTarget, allPlatformSettings);
 
                 var textureSettings = textureImporterSettings.ExtractTextureSettings();
                 textureSettings.assetPath = ctx.assetPath;

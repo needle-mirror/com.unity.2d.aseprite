@@ -11,14 +11,14 @@ This page highlights which Aseprite feature the Aseprite Importer supports/does 
 
 **Layer settings**
 - Visible/Hidden layer
-    - Hidden layers are by default not imported. This can be changed by checking “Include hidden layers” in the import settings.
+    - Hidden layers are not imported by default. This can be changed by checking “Include hidden layers” in the import settings.
 - Layer blend modes
     - All blend modes are supported with Import Mode: Merge frames.
-- Layer & Cel opacity
-- Linked Cels
+- Layer & Cell opacity
+- Linked Cells
 - Tags
     - Only Animation Direction: Forward is supported.
-    - Values set in the repeating field only has two results on import:
+    - Values set in the repeating field only have two results on import:
         - ∞ will result in a looping Animation Clip. This value is the default for all Tags in Aseprite.
         - 1 -> N will result in a non looping Animation Clip.
 - [Individual frame timings](https://www.aseprite.org/docs/frame-duration/)

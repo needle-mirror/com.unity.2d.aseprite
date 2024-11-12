@@ -25,7 +25,7 @@ namespace UnityEditor.U2D.Aseprite
                 index = 0,
                 name = assetName
             };
-            flattenLayer.guid = Layer.GenerateGuid(flattenLayer);
+            flattenLayer.guid = Layer.GenerateGuid(flattenLayer, layers);
             layers.Add(flattenLayer);
         }
     }

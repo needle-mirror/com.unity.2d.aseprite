@@ -791,7 +791,7 @@ namespace UnityEditor.U2D.Aseprite
         {
             var importer = targets[targetIndex] as AsepriteImporter;
             var extraData = extraTarget as AsepriteImporterEditorExternalData;
-            var platformSettingsNeeded = TexturePlatformSettingsHelper.PlatformSettingsNeeded(this);
+            var platformSettingsNeeded = TexturePlatformSettingsHelper.PlatformSettingsNeeded(PlatformSettingsUtilities.CreateDefaultSettings);
             if (importer != null)
             {
                 extraData.Init(importer, platformSettingsNeeded);

@@ -41,11 +41,11 @@ The Aseprite Importer is available after you import a .ase/.aseprite file into y
     </tr>
     <tr>
       <td rowspan="1"><strong>Pixels Per Unit</strong></td>
-      <td colspan="2">Sets the number of pixels that equals one Unity unit.</td>
+      <td colspan="2">Set the number of pixels that equals one Unity unit.</td>
     </tr>
     <tr>
       <td rowspan="3"><strong>Mesh Type</strong></td>
-      <td colspan="2">Sets the Mesh type that Unity generates for the Sprite. This is set to <b>Tight</b> by default.</td>
+      <td colspan="2">Set the Mesh type that Unity generates for the Sprite. This is set to <b>Tight</b> by default.</td>
     </tr>
     <tr>
       <td><strong><a href="https://docs.unity3d.com/Documentation/ScriptReference/SpriteMeshType.FullRect.html">Full Rect</a></strong></td>
@@ -74,7 +74,7 @@ The Aseprite Importer is available after you import a .ase/.aseprite file into y
   <tbody>
     <tr>
       <td rowspan="1"><strong>Include Hidden Layers</strong></td>
-      <td colspan="2">Enable this property to include the hidden layers of the .ase/.asperite file in the import. This property is set to <b>False</b> by default.</td>
+      <td colspan="2">Enable this property to include the hidden layers of the .ase/.aseprite file in the import. This property is set to <b>False</b> by default.</td>
     </tr>
     <tr>
       <td rowspan="3"><strong>Import Mode</strong></td>
@@ -143,7 +143,7 @@ The Aseprite Importer is available after you import a .ase/.aseprite file into y
     </tr>
     <tr>
       <td rowspan="1"><strong>Export Animation Assets</strong></td>
-      <td colspan="2">The Animator Controller and the Animation Clips are generated as Read Only assets. This option can be used to export editable versions of these assets.</td>
+      <td colspan="2">The Animator Controller and the Animation Clips are generated as Read-Only assets. This option can be used to export editable versions of these assets.</td>
     </tr>
   </tbody>
 </table>

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.7] - 2024-11-12
+### Fixed
+- Fixed an issue where adding Sprite Bones would cause the Sprites to become corrupt in the importation. (DANB-779)
+- Fixed an issue where the position rect would not get updated after being set in the Sprite Editor.
+- Fixed an issue where the references to sprites would be lost when adding new layers to an Aseprite file. (DANB-782)
+- Fixed an issue where the default compression would be set to "Normal Quality" instead of the expected "Uncompressed".
+
 ## [1.1.6] - 2024-08-30
 ### Fixed
 - Fixed an issue where SpriteRenderers would lose their reference if an Aseprite file's name was changed. (DANB-692)
@@ -28,14 +35,14 @@
 
 ## [1.1.1] - 2024-01-03
 ### Fixed
-- Fixed an issue where the Sprite Editor could be opened even though there were no valid texture to open it with.
-- Fixed an issue where the importer would not generate a square power of two texture for compressions which needs it (pvrtc).
+- Fixed an issue where the Sprite Editor could be opened even though there was no valid texture to open it with.
+- Fixed an issue where the importer would not generate a square power-of-two texture for compressions which needs it (pvrtc).
 - Fixed an issue where changes to linked cells would not be taken into account when reimporting.
 
 ## [1.1.0] - 2023-11-24
 ### Added
 - Added a mosaic padding option to the importer editor.
-- Added Generate Physics Shape option to the importer editor.
+- Added "Generate Physics Shape" option to the importer editor.
 
 ### Changed
 - Fixed an issue where the background importer would act on files that were not Aseprite files.
@@ -60,7 +67,7 @@
 
 ## [1.0.0-pre.3] - 2023-03-23
 ### Added
-- Bursted the texture generation tasks, to speed up importation of Aseprite files. (Note: Only for Unity 2022.2 and newer).
+- Burst compiled the texture generation tasks to speed up importation of Aseprite files. (Note: Only for Unity 2022.2 and newer).
 - Layer blend modes are now supported with Import Mode: Merge Frames.
 - Added ability to generate Animation Events from Cell user data.
 - Added ability to export Animator Controller and/or Animation Clips.
@@ -75,7 +82,7 @@
 - Added support for individual frame timings in animation clips.
 - Added support for layer groups.
 - Added support for Layer & Cel opacity.
-- Added support for repeating/non repeating tags/clips.
+- Added support for repeating/non-repeating tags/clips.
 
 ### Changed
 - The importer UI is now re-written in UI Toolkit.
@@ -83,7 +90,7 @@
 - A Sorting Group component is added by default to Model Prefabs with more than one Sprite Renderer.
 
 ### Fixed
-- Fixed an issue where renaming an Asperite file in Unity would throw a null reference exception. (DANB-384)
+- Fixed an issue where renaming an Aseprite file in Unity would throw a null reference exception. (DANB-384)
 - Fixed an issue where the background importer would import assets even when Unity Editor has focus.
 - Fixed an issue where the Pixels Per Unit value could be set to invalid values.
 

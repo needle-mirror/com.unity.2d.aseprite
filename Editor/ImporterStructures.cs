@@ -68,10 +68,20 @@ namespace UnityEditor.U2D.Aseprite
             set => m_ParentIndex = value;
         }
 
-        public static int GenerateGuid(Layer layer)
+        public static int GenerateGuid(Layer layer, IReadOnlyList<Layer> layers)
         {
-            var hash = layer.name.GetHashCode();
-            hash = (hash * 397) ^ layer.index.GetHashCode();
+            var fullName = layer.name;
+            var parent = layer;
+            do
+            {
+                var parentIndex = parent.parentIndex;
+                parent = layers.Find(x => x.index == parentIndex);
+                if (parent != null)
+                    fullName = fullName.Insert(0, parent.name + "/");
+                
+            } while (parent != null);
+            
+            var hash = fullName.GetHashCode();
             return hash;
         }
     }

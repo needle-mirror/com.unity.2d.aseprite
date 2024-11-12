@@ -88,8 +88,8 @@ namespace UnityEditor.U2D.Aseprite
             sr.sortingOrder = layer.index + firstCell.additiveSortOrder;
 
 #if ENABLE_URP
-                if (importSettings.addShadowCasters)
-                    gameObject.AddComponent<UnityEngine.Rendering.Universal.ShadowCaster2D>();
+            if (importSettings.addShadowCasters)
+                gameObject.AddComponent<UnityEngine.Rendering.Universal.ShadowCaster2D>();
 #endif
 
             if (importSettings.defaultPivotSpace == PivotSpaces.Canvas)

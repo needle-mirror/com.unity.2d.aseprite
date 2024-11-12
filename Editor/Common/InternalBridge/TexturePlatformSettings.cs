@@ -1,6 +1,4 @@
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEditor.Build;
 using System;
 
 namespace UnityEditor.U2D.Aseprite.Common
@@ -45,15 +43,16 @@ namespace UnityEditor.U2D.Aseprite.Common
         {
             if (model.platformTextureSettingsProp != null && model.platformTextureSettingsProp.isValid && m_DataProvider.GetBuildTargetName(model.platformTextureSettingsProp) == model.platformTextureSettings.name)
                 return;
+            
             if (platformSettingsArray.arraySize == 0)
             {
-                model.platformTextureSettingsProp = (SerializedProperty)null;
+                model.platformTextureSettingsProp = null;
                 throw new UnityException("Cannot find any Platform Settings, including the Default Platform. This is incorrect, did initialization fail?");
             }
 
-            for (int index = 0; index < platformSettingsArray.arraySize; ++index)
+            for (var index = 0; index < platformSettingsArray.arraySize; ++index)
             {
-                SerializedProperty arrayElementAtIndex = platformSettingsArray.GetArrayElementAtIndex(index);
+                var arrayElementAtIndex = platformSettingsArray.GetArrayElementAtIndex(index);
                 if (m_DataProvider.GetBuildTargetName(arrayElementAtIndex) == model.platformTextureSettings.name)
                 {
                     model.platformTextureSettingsProp = arrayElementAtIndex;
@@ -145,121 +144,6 @@ namespace UnityEditor.U2D.Aseprite.Common
             if (targetGroup != BuildTargetGroup.Unknown)
                 return BuildPipeline.GetBuildTargetGroupName(targetGroup);
             return platform;
-        }
-    }
-
-    [Serializable]
-    internal class TexturePlatformSettingsHelper
-    {
-        [SerializeField]
-        List<TexturePlatformSettings> m_PlatformSettings;
-        ITexturePlatformSettingsDataProvider m_DataProvider;
-
-        internal static List<TextureImporterPlatformSettings> PlatformSettingsNeeded(ITexturePlatformSettingsDataProvider dataProvider)
-        {
-            BuildPlatform[] validPlatforms = BaseTextureImportPlatformSettings.GetBuildPlayerValidPlatforms();
-
-            var platformSettings = new List<TextureImporterPlatformSettings>();
-            platformSettings.Add(new TextureImporterPlatformSettings()
-            {
-                name = TextureImporterInspector.s_DefaultPlatformName
-            });
-
-            foreach (var bp in validPlatforms)
-            {
-                platformSettings.Add(new TextureImporterPlatformSettings
-                {
-                    name = bp.name,
-                    overridden = false
-                });
-            }
-
-            return platformSettings;
-        }
-
-        public TexturePlatformSettingsHelper(ITexturePlatformSettingsDataProvider dataProvider)
-        {
-            m_DataProvider = dataProvider;
-            var validPlatforms = BaseTextureImportPlatformSettings.GetBuildPlayerValidPlatforms();
-
-            m_PlatformSettings = new List<TexturePlatformSettings>();
-            m_PlatformSettings.Add(new TexturePlatformSettings(TextureImporterInspector.s_DefaultPlatformName, BuildTarget.StandaloneWindows, dataProvider, DefaultTextureImportPlatformSettings));
-
-            foreach (var bp in validPlatforms)
-            {
-                m_PlatformSettings.Add(new TexturePlatformSettings(bp.name, bp.defaultTarget, dataProvider, DefaultTextureImportPlatformSettings));
-            }
-        }
-
-        BaseTextureImportPlatformSettings DefaultTextureImportPlatformSettings()
-        {
-            return m_PlatformSettings[0];
-        }
-
-        public static string defaultPlatformName => TextureImporterInspector.s_DefaultPlatformName;
-        public SpriteImportMode spriteImportMode => m_DataProvider.spriteImportMode;
-        public TextureImporterType textureType => m_DataProvider.textureType;
-        public bool textureTypeHasMultipleDifferentValues => m_DataProvider.textureTypeHasMultipleDifferentValues;
-
-        public void ShowPlatformSpecificSettings()
-        {
-            BaseTextureImportPlatformSettings.InitPlatformSettings(m_PlatformSettings.ConvertAll(x => x as BaseTextureImportPlatformSettings));
-            m_PlatformSettings.ForEach(settings => settings.CacheSerializedProperties(m_DataProvider.platformSettingsArray));
-            //Show platform grouping
-            var selectedPage = EditorGUILayout.BeginPlatformGrouping(BaseTextureImportPlatformSettings.GetBuildPlayerValidPlatforms(), EditorGUIUtility.TrTextContent("Default"), EditorStyles.frameBox, idx =>
-            {
-                var ps = m_PlatformSettings[idx + 1];
-                var model = ps.model;
-                if (model.isDefault)
-                    return false;
-                if (model.overriddenIsDifferent || model.allAreOverridden)
-                    return true;
-                return false;
-            });
-
-
-            //Show platform settings
-            using var changed = new EditorGUI.ChangeCheckScope();
-
-            BaseTextureImportPlatformSettings.ShowPlatformSpecificSettings(m_PlatformSettings.ConvertAll<BaseTextureImportPlatformSettings>(x => x as BaseTextureImportPlatformSettings), selectedPage);
-            // Doing it this way is slow, but it ensure Presets get updated correctly whenever the UI is being changed.
-            if (changed.changed)
-            {
-                BaseTextureImportPlatformSettings.ApplyPlatformSettings(m_PlatformSettings.ConvertAll<BaseTextureImportPlatformSettings>(x => x as BaseTextureImportPlatformSettings));
-            }
-        }
-
-        public bool HasModified()
-        {
-            foreach (var ps in m_PlatformSettings)
-            {
-                if (ps.model.HasChanged())
-                    return true;
-            }
-            return false;
-        }
-
-        void SyncPlatformSettings()
-        {
-            foreach (var ps in m_PlatformSettings)
-                ps.Sync();
-        }
-
-        public void Apply()
-        {
-            foreach (var ps in m_PlatformSettings)
-                ps.Apply();
-        }
-
-        public static string GetBuildTargetGroupName(BuildTarget target)
-        {
-            var targetGroup = BuildPipeline.GetBuildTargetGroup(target);
-            foreach (var bp in BuildPlatforms.instance.buildPlatforms)
-            {
-                if (bp.targetGroup == targetGroup)
-                    return bp.name;
-            }
-            return TextureImporter.defaultPlatformName;
         }
     }
 }

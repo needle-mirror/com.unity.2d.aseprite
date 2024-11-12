@@ -439,7 +439,7 @@ namespace UnityEditor.U2D.Aseprite
         /// <returns>TextureImporterPlatformSettings used for importing the texture for the build target.</returns>
         public TextureImporterPlatformSettings GetImporterPlatformSettings(BuildTarget buildTarget)
         {
-            return TextureImporterPlatformUtilities.GetPlatformTextureSettings(buildTarget, m_PlatformSettings);
+            return PlatformSettingsUtilities.GetPlatformTextureSettings(buildTarget, m_PlatformSettings);
         }
 
         /// <summary>
