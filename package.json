@@ -1,6 +1,6 @@
 {
   "name": "com.unity.2d.aseprite",
-  "version": "1.1.7",
+  "version": "1.1.8",
   "unity": "2021.3",
   "unityRelease": "15f1",
   "displayName": "2D Aseprite Importer",
@@ -23,15 +23,15 @@
     "com.unity.2d.aseprite.tests": "1.1.5"
   },
   "_upm": {
-    "changelog": "### Fixed\n- Fixed an issue where adding Sprite Bones would cause the Sprites to become corrupt in the importation. (DANB-779)\n- Fixed an issue where the position rect would not get updated after being set in the Sprite Editor.\n- Fixed an issue where the references to sprites would be lost when adding new layers to an Aseprite file. (DANB-782)\n- Fixed an issue where the default compression would be set to \"Normal Quality\" instead of the expected \"Uncompressed\"."
+    "changelog": "### Fixed\n- Fixed an issue where the importer inspector would throw an exception if an animation clip was empty of data. (DANB-788)\n- Fixed an issue where the Z-Index would not be taken into account when the import mode is set to \"Merge Frame\". (DANB-787)"
   },
   "upmCi": {
-    "footprint": "6cb06d6f563e17dcf40514bc6cf9e25347b17cf8"
+    "footprint": "7839b5dcbf2bd89702070b84018d138f81abd187"
   },
   "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.2d.aseprite@1.1/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/AsepriteImporter.git",
     "type": "git",
-    "revision": "8dcf77735261b73309daf35e840d591271a7814d"
+    "revision": "02487451b5735520a22cdd8423415415e5cc8484"
   }
 }

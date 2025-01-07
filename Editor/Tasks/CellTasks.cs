@@ -17,12 +17,14 @@ namespace UnityEditor.U2D.Aseprite
                 cells.AddRange(layers[i].cells);
         }
 
-        public static Dictionary<int, List<Cell>> GetAllCellsPerFrame(in List<Layer> layers)
+        public static Dictionary<int, List<Cell>> GetAllCellsPerFrame(IReadOnlyList<Layer> layers)
         {
+            var cellsToSortingIndex = new Dictionary<Cell, int>();
             var cellsPerFrame = new Dictionary<int, List<Cell>>();
             for (var i = 0; i < layers.Count; ++i)
             {
-                var cells = layers[i].cells;
+                var layer = layers[i];
+                var cells = layer.cells;
                 for (var m = 0; m < cells.Count; ++m)
                 {
                     var cell = cells[m];
@@ -35,9 +37,11 @@ namespace UnityEditor.U2D.Aseprite
                         frame.Add(cell);
                     else
                         cellsPerFrame.Add(cell.frameIndex, new List<Cell>() { cell });
+                    
+                    cellsToSortingIndex.Add(cell, layer.index + cell.additiveSortOrder);
                 }
 
-                var linkedCells = layers[i].linkedCells;
+                var linkedCells = layer.linkedCells;
                 for (var m = 0; m < linkedCells.Count; ++m)
                 {
                     var frameIndex = linkedCells[m].frameIndex;
@@ -57,13 +61,32 @@ namespace UnityEditor.U2D.Aseprite
                         frame.Add(cell);
                     else
                         cellsPerFrame.Add(frameIndex, new List<Cell>() { cell });
+                    
+                    // Since the cell is linked, it may have already been added. If so, use the previous sorting index.
+                    cellsToSortingIndex.TryAdd(cell, layer.index + cell.additiveSortOrder);
                 }
+            }
+            
+            // Sort the cell lists in the order of their cell index.
+            // The cell index is a combination of the layer index and the Z-Index of the cell.
+            foreach (var cellList in cellsPerFrame.Values)
+            {
+                cellList.Sort((x, y) =>
+                {
+                    var indexX = cellsToSortingIndex[x];
+                    var indexY = cellsToSortingIndex[y];
+                    if (indexX > indexY)
+                        return 1;
+                    if (indexX < indexY)
+                        return -1;
+                    return x.additiveSortOrder.CompareTo(y.additiveSortOrder);
+                });
             }
 
             return cellsPerFrame;
         }
 
-        public static List<Cell> MergeCells(in Dictionary<int, List<Cell>> cellsPerFrame, string cellName)
+        public static List<Cell> MergeCells(IReadOnlyDictionary<int, List<Cell>> cellsPerFrame, string cellName)
         {
             var mergedCells = new List<Cell>(cellsPerFrame.Count);
             foreach (var (frameIndex, cells) in cellsPerFrame)

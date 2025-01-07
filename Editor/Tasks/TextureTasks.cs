@@ -52,6 +52,14 @@ namespace UnityEditor.U2D.Aseprite
             public NativeArray<Color32> image;
         }
 
+        /// <summary>
+        /// Merge a set of textures into a single texture, applying blend modes to each texture (if requested).
+        /// The merging happens from front to back of the texture array. 
+        /// </summary>
+        /// <param name="textures">Textures to merge</param>
+        /// <param name="textureSizes">Texture sizes</param>
+        /// <param name="blendModes">Blend mode per texture</param>
+        /// <param name="output">Output of the operation, a texture and its rect</param>
         [BurstCompile]
         public static unsafe void MergeTextures(in NativeArray<IntPtr> textures, in NativeArray<RectInt> textureSizes, in NativeArray<BlendModes> blendModes, out MergeOutput output)
         {
@@ -74,7 +82,7 @@ namespace UnityEditor.U2D.Aseprite
                 for (var y = 0; y < inHeight; ++y)
                 {
                     var outPosY = (y + inY) - outStartY;
-                    // If pixel is outside of output texture's Y, move to the next pixel.
+                    // If the pixel is outside output texture's Y, move to the next pixel.
                     if (outPosY < 0 || outPosY >= outHeight)
                         continue;
 
@@ -86,7 +94,7 @@ namespace UnityEditor.U2D.Aseprite
                     for (var x = 0; x < inWidth; ++x)
                     {
                         var outPosX = (x + inX) - outStartX;
-                        // If pixel is outside of output texture's X, move to the next pixel.
+                        // If the pixel is outside output texture's X, move to the next pixel.
                         if (outPosX < 0 || outPosX >= outWidth)
                             continue;
 

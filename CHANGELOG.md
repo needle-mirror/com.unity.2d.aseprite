@@ -1,4 +1,8 @@
 # Changelog
+## [1.1.8] - 2025-01-07
+### Fixed
+- Fixed an issue where the importer inspector would throw an exception if an animation clip was empty of data. (DANB-788)
+- Fixed an issue where the Z-Index would not be taken into account when the import mode is set to "Merge Frame". (DANB-787)
 
 ## [1.1.7] - 2024-11-12
 ### Fixed

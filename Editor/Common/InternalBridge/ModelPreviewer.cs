@@ -90,6 +90,11 @@ namespace UnityEditor.U2D.Aseprite.Common
             }
 
             m_FrameTimings = new List<float>(timeSet.Count);
+            
+            // If the clip is empty, early out.
+            if (timeSet.Count == 0)
+                return;
+            
             foreach (var time in timeSet)
                 m_FrameTimings.Add(time);
             m_FrameTimings.Sort();
@@ -215,7 +220,7 @@ namespace UnityEditor.U2D.Aseprite.Common
             }
 
             // Remove one to get the frame number start from 0
-            return frame - 1;
+            return Mathf.Max(frame - 1, 0);
         }
 
         void DoRenderPreview()

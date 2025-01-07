@@ -87,7 +87,7 @@ namespace UnityEditor.U2D.Aseprite
     }
 
     [Serializable]
-    internal struct Cell
+    internal struct Cell : IEquatable<Cell>
     {
         [SerializeField] string m_Name;
         [SerializeField] int m_FrameIndex;
@@ -124,6 +124,41 @@ namespace UnityEditor.U2D.Aseprite
         {
             get => new GUID(m_SpriteId);
             set => m_SpriteId = value.ToString();
+        }
+
+        public bool Equals(Cell other)
+        {
+            return m_Name == other.m_Name && 
+                   m_FrameIndex == other.m_FrameIndex && 
+                   m_AdditiveSortOrder == other.m_AdditiveSortOrder && 
+                   m_CellRect.Equals(other.m_CellRect) && 
+                   m_SpriteId == other.m_SpriteId && 
+                   updatedCellRect == other.updatedCellRect && 
+                   opacity.Equals(other.opacity) && 
+                   blendMode == other.blendMode && 
+                   image.Equals(other.image);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is Cell other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = (m_Name != null ? m_Name.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ m_FrameIndex;
+                hashCode = (hashCode * 397) ^ m_AdditiveSortOrder;
+                hashCode = (hashCode * 397) ^ m_CellRect.GetHashCode();
+                hashCode = (hashCode * 397) ^ (m_SpriteId != null ? m_SpriteId.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ updatedCellRect.GetHashCode();
+                hashCode = (hashCode * 397) ^ opacity.GetHashCode();
+                hashCode = (hashCode * 397) ^ (int) blendMode;
+                hashCode = (hashCode * 397) ^ image.GetHashCode();
+                return hashCode;
+            }
         }
     }
 
