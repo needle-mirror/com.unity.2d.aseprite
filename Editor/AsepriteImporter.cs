@@ -243,7 +243,8 @@ namespace UnityEditor.U2D.Aseprite
                             cell.cellRect.position,
                             spriteRects[dataIndex],
                             packOffsets[dataIndex],
-                            uvTransforms[dataIndex]);
+                            uvTransforms[dataIndex],
+                            new int2(m_CanvasSize.x, m_CanvasSize.y));
                         newSpriteMeta.Add(spriteData);
 
                         if (cell.updatedCellRect)
@@ -264,7 +265,8 @@ namespace UnityEditor.U2D.Aseprite
                                 Vector2Int.one,
                                 spriteRects[dataIndex],
                                 packOffsets[dataIndex],
-                                uvTransforms[dataIndex]);
+                                uvTransforms[dataIndex],
+                                tile.size);
                             newSpriteMeta.Add(spriteData);
                         }
                     }
@@ -897,13 +899,36 @@ namespace UnityEditor.U2D.Aseprite
             Vector2Int position,
             RectInt spriteRect,
             Vector2Int packOffset,
-            Vector2Int uvTransform)
+            Vector2Int uvTransform,
+            int2 canvasSize)
         {
             var spriteData = new SpriteMetaData();
             spriteData.border = Vector4.zero;
 
             if (importMode == FileImportModes.TileSet)
-                spriteData.alignment = SpriteAlignment.Center;
+            {
+                // Get the position of the sprite in the tile
+                var spritePosition = (Vector2)uvTransform;
+                // Remove the mosaic padding
+                spritePosition.x -= spriteRect.x;
+                spritePosition.y -= spriteRect.y;
+                // Calculate how many times the sprite can go into the tile
+                var scaleX = canvasSize.x / (float)spriteRect.width;
+                var scaleY = canvasSize.y / (float)spriteRect.height;
+                
+                var pivot = new float2(spritePosition.x / (float)canvasSize.x, spritePosition.y / (float)canvasSize.y);
+                
+                // Sprites are stored at the center of a Tile asset, so add center alignment to the pivot.
+                var alignmentPos = ImportUtilities.PivotAlignmentToVector(SpriteAlignment.Center);
+                pivot.x += alignmentPos.x;
+                pivot.y += alignmentPos.y;
+
+                pivot.x *= scaleX;
+                pivot.y *= scaleY;
+                
+                spriteData.alignment = SpriteAlignment.Custom;
+                spriteData.pivot = pivot;
+            }
             else if (pivotSpace == PivotSpaces.Canvas)
             {
                 spriteData.alignment = SpriteAlignment.Custom;
@@ -912,7 +937,7 @@ namespace UnityEditor.U2D.Aseprite
                 cellRect.x += packOffset.x;
                 cellRect.y += packOffset.y;
 
-                spriteData.pivot = ImportUtilities.CalculateCellPivot(cellRect, spritePadding, m_CanvasSize, pivotAlignment, customPivotPosition);
+                spriteData.pivot = ImportUtilities.CalculateCellPivot(cellRect, spritePadding, canvasSize, pivotAlignment, customPivotPosition);
             }
             else
             {

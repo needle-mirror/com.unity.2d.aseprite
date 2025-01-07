@@ -5,6 +5,7 @@ using System.Text;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
+using Unity.Mathematics;
 using UnityEditor.Animations;
 using UnityEngine;
 
@@ -202,20 +203,20 @@ namespace UnityEditor.U2D.Aseprite
             for (var i = 0; i < clips.Length; ++i)
                 controller.AddMotion(clips[i]);
         }
-
-        public static Vector2 CalculateCellPivot(RectInt cellRect, uint spritePadding, Vector2Int canvasSize, SpriteAlignment alignment, Vector2 customPivot)
+        
+        public static float2 CalculateCellPivot(RectInt cellRect, uint spritePadding, int2 canvasSize, SpriteAlignment alignment, float2 customPivot)
         {
             if (cellRect.width == 0 || cellRect.height == 0)
-                return Vector2.zero;
+                return float2.zero;
 
             var scaleX = canvasSize.x / (float)cellRect.width;
             var scaleY = canvasSize.y / (float)cellRect.height;
             var halfSpritePadding = spritePadding / 2f;
 
-            var pivot = new Vector2((cellRect.x - halfSpritePadding) / (float)canvasSize.x, (cellRect.y - halfSpritePadding) / (float)canvasSize.y);
+            var pivot = new float2((cellRect.x - halfSpritePadding) / (float)canvasSize.x, (cellRect.y - halfSpritePadding) / (float)canvasSize.y);
             pivot *= -1f;
 
-            Vector2 alignmentPos;
+            float2 alignmentPos;
             if (alignment == SpriteAlignment.Custom)
                 alignmentPos = customPivot;
             else
@@ -230,30 +231,30 @@ namespace UnityEditor.U2D.Aseprite
             return pivot;
         }
 
-        public static Vector2 PivotAlignmentToVector(SpriteAlignment alignment)
+        public static float2 PivotAlignmentToVector(SpriteAlignment alignment)
         {
             switch (alignment)
             {
                 case SpriteAlignment.Center:
-                    return new Vector2(0.5f, 0.5f);
+                    return new float2(0.5f, 0.5f);
                 case SpriteAlignment.TopLeft:
-                    return new Vector2(0f, 1f);
+                    return new float2(0f, 1f);
                 case SpriteAlignment.TopCenter:
-                    return new Vector2(0.5f, 1f);
+                    return new float2(0.5f, 1f);
                 case SpriteAlignment.TopRight:
-                    return new Vector2(1f, 1f);
+                    return new float2(1f, 1f);
                 case SpriteAlignment.LeftCenter:
-                    return new Vector2(0f, 0.5f);
+                    return new float2(0f, 0.5f);
                 case SpriteAlignment.RightCenter:
-                    return new Vector2(1f, 0.5f);
+                    return new float2(1f, 0.5f);
                 case SpriteAlignment.BottomLeft:
-                    return new Vector2(0f, 0f);
+                    return new float2(0f, 0f);
                 case SpriteAlignment.BottomCenter:
-                    return new Vector2(0.5f, 0f);
+                    return new float2(0.5f, 0f);
                 case SpriteAlignment.BottomRight:
-                    return new Vector2(1f, 0f);
+                    return new float2(1f, 0f);
                 default:
-                    return new Vector2(0f, 0f);
+                    return new float2(0f, 0f);
             }
         }
 

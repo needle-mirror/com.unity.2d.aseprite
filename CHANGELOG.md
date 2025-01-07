@@ -1,4 +1,10 @@
 # Changelog
+## [1.2.1] - 2025-01-07
+### Fixed
+- Fixed an issue where Sprites smaller than the tile size would be wrongly placed in the tile palette.
+- Fixed an issue where the importer inspector would throw an exception if an animation clip was empty of data. (DANB-788)
+- Fixed an issue where the Z-Index would not be taken into account when the import mode is set to "Merge Frame". (DANB-787)
+
 ## [1.2.0] - 2024-08-29
 ### Added
 - Added a new import mode, Tile Set, which imports tile data from Aseprite and generates Unity Tilemap assets on import.
