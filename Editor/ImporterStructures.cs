@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace UnityEditor.U2D.Aseprite
 {
@@ -16,8 +15,10 @@ namespace UnityEditor.U2D.Aseprite
         [SerializeField] LayerFlags m_LayerFlags;
         [SerializeField] LayerTypes m_LayerType;
         [SerializeField] BlendModes m_BlendMode;
-        [SerializeField] List<Cell> m_Cells = new List<Cell>();
-        [SerializeField] List<LinkedCell> m_LinkedCells = new List<LinkedCell>();
+        [SerializeField] List<Cell> m_Cells = new ();
+        [SerializeField] List<LinkedCell> m_LinkedCells = new ();
+        [SerializeField] List<TileCell> m_TileCells = new ();
+        [SerializeField] uint m_TileSetIndex;
         [SerializeField] int m_ParentIndex = -1;
 
         [NonSerialized] public float opacity;
@@ -63,6 +64,16 @@ namespace UnityEditor.U2D.Aseprite
             get => m_LinkedCells;
             set => m_LinkedCells = value;
         }
+        public List<TileCell> tileCells
+        {
+            get => m_TileCells;
+            set => m_TileCells = value;
+        }
+        public uint tileSetIndex
+        {
+            get => m_TileSetIndex;
+            set => m_TileSetIndex = value;
+        }        
         public int parentIndex
         {
             get => m_ParentIndex;
@@ -181,6 +192,36 @@ namespace UnityEditor.U2D.Aseprite
         }
     }
 
+    [Serializable]
+    internal struct TileCell
+    {
+        [SerializeField] uint m_LayerIndex;
+        [SerializeField] int m_FrameIndex;
+        [SerializeField] RectInt m_CellRect;
+        [SerializeField] uint[] m_TileIndices;
+
+        public uint layerIndex
+        {
+            get => m_LayerIndex;
+            set => m_LayerIndex = value;
+        }
+        public int frameIndex
+        {
+            get => m_FrameIndex;
+            set => m_FrameIndex = value;
+        }
+        public RectInt cellRect
+        {
+            get => m_CellRect;
+            set => m_CellRect = value;
+        }
+        public uint[] tileIndices
+        {
+            get => m_TileIndices;
+            set => m_TileIndices = value;
+        }
+    }
+
     internal class Frame
     {
         int m_Duration;
@@ -215,7 +256,7 @@ namespace UnityEditor.U2D.Aseprite
         [SerializeField] uint m_Id;
         [SerializeField] string m_Name;
         [SerializeField] int2 m_TileSize;
-        [SerializeField] List<Tile> m_Tiles = new List<Tile>();
+        [SerializeField] List<Tile> m_Tiles = new ();
         [SerializeField] int m_Guid;
 
         public uint id
@@ -257,11 +298,16 @@ namespace UnityEditor.U2D.Aseprite
     internal struct Tile
     {
         [NonSerialized] public NativeArray<Color32> image;
-
+        [SerializeField] uint m_TileId;
         [SerializeField] int2 m_Size;
         [SerializeField] string m_Name;
         [SerializeField] string m_SpriteId;
 
+        public uint tileId
+        {
+            get => m_TileId;
+            set => m_TileId = value;
+        }
         public string name
         {
             get => m_Name;

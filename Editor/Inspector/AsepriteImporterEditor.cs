@@ -369,6 +369,15 @@ namespace UnityEditor.U2D.Aseprite
                 m_LayerImportMode.intValue = layerModePopup.index;
                 serializedObject.ApplyModifiedProperties();
             });
+            layerModePopup.schedule.Execute(() =>
+            {
+                var shouldShow = fileImportMode is FileImportModes.AnimatedSprite;
+                if (layerModePopup.visible != shouldShow)
+                {
+                    layerModePopup.visible = shouldShow;
+                    layerModePopup.EnableInClassList(k_HiddenElementUssClass, !shouldShow);
+                }
+            }).Every(k_PollForChangesInternal);            
             layerModePopup.AddToClassList(k_BaseFieldAlignedUssClass);
             foldOut.Add(layerModePopup);
 

@@ -1,4 +1,8 @@
 # Changelog
+## [1.2.2] - 2025-02-27
+### Fixed
+- Fixed an issue where the Tile Palette would not be generated the same way as in Aseprite when the Aseprite file contains a Tile Layer. (DANB-824)
+
 ## [1.2.1] - 2025-01-07
 ### Fixed
 - Fixed an issue where Sprites smaller than the tile size would be wrongly placed in the tile palette.

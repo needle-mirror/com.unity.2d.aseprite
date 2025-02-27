@@ -449,6 +449,7 @@ namespace UnityEditor.U2D.Aseprite
                         layer.layerType = layerChunk.layerType;
                         layer.blendMode = layerChunk.blendMode;
                         layer.opacity = layerChunk.opacity / 255f;
+                        layer.tileSetIndex = layerChunk.tileSetIndex;
                         layer.index = layers.Count;
                         layer.guid = Layer.GenerateGuid(layer, layers);
 
@@ -475,16 +476,36 @@ namespace UnityEditor.U2D.Aseprite
                         var cellType = cellChunk.cellType;
                         if (cellType == CellTypes.LinkedCell)
                         {
-                            var cell = new LinkedCell();
-                            cell.frameIndex = i;
-                            cell.linkedToFrame = cellChunk.linkedToFrame;
+                            var cell = new LinkedCell
+                            {
+                                frameIndex = i,
+                                linkedToFrame = cellChunk.linkedToFrame
+                            };
                             layer.linkedCells.Add(cell);
+                        }
+                        else if (cellType == CellTypes.CompressedTileMap)
+                        {
+                            var tileCell = new TileCell
+                            {
+                                layerIndex = cellChunk.layerIndex,
+                                frameIndex = i,
+                                cellRect = new RectInt(cellChunk.posX, cellChunk.posY, cellChunk.width, cellChunk.height)
+                            };
+
+                            var chunkTileIndices = cellChunk.tileIndices;
+                            var tileIndices = new uint[chunkTileIndices.Length];
+                            for (var n = 0; n < tileIndices.Length; ++n)
+                                tileIndices[n] = chunkTileIndices[n];
+                            tileCell.tileIndices = tileIndices;
+                            layer.tileCells.Add(tileCell);
                         }
                         else
                         {
-                            var cell = new Cell();
-                            cell.frameIndex = i;
-                            cell.updatedCellRect = false;
+                            var cell = new Cell
+                            {
+                                frameIndex = i,
+                                updatedCellRect = false
+                            };
 
                             // Flip Y. Aseprite 0,0 is at Top Left. Unity 0,0 is at Bottom Left.
                             var cellY = (canvasSize.y - cellChunk.posY) - cellChunk.height;
@@ -561,7 +582,8 @@ namespace UnityEditor.U2D.Aseprite
 
         void FetchImageDataFromLayers(List<Layer> newLayers, out List<NativeArray<Color32>> imageBuffers, out List<int2> imageSizes)
         {
-            if (layerImportMode == LayerImportModes.IndividualLayers)
+            // TileSet will always be in individual layers, since each layer can refer to a different tileSet.
+            if (layerImportMode == LayerImportModes.IndividualLayers || importMode == FileImportModes.TileSet)
             {
                 m_AsepriteLayers = UpdateLayers(newLayers, m_AsepriteLayers, true);
 
@@ -629,9 +651,12 @@ namespace UnityEditor.U2D.Aseprite
                     }
                     finalLayer.cells = new List<Cell>(newCells);
                     finalLayer.linkedCells = new List<LinkedCell>(newLayers[layerIndex].linkedCells);
+                    finalLayer.tileCells = new List<TileCell>(newLayers[layerIndex].tileCells);
+                    finalLayer.tileSetIndex = newLayers[layerIndex].tileSetIndex;
                     finalLayer.index = newLayers[layerIndex].index;
                     finalLayer.opacity = newLayers[layerIndex].opacity;
                     finalLayer.parentIndex = newLayers[layerIndex].parentIndex;
+                    finalLayer.layerType = newLayers[layerIndex].layerType;
                 }
             }
 
@@ -794,7 +819,7 @@ namespace UnityEditor.U2D.Aseprite
                     tileSetNames.Add(tileSetName);
 
                     var tiles = new List<Tile>();
-                    for (var j = 0; j < noOfTiles; ++j)
+                    for (uint j = 0; j < noOfTiles; ++j)
                     {
                         var tileImage = tileSetChunk.tileImages[j];
                         if (ImportUtilities.IsEmptyImage(in tileImage))
@@ -802,6 +827,7 @@ namespace UnityEditor.U2D.Aseprite
 
                         var tile = new Tile()
                         {
+                            tileId = j,
                             image = tileImage,
                             size = tileSize,
                             spriteId = GUID.Generate(),
@@ -1131,6 +1157,7 @@ namespace UnityEditor.U2D.Aseprite
             var sprites = output.sprites;
             TilePaletteGeneration.Generate(
                 ctx,
+                m_AsepriteLayers,
                 m_TileSets,
                 sprites,
                 pixelsPerUnit,

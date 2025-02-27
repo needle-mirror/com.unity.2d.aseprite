@@ -31,6 +31,7 @@ This page highlights which Aseprite feature the Aseprite Importer supports/does 
 **Misc**
 - [Tilemaps](https://www.aseprite.org/docs/tilemap/)
     - When importing tile data, select **Import Mode: Tile Set**. This will tell Unity to generate [Tile assets](https://docs.unity3d.com/Manual/Tilemap-TileAsset.html) for each Aseprite Tile, and a [Tile Palette](https://docs.unity3d.com/Manual/Tilemap-Palette.html) to store them all in.
+    - The Aseprite Importer only supports Tile Sets which are of the same size. If an Aseprite file is imported with multiple different Tile Set sizes, the first used Tile Set will be used to setup the Tile sizes inside of Unity.
 
 ## Unsupported features
 - [Slices](https://www.aseprite.org/docs/slices/)

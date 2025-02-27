@@ -161,3 +161,10 @@ public class GameObjectInjector : AssetPostprocessor
     }
 }
 ```
+
+## How to disable looping on Animation Clips?
+By default, Animation Clips generated from Aseprite [Tags](https://www.aseprite.org/docs/tags/) will automatically loop. To disable looping, open Aseprite and bring up the Tag Property window of the Tag you wish to turn non-looping. In the Repeat field, change the value from ∞ to 1 (Aseprite Importer only supports looping and non-looping. Any value greater than 1 will still result in only a single playback). 
+
+![](images/Faq_NonLoop_00.png)
+
+Save your changes in Aseprite and switch over to Unity. The Aseprite file will automatically be reimported with the Animation Clip updated with non-looping set.

@@ -1,6 +1,6 @@
 {
   "name": "com.unity.2d.aseprite",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "unity": "6000.1",
   "unityRelease": "0a9",
   "displayName": "2D Aseprite Importer",
@@ -24,15 +24,15 @@
     "com.unity.2d.aseprite.tests": "1.2.0"
   },
   "_upm": {
-    "changelog": "### Fixed\n- Fixed an issue where Sprites smaller than the tile size would be wrongly placed in the tile palette.\n- Fixed an issue where the importer inspector would throw an exception if an animation clip was empty of data. (DANB-788)\n- Fixed an issue where the Z-Index would not be taken into account when the import mode is set to \"Merge Frame\". (DANB-787)"
+    "changelog": "### Fixed\n- Fixed an issue where the Tile Palette would not be generated the same way as in Aseprite when the Aseprite file contains a Tile Layer. (DANB-824)"
   },
   "upmCi": {
-    "footprint": "f33a6af3a8ffc6929d69925f98e2f0119aab2d33"
+    "footprint": "cdf93a383321aa54e7ef6a0e8977bf7bbfa3a12d"
   },
   "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.2d.aseprite@1.2/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/AsepriteImporter.git",
     "type": "git",
-    "revision": "c5f809f93ebb310f827644e716ccdada309a879e"
+    "revision": "a49c4a2562bef50a4792e67d4dd2132e52c23199"
   }
 }

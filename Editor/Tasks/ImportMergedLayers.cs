@@ -21,6 +21,7 @@ namespace UnityEditor.U2D.Aseprite
             layers.Clear();
             var flattenLayer = new Layer()
             {
+                layerType = LayerTypes.Normal,
                 cells = cells,
                 index = 0,
                 name = assetName

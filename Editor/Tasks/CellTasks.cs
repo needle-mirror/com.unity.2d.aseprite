@@ -85,7 +85,7 @@ namespace UnityEditor.U2D.Aseprite
 
             return cellsPerFrame;
         }
-
+        
         public static List<Cell> MergeCells(IReadOnlyDictionary<int, List<Cell>> cellsPerFrame, string cellName)
         {
             var mergedCells = new List<Cell>(cellsPerFrame.Count);

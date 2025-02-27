@@ -85,6 +85,10 @@ namespace UnityEditor.U2D.Aseprite
         /// User data associated with the cell.
         /// </summary>
         public UserDataChunk dataChunk { get; set; }
+        /// <summary>
+        /// Indices to the tiles in the cell. Note, only populated if the cell is of type CompressedTileMap.
+        /// </summary>
+        internal NativeArray<uint> tileIndices  { get; private set; }
 
         /// <summary>
         /// Read and store the chunk data.
@@ -137,10 +141,12 @@ namespace UnityEditor.U2D.Aseprite
 
                 image = AsepriteUtilities.GenerateImageData(m_ColorDepth, decompressedData, m_PaletteEntries, m_AlphaPaletteEntry);
             }
-            else if (cellType == CellTypes.CompressedTileMap) // Not implemented yet.
+            else if (cellType == CellTypes.CompressedTileMap) 
             {
+                // Width and height in number of tiles
                 width = reader.ReadUInt16();
                 height = reader.ReadUInt16();
+                
                 var bitsPerTile = reader.ReadUInt16();
                 var tileIdMask = reader.ReadUInt32();
                 var xFlipMask = reader.ReadUInt32();
@@ -157,27 +163,35 @@ namespace UnityEditor.U2D.Aseprite
                 var bytesPerTile = bitsPerTile / 8;
                 var noOfTiles = decompressedData.Length / bytesPerTile;
 
+                var indices = new NativeArray<uint>(noOfTiles, Allocator.Persistent);
+
                 using var memoryStream = new MemoryStream(decompressedData);
                 using var binaryReader = new BinaryReader(memoryStream);
                 for (var i = 0; i < noOfTiles; ++i)
                 {
-                    uint tileIndex = 0;
+                    uint tileData = 0;
                     if (bitsPerTile == 32)
-                        tileIndex = binaryReader.ReadUInt32();
+                        tileData = binaryReader.ReadUInt32();
                     else if (bitsPerTile == 16)
-                        tileIndex = binaryReader.ReadUInt16();
+                        tileData = binaryReader.ReadUInt16();
                     else if (bitsPerTile == 8)
-                        tileIndex = binaryReader.ReadByte();
+                        tileData = binaryReader.ReadByte();
+                    
+                    var tileId = tileData & tileIdMask;
+                    indices[i] = tileId;
                 }
+
+                tileIndices = indices;
             }
         }
 
         /// <summary>
-        /// Dispose of the image data.
+        /// Dispose of the image and tile data.
         /// </summary>
         public override void Dispose()
         {
             image.DisposeIfCreated();
+            tileIndices.DisposeIfCreated();
         }
     }
 }
