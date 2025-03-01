@@ -114,8 +114,8 @@ namespace UnityEditor.U2D.Aseprite
             var tilePositions = new List<Vector3Int>();
 
             for (var i = 0; i < layers.Count; ++i)
-                GetSpriteAndPositionFromLayer(layers[i], tileSets, sprites, ref tileSprites, ref tilePositions);
-            
+                GetSpriteAndPositionFromLayer(layers[i], i, tileSets, sprites, ref tileSprites, ref tilePositions);
+
             var tileTemplate = ScriptableObject.CreateInstance<PositionTileTemplate>();
             tileTemplate.positions = tilePositions;
             var tileTemplates = new TileTemplate[]
@@ -128,7 +128,7 @@ namespace UnityEditor.U2D.Aseprite
         }
 #endif
 
-        static void GetSpriteAndPositionFromLayer(Layer layer, List<TileSet> tileSets, Sprite[] sprites, ref List<Sprite> tileSprites, ref List<Vector3Int> tilePositions)
+        static void GetSpriteAndPositionFromLayer(Layer layer, int layerIndex, List<TileSet> tileSets, Sprite[] sprites, ref List<Sprite> tileSprites, ref List<Vector3Int> tilePositions)
         {
             var tileSet = tileSets.Find(x => x.id == layer.tileSetIndex);
             var tiles = tileSet.tiles;
@@ -140,7 +140,11 @@ namespace UnityEditor.U2D.Aseprite
             var xPos = cell.cellRect.x / tileSet.tileSize.x;
             var yPos = cell.cellRect.y / tileSet.tileSize.y;
             var tileIndices = cell.tileIndices;
-            
+
+            var spriteIdCache = new GUID[sprites.Length];
+            for (var i = 0; i < spriteIdCache.Length; ++i)
+                spriteIdCache[i] = sprites[i].GetSpriteID();
+                
             for (var i = 0; i < tileIndices.Length; ++i)
             {
                 if (tileIndices[i] == 0)
@@ -148,10 +152,10 @@ namespace UnityEditor.U2D.Aseprite
 
                 var tileIndex = tiles.FindIndex(x => x.tileId == tileIndices[i]);
                 var spriteId = tiles[tileIndex].spriteId;
-                var spriteIndex = sprites.FindIndex(x => x.GetSpriteID() == spriteId);
+                var spriteIndex = spriteIdCache.FindIndex(x => x == spriteId);
                 
                 tileSprites.Add(sprites[spriteIndex]);
-                var tilePos = new Vector3Int(xPos + (i % width), yPos + (i / width), 0);
+                var tilePos = new Vector3Int(xPos + (i % width), yPos + (i / width), layerIndex);
                 tilePos.y *= -1;
                 tilePositions.Add(tilePos);
             }

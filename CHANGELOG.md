@@ -1,4 +1,13 @@
 # Changelog
+## [1.2.3] - 2025-03-01
+### Added
+- Added support for Aseprite's new Layer UUID, to help identify each Aseprite Layer by id instead of name and path.
+
+### Fixed
+- Fixed an issue where changes to a Tile's size in Aseprite would not be reflected in Unity. (DANB-816)
+- Fixed an issue where Tile Layers from Aseprite would not stack in the generated Tile Palette.
+- Slight improvement to the way tile data is imported, resulting in slightly quicker imports.
+
 ## [1.2.2] - 2025-02-27
 ### Fixed
 - Fixed an issue where the Tile Palette would not be generated the same way as in Aseprite when the Aseprite file contains a Tile Layer. (DANB-824)

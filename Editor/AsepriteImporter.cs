@@ -14,7 +14,7 @@ namespace UnityEditor.U2D.Aseprite
     /// ScriptedImporter to import Aseprite files
     /// </summary>
     // Version using unity release + 5 digit padding for future upgrade. Eg 2021.2 -> 21200000
-    [ScriptedImporter(21300003, new string[] { "aseprite", "ase" }, AllowCaching = true)]
+    [ScriptedImporter(21300004, new string[] { "aseprite", "ase" }, AllowCaching = true)]
     [HelpURL("https://docs.unity3d.com/Packages/com.unity.2d.aseprite@latest")]
     public partial class AsepriteImporter : ScriptedImporter, ISpriteEditorDataProvider
     {
@@ -272,8 +272,11 @@ namespace UnityEditor.U2D.Aseprite
                     }
 
                     // If the packing texture size has changed, the rects will have a new position which must be taken into account.
+                    // OR
+                    // The import mode is set to Tile Set. 
                     if (Math.Abs(m_PreviousTextureSize.x - packedTextureWidth) > Mathf.Epsilon 
-                        || Math.Abs(m_PreviousTextureSize.y - packedTextureHeight) > Mathf.Epsilon)
+                        || Math.Abs(m_PreviousTextureSize.y - packedTextureHeight) > Mathf.Epsilon
+                        || importMode == FileImportModes.TileSet)
                     {
                         importedRectsHaveChanged = true;
                     }
@@ -341,6 +344,15 @@ namespace UnityEditor.U2D.Aseprite
             {
                 foreach (var layer in m_AsepriteLayers)
                     layer.guid = Layer.GenerateGuid(layer, m_AsepriteLayers);
+                m_ImporterVersion++;
+            }
+            // Upgrade from version 1 -> 2
+            // This upgrade populates the UUID field for each layer.
+            // The UUID is a unique identifier for each layer, which is also used by Aseprite (if the setting has been enabled in Aseprite).
+            if (m_ImporterVersion == 1)
+            {
+                foreach (var layer in m_AsepriteLayers)
+                    layer.uuid = new UUID((uint)layer.guid, 0, 0, 0);
                 m_ImporterVersion++;
             }
         }
@@ -451,7 +463,12 @@ namespace UnityEditor.U2D.Aseprite
                         layer.opacity = layerChunk.opacity / 255f;
                         layer.tileSetIndex = layerChunk.tileSetIndex;
                         layer.index = layers.Count;
-                        layer.guid = Layer.GenerateGuid(layer, layers);
+                        layer.uuid = layerChunk.uuid;
+                        if (layer.uuid == UUID.zero)
+                        {
+                            var guid = (uint)Layer.GenerateGuid(layer, layers);
+                            layer.uuid = new UUID(guid, 0, 0, 0);
+                        }
 
                         layers.Add(layer);
                     }
@@ -615,7 +632,7 @@ namespace UnityEditor.U2D.Aseprite
                 for (var i = 0; i < oldLayers.Count; ++i)
                 {
                     var oldLayer = oldLayers[i];
-                    if (newLayers.FindIndex(x => x.guid == oldLayer.guid) == -1)
+                    if (newLayers.FindIndex(x => x.uuid == oldLayer.uuid) == -1)
                         finalLayers.Remove(oldLayer);
                 }
 
@@ -623,7 +640,7 @@ namespace UnityEditor.U2D.Aseprite
                 for (var i = 0; i < newLayers.Count; ++i)
                 {
                     var newLayer = newLayers[i];
-                    var layerIndex = finalLayers.FindIndex(x => x.guid == newLayer.guid);
+                    var layerIndex = finalLayers.FindIndex(x => x.uuid == newLayer.uuid);
                     if (layerIndex == -1)
                         finalLayers.Add(newLayer);
                 }
@@ -633,7 +650,7 @@ namespace UnityEditor.U2D.Aseprite
             for (var i = 0; i < finalLayers.Count; ++i)
             {
                 var finalLayer = finalLayers[i];
-                var layerIndex = isIndividual ? newLayers.FindIndex(x => x.guid == finalLayer.guid) : 0;
+                var layerIndex = isIndividual ? newLayers.FindIndex(x => x.uuid == finalLayer.uuid) : 0;
                 if (layerIndex != -1)
                 {
                     var oldCells = finalLayer.cells;
@@ -684,8 +701,10 @@ namespace UnityEditor.U2D.Aseprite
 
         bool IsRequiringSquarePotTexture(AssetImportContext ctx)
         {
+#pragma warning disable CS0618
             var platformSettings = PlatformSettingsUtilities.GetPlatformTextureSettings(ctx.selectedBuildTarget, in m_PlatformSettings);
-            return (TextureImporterFormat.PVRTC_RGB2 <= platformSettings.format && platformSettings.format <= TextureImporterFormat.PVRTC_RGBA4);
+            return platformSettings.format is >= TextureImporterFormat.PVRTC_RGB2 and <= TextureImporterFormat.PVRTC_RGBA4; 
+#pragma warning restore CS0618
         }
 
         static List<Frame> ExtractFrameData(in AsepriteFile file)
@@ -889,7 +908,7 @@ namespace UnityEditor.U2D.Aseprite
                     var newMeta = newSpriteMeta[i];
                     var finalMeta = finalSpriteMeta.Find(x => x.spriteID == newMeta.spriteID);
                     
-                    // Override previous pivot & sprite rect if:
+                    // Override previous pivot and sprite rect if:
                     // - Importer settings have been updated
                     // - OR
                     // - The cell's size has changed in DCC
@@ -897,6 +916,8 @@ namespace UnityEditor.U2D.Aseprite
                     // - The packing texture's size has changed
                     // - OR
                     // - A layer has been removed / renamed
+                    // - OR
+                    // - The import mode is set to TileSet
                     if (finalMeta != null && (AreSettingsUpdated() || importedRectsHaveChanged))
                     {
                         finalMeta.alignment = newMeta.alignment;

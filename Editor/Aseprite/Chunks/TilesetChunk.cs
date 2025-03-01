@@ -99,7 +99,7 @@ namespace UnityEditor.U2D.Aseprite
                 var compressedDataLength = (int)reader.ReadUInt32();
                 var decompressedData = AsepriteUtilities.ReadAndDecompressedData(reader, compressedDataLength);
 
-                var tilemapImage = AsepriteUtilities.GenerateImageData(m_ColorDepth, decompressedData, m_PaletteEntries, m_AlphaPaletteEntry);
+                using var tilemapImage = AsepriteUtilities.GenerateImageData(m_ColorDepth, decompressedData, m_PaletteEntries, m_AlphaPaletteEntry);
 
                 tileImages = new NativeArray<Color32>[noOfTiles];
                 for (var i = 0; i < noOfTiles; ++i)
@@ -116,8 +116,6 @@ namespace UnityEditor.U2D.Aseprite
 
                     tileImages[i] = tileImage;
                 }
-
-                tilemapImage.Dispose();
             }
         }
 

@@ -10,7 +10,8 @@ namespace UnityEditor.U2D.Aseprite
     internal class Layer
     {
         [SerializeField] int m_LayerIndex;
-        [SerializeField] int m_Guid;
+        [SerializeField] UUID m_Uuid;
+        [SerializeField] int m_Guid; // Only used if the Aseprite file does not contain a UUID.
         [SerializeField] string m_Name;
         [SerializeField] LayerFlags m_LayerFlags;
         [SerializeField] LayerTypes m_LayerType;
@@ -28,7 +29,19 @@ namespace UnityEditor.U2D.Aseprite
             get => m_LayerIndex;
             set => m_LayerIndex = value;
         }
-
+        /// <summary>
+        /// The UUID is a Universally Unique Identifier used to identify the layer.
+        /// The UUID is either read from the Aseprite file (if available), or generated from the layer name and its parent's name.
+        /// </summary>
+        public UUID uuid
+        {
+            get => m_Uuid;
+            set => m_Uuid = value;
+        }
+        /// <summary>
+        /// The GUID is generated from the layer name and its parent's name.
+        /// The GUID is being deprecated in favor of the UUID.
+        /// </summary>
         public int guid
         {
             get => m_Guid;
@@ -367,5 +380,102 @@ namespace UnityEditor.U2D.Aseprite
         /// Local space. This is the normal pivot space.
         /// </summary>
         Local
+    }
+
+    /// <summary>
+    /// Universally Unique Identifier used by Aseprite
+    /// </summary>
+    [Serializable]
+    internal struct UUID : IComparable, IComparable<UUID>, IEquatable<UUID>
+    {
+        public static readonly UUID zero = default;
+        
+        [SerializeField] uint m_Value0;
+        [SerializeField] uint m_Value1;
+        [SerializeField] uint m_Value2;
+        [SerializeField] uint m_Value3;
+
+        public UUID(uint value0, uint value1, uint value2, uint value3)
+        {
+            m_Value0 = value0;
+            m_Value1 = value1;
+            m_Value2 = value2;
+            m_Value3 = value3;
+        }
+        
+        public static bool operator==(UUID x, UUID y)
+        {
+            return x.m_Value0 == y.m_Value0 && x.m_Value1 == y.m_Value1 && x.m_Value2 == y.m_Value2 && x.m_Value3 == y.m_Value3;
+        }
+
+        public static bool operator!=(UUID x, UUID y)
+        {
+            return !(x == y);
+        }        
+        
+        public static bool operator<(UUID x, UUID y)
+        {
+            if (x.m_Value0 != y.m_Value0)
+                return x.m_Value0 < y.m_Value0;
+            if (x.m_Value1 != y.m_Value1)
+                return x.m_Value1 < y.m_Value1;
+            if (x.m_Value2 != y.m_Value2)
+                return x.m_Value2 < y.m_Value2;
+            return x.m_Value3 < y.m_Value3;
+        }
+
+        public static bool operator>(UUID x, UUID y)
+        {
+            if (x < y)
+                return false;
+            if (x == y)
+                return false;
+            return true;
+        }        
+
+        public override bool Equals(object obj)
+        {
+            return obj is UUID uuid && Equals(uuid);
+        }
+
+        public bool Equals(UUID obj)
+        {
+            return this == obj;
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = (int)m_Value0;
+                hashCode = (hashCode * 397) ^ (int)m_Value1;
+                hashCode = (hashCode * 397) ^ (int)m_Value2;
+                hashCode = (hashCode * 397) ^ (int)m_Value3;
+                return hashCode;
+            }
+        }
+
+        public int CompareTo(object obj)
+        {
+            if (obj == null)
+                return 1;
+
+            var rhs = (UUID)obj;
+            return this.CompareTo(rhs);
+        }
+
+        public int CompareTo(UUID rhs)
+        {
+            if (this < rhs)
+                return -1;
+            if (this > rhs)
+                return 1;
+            return 0;
+        }
+
+        public override string ToString()
+        {
+            return $"{m_Value0:X8}-{m_Value1:X8}-{m_Value2:X8}-{m_Value3:X8}";
+        }
     }
 }

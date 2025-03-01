@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -10,24 +11,30 @@ namespace UnityEditor.U2D.Aseprite
     [BurstCompile]
     internal static class TextureTasks
     {
-        [BurstCompile]
+        [BurstCompile, MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void AddOpacity(ref NativeArray<Color32> texture, float opacity)
         {
-            for (var i = 0; i < texture.Length; ++i)
+            unsafe
             {
-                var color = texture[i];
-                color.a = (byte)(color.a * opacity);
-                texture[i] = color;
+                var textureLength = texture.Length;
+                var texturePtr = (Color32*)texture.GetUnsafePtr();
+                for (var i = 0; i < textureLength; ++i)
+                {
+                    var color = texture[i];
+                    color.a = (byte)(color.a * opacity);
+                    texturePtr[i] = color;
+                }   
             }
         }
 
-        [BurstCompile]
+        [BurstCompile, MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe void FlipTextureY(Color32* texturePtr, int length, in int2 size)
         {
             if (size.x == 0 || size.y == 0)
                 return;
 
-            var outputTexture = new NativeArray<Color32>(length, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
+            using var outputTexture = new NativeArray<Color32>(length, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
+            var outputTexturePtr = (Color32*)outputTexture.GetUnsafePtr();
             for (var y = 0; y < size.y; ++y)
             {
                 var inRow = ((size.y - 1) - y) * size.x;
@@ -37,12 +44,11 @@ namespace UnityEditor.U2D.Aseprite
                 {
                     var inIndex = x + inRow;
                     var outIndex = x + outRow;
-                    outputTexture[outIndex] = texturePtr[inIndex];
+                    outputTexturePtr[outIndex] = texturePtr[inIndex];
                 }
             }
             
-            UnsafeUtility.MemCpy(texturePtr, outputTexture.GetUnsafePtr(), length * sizeof(Color32));
-            outputTexture.Dispose();
+            UnsafeUtility.MemCpy(texturePtr, outputTexturePtr, length * sizeof(Color32));
         }
 
         public struct MergeOutput

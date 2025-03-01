@@ -356,6 +356,15 @@ namespace UnityEditor.U2D.Aseprite
             {
                 tooltip = styles.importHiddenLayer.tooltip
             };
+            hiddenLayersField.schedule.Execute(() =>
+            {
+                var shouldShow = fileImportMode is FileImportModes.AnimatedSprite or FileImportModes.SpriteSheet;
+                if (hiddenLayersField.visible != shouldShow)
+                {
+                    hiddenLayersField.visible = shouldShow;
+                    hiddenLayersField.EnableInClassList(k_HiddenElementUssClass, !shouldShow);
+                }
+            }).Every(k_PollForChangesInternal);             
             hiddenLayersField.Bind(serializedObject);
             foldOut.Add(hiddenLayersField);
 

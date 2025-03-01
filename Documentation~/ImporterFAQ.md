@@ -17,6 +17,14 @@ The Aseprite Importer will overwrite custom Sprite data authored in the Sprite E
 * Changed the cell's size in Aseprite.
 * Packing texture's size has changed.
 * Removed or renamed a layer.
+* Import mode is set to TileSet.
+
+### Enable UUID for layers
+By default, the Aseprite Importer identifies the layers (and the Sprites) by the name and the path of a layer. In Aseprite `v1.3.14-beta1`, a unique identifier for layers was introduced. If switched on, the Sprite data is kept even if the layer name in Aseprite is changed. 
+
+To turn the unique identifiers on, open Aseprite, go to **Sprite > Properties...** and check the **Create UUID for layers**-checkbox. Note that this has to be done for every Aseprite file. 
+
+![](images/Faq_uuid_00.png)
 
 ## How to combine multiple sprite sheets into one?
 You can make use of Sprite Atlases to combine multiple sprite sheets into a single texture. Read more about Sprite Atlas [here](https://docs.unity3d.com/2021.3/Documentation/Manual/class-SpriteAtlas.html). Combining multiple sprite sheets into one is a good way to reduce the draw calls in a scene.
