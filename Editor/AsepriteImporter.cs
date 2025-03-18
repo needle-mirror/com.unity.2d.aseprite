@@ -626,20 +626,22 @@ namespace UnityEditor.U2D.Aseprite
 
             var finalLayers = new List<Layer>(oldLayers);
 
-            if (isIndividual)
+            // Remove old layers & Add new layers if: 
+            // - We are using Individual layer import mode
+            // OR
+            // - There are more than one old layer. This path is for when going from Individual mode to Merged mode.
+            if (isIndividual || oldLayers.Count > 1)
             {
                 // Remove old layers
-                for (var i = 0; i < oldLayers.Count; ++i)
+                foreach (var oldLayer in oldLayers)
                 {
-                    var oldLayer = oldLayers[i];
                     if (newLayers.FindIndex(x => x.uuid == oldLayer.uuid) == -1)
                         finalLayers.Remove(oldLayer);
                 }
 
                 // Add new layers
-                for (var i = 0; i < newLayers.Count; ++i)
+                foreach (var newLayer in newLayers)
                 {
-                    var newLayer = newLayers[i];
                     var layerIndex = finalLayers.FindIndex(x => x.uuid == newLayer.uuid);
                     if (layerIndex == -1)
                         finalLayers.Add(newLayer);
@@ -647,9 +649,8 @@ namespace UnityEditor.U2D.Aseprite
             }
 
             // Update layer data
-            for (var i = 0; i < finalLayers.Count; ++i)
+            foreach (var finalLayer in finalLayers)
             {
-                var finalLayer = finalLayers[i];
                 var layerIndex = isIndividual ? newLayers.FindIndex(x => x.uuid == finalLayer.uuid) : 0;
                 if (layerIndex != -1)
                 {

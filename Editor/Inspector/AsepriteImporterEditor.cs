@@ -18,6 +18,7 @@ namespace UnityEditor.U2D.Aseprite
         const string k_HiddenElementUssClass = "HiddenElement";
         const string k_PaddingElementUssClass = "PaddingElement";
         const string k_SubElementUssClass = "SubElement";
+        const string k_SubSubElementUssClass = "SubSubElement";
 
         // This number is in milliseconds. 
         const long k_PollForChangesInternal = 50;
@@ -76,9 +77,7 @@ namespace UnityEditor.U2D.Aseprite
 
         VisualElement m_RootVisualElement;
         VisualElement m_InspectorSettingsView;
-
-        readonly Dictionary<TextureImporterType, Action[]> m_AdvancedInspectorGUI = new();
-        bool m_IsPowerOfTwo = false;
+        
         readonly AsepriteImporterEditorFoldOutState m_EditorFoldOutState = new();
         bool m_ShowPerAxisWrapModes = false;
         readonly int[] m_FilterModeOptions = (int[])(Enum.GetValues(typeof(FilterMode)));
@@ -128,7 +127,6 @@ namespace UnityEditor.U2D.Aseprite
                 var importer = (AsepriteImporter)targets[i];
                 m_ImporterTargets[i] = importer;
                 m_AssetPaths[i] = importer.assetPath;
-                m_IsPowerOfTwo &= importer.isNPOT;
             }
         }
 
@@ -195,24 +193,6 @@ namespace UnityEditor.U2D.Aseprite
 
         void SetupInspectorUI()
         {
-            var advancedGUIAction = new Action[]
-            {
-                ColorSpaceGUI,
-                AlphaHandlingGUI,
-                POTScaleGUI,
-                ReadableGUI,
-                MipMapGUI
-            };
-            m_AdvancedInspectorGUI.Add(TextureImporterType.Sprite, advancedGUIAction);
-
-            advancedGUIAction = new Action[]
-            {
-                POTScaleGUI,
-                ReadableGUI,
-                MipMapGUI
-            };
-            m_AdvancedInspectorGUI.Add(TextureImporterType.Default, advancedGUIAction);
-
             m_InspectorUI = new[]
             {
                 SetupSpriteActorContainer()
@@ -726,7 +706,10 @@ namespace UnityEditor.U2D.Aseprite
                 filter = (FilterMode)EditorGUILayout.IntPopup(styles.filterMode, (int)filter, styles.filterModeOptions, m_FilterModeOptions);
                 EditorGUI.showMixedValue = false;
                 if (EditorGUI.EndChangeCheck())
-                    m_FilterMode.intValue = (int)filter;
+                {
+                    m_FilterMode.intValue = (int) filter;
+                    m_FilterMode.serializedObject.ApplyModifiedProperties();
+                }
 
                 // Aniso
                 var showAniso = (FilterMode)m_FilterMode.intValue != FilterMode.Point
@@ -742,7 +725,10 @@ namespace UnityEditor.U2D.Aseprite
                     aniso = EditorGUILayout.IntSlider(styles.anisoLevelLabel, aniso, 0, 16);
                     EditorGUI.showMixedValue = false;
                     if (EditorGUI.EndChangeCheck())
+                    {
                         m_Aniso.intValue = aniso;
+                        m_Aniso.serializedObject.ApplyModifiedProperties();
+                    }
 
                     if (aniso > 1)
                     {
@@ -791,8 +777,6 @@ namespace UnityEditor.U2D.Aseprite
         {
             if (m_TextureType.hasMultipleDifferentValues)
                 return;
-            if (!m_AdvancedInspectorGUI.ContainsKey((TextureImporterType)m_TextureType.intValue))
-                return;
 
             var foldOut = new Foldout()
             {
@@ -803,21 +787,240 @@ namespace UnityEditor.U2D.Aseprite
             ImporterEditorUtils.AddSkinUssClass(foldOut.Q<Toggle>());
             foldOut.RegisterValueChangedCallback(_ => { m_EditorFoldOutState.advancedFoldout = foldOut.value; });
             root.Add(foldOut);
-
-            var imguiContainer = new IMGUIContainer(() =>
+            
+            // sRGB Toggle
+            var srgbToggle = new Toggle(styles.sRGBTexture.text)
             {
-                serializedObject.Update();
-                extraDataSerializedObject.Update();
-
-                foreach (var action in m_AdvancedInspectorGUI[(TextureImporterType)m_TextureType.intValue])
-                {
-                    action();
-                }
-
-                serializedObject.ApplyModifiedProperties();
-                extraDataSerializedObject.ApplyModifiedProperties();
+                value = m_sRGBTexture.intValue > 0,
+                tooltip = styles.sRGBTexture.tooltip,
+            };
+            srgbToggle.AddToClassList(k_BaseFieldAlignedUssClass);
+            srgbToggle.RegisterValueChangedCallback(_ =>
+            {
+                m_sRGBTexture.intValue = srgbToggle.value ? 1 : 0;
+                m_sRGBTexture.serializedObject.ApplyModifiedProperties();
             });
-            foldOut.Add(imguiContainer);
+            foldOut.Add(srgbToggle);
+
+            // AlphaSource Enum
+            var alphaSourceEnum = new EnumField(styles.alphaSource.text, TextureImporterAlphaSource.FromInput)
+            {
+                value = (TextureImporterAlphaSource)m_AlphaSource.intValue,
+                tooltip = styles.alphaSource.tooltip
+            };
+            alphaSourceEnum.AddToClassList(k_BaseFieldAlignedUssClass);
+            alphaSourceEnum.RegisterValueChangedCallback(_ =>
+            {
+                m_AlphaSource.intValue = (int)(TextureImporterAlphaSource)alphaSourceEnum.value;
+                m_AlphaSource.serializedObject.ApplyModifiedProperties();
+            });
+            foldOut.Add(alphaSourceEnum);       
+            
+            // AlphaIsTransparency Toggle
+            var alphaIsTransparencyToggle = new Toggle(styles.alphaIsTransparency.text)
+            {
+                value = m_AlphaIsTransparency.intValue > 0,
+                tooltip = styles.alphaIsTransparency.tooltip,
+            };
+            alphaIsTransparencyToggle.AddToClassList(k_BaseFieldAlignedUssClass);
+            alphaIsTransparencyToggle.RegisterValueChangedCallback(_ =>
+            {
+                m_AlphaIsTransparency.intValue = alphaIsTransparencyToggle.value ? 1 : 0;
+                m_AlphaIsTransparency.serializedObject.ApplyModifiedProperties();
+            });
+            var showAlphaIsTransparency = (TextureImporterAlphaSource)m_AlphaSource.intValue != TextureImporterAlphaSource.None;
+            alphaIsTransparencyToggle.SetEnabled(showAlphaIsTransparency);
+            alphaIsTransparencyToggle.schedule.Execute(() =>
+            {
+                showAlphaIsTransparency = (TextureImporterAlphaSource)m_AlphaSource.intValue != TextureImporterAlphaSource.None;
+                if (alphaIsTransparencyToggle.enabledSelf != showAlphaIsTransparency)
+                    alphaIsTransparencyToggle.SetEnabled(showAlphaIsTransparency);
+            }).Every(k_PollForChangesInternal);            
+            foldOut.Add(alphaIsTransparencyToggle);            
+            
+            // Read/Write Enabled Toggle
+            var readWriteToggle = new Toggle(styles.readWrite.text)
+            {
+                value = m_IsReadable.intValue > 0,
+                tooltip = styles.readWrite.tooltip,
+            };
+            readWriteToggle.AddToClassList(k_BaseFieldAlignedUssClass);
+            readWriteToggle.RegisterValueChangedCallback(_ =>
+            {
+                m_IsReadable.intValue = readWriteToggle.value ? 1 : 0;
+                m_IsReadable.serializedObject.ApplyModifiedProperties();
+            });
+            foldOut.Add(readWriteToggle);
+            
+            // MipMap Toggle
+            var mipmapToggle = new Toggle(styles.generateMipMaps.text)
+            {
+                value = m_EnableMipMap.intValue > 0,
+                tooltip = styles.generateMipMaps.tooltip,
+            };
+            mipmapToggle.AddToClassList(k_BaseFieldAlignedUssClass);
+            mipmapToggle.RegisterValueChangedCallback(_ =>
+            {
+                m_EnableMipMap.intValue = mipmapToggle.value ? 1 : 0;
+                m_EnableMipMap.serializedObject.ApplyModifiedProperties();
+            });
+            foldOut.Add(mipmapToggle);
+
+            // MipMap container
+            var mipMapOptionContainer = new VisualElement();
+            mipMapOptionContainer.schedule.Execute(() =>
+            {
+                var shouldShow = mipmapToggle.value;
+                if (mipMapOptionContainer.visible != shouldShow)
+                {
+                    mipMapOptionContainer.visible = shouldShow;
+                    mipMapOptionContainer.EnableInClassList(k_HiddenElementUssClass, !shouldShow);
+                }
+            }).Every(k_PollForChangesInternal);            
+            foldOut.Add(mipMapOptionContainer);
+            
+            // Border MipMap Toggle
+            var borderToggle = new Toggle(styles.borderMipMaps.text)
+            {
+                value = m_BorderMipMap.intValue > 0,
+                tooltip = styles.borderMipMaps.tooltip,
+            };
+            borderToggle.AddToClassList(k_BaseFieldAlignedUssClass);
+            borderToggle.AddToClassList(k_SubElementUssClass);
+            borderToggle.RegisterValueChangedCallback(_ =>
+            {
+                m_BorderMipMap.intValue = borderToggle.value ? 1 : 0;
+                m_BorderMipMap.serializedObject.ApplyModifiedProperties();
+            });
+            mipMapOptionContainer.Add(borderToggle);
+            
+#if ENABLE_TEXTURE_STREAMING
+            // Streaming Toggle
+            var streamingToggle = new Toggle(styles.streamingMipMaps.text)
+            {
+                value = m_StreamingMipmaps.intValue > 0,
+                tooltip = styles.streamingMipMaps.tooltip,
+            };
+            streamingToggle.AddToClassList(k_BaseFieldAlignedUssClass);
+            streamingToggle.AddToClassList(k_SubElementUssClass);
+            streamingToggle.RegisterValueChangedCallback(_ =>
+            {
+                m_StreamingMipmaps.intValue = streamingToggle.value ? 1 : 0;
+                m_StreamingMipmaps.serializedObject.ApplyModifiedProperties();
+            });
+            mipMapOptionContainer.Add(streamingToggle);
+            
+            // Streaming Priority Field
+            var streamingPriorityField = new PropertyField(m_StreamingMipmapsPriority, styles.streamingMipmapsPriority.text)
+            {
+                tooltip = styles.streamingMipmapsPriority.tooltip,
+            };
+            streamingPriorityField.AddToClassList(k_BaseFieldAlignedUssClass);
+            streamingPriorityField.AddToClassList(k_SubSubElementUssClass);
+            streamingPriorityField.RegisterValueChangeCallback(x =>
+            {
+                m_StreamingMipmapsPriority.intValue = Mathf.Clamp(m_StreamingMipmapsPriority.intValue, -128, 127);
+                m_StreamingMipmapsPriority.serializedObject.ApplyModifiedProperties();
+            });  
+            streamingPriorityField.schedule.Execute(() =>
+            {
+                var shouldShow = streamingToggle.value;
+                if (streamingPriorityField.visible != shouldShow)
+                {
+                    streamingPriorityField.visible = shouldShow;
+                    streamingPriorityField.EnableInClassList(k_HiddenElementUssClass, !shouldShow);
+                }
+            }).Every(k_PollForChangesInternal);              
+            mipMapOptionContainer.Add(streamingPriorityField);
+#endif
+            
+            // Mip Map Filtering Enum
+            var mipmapModeEnum = new EnumField(styles.mipMapFilter.text, TextureImporterMipFilter.BoxFilter)
+            {
+                value = (TextureImporterMipFilter)m_MipMapMode.intValue,
+                tooltip = styles.mipMapFilter.tooltip
+            };
+            mipmapModeEnum.AddToClassList(k_BaseFieldAlignedUssClass);
+            mipmapModeEnum.AddToClassList(k_SubElementUssClass);
+            mipmapModeEnum.RegisterValueChangedCallback(_ =>
+            {
+                m_MipMapMode.intValue = (int)(TextureImporterMipFilter)mipmapModeEnum.value;
+                m_MipMapMode.serializedObject.ApplyModifiedProperties();
+            });
+            mipMapOptionContainer.Add(mipmapModeEnum);  
+            
+            // Preserve Coverage Toggle
+            var preserveCoverageToggle = new Toggle(styles.mipMapsPreserveCoverage.text)
+            {
+                value = m_MipMapsPreserveCoverage.intValue > 0,
+                tooltip = styles.mipMapsPreserveCoverage.tooltip,
+            };
+            preserveCoverageToggle.AddToClassList(k_BaseFieldAlignedUssClass);
+            preserveCoverageToggle.AddToClassList(k_SubElementUssClass);
+            preserveCoverageToggle.RegisterValueChangedCallback(_ =>
+            {
+                m_MipMapsPreserveCoverage.intValue = preserveCoverageToggle.value ? 1 : 0;
+                m_MipMapsPreserveCoverage.serializedObject.ApplyModifiedProperties();
+            });
+            mipMapOptionContainer.Add(preserveCoverageToggle);
+            
+            // Alpha Cutoff Field
+            var alphaCutoffField = new PropertyField(m_AlphaTestReferenceValue, styles.alphaTestReferenceValue.text)
+            {
+                tooltip = styles.alphaTestReferenceValue.tooltip,
+            };
+            alphaCutoffField.AddToClassList(k_BaseFieldAlignedUssClass);
+            alphaCutoffField.AddToClassList(k_SubSubElementUssClass);
+            alphaCutoffField.schedule.Execute(() =>
+            {
+                var shouldShow = preserveCoverageToggle.value;
+                if (alphaCutoffField.visible != shouldShow)
+                {
+                    alphaCutoffField.visible = shouldShow;
+                    alphaCutoffField.EnableInClassList(k_HiddenElementUssClass, !shouldShow);
+                }
+            }).Every(k_PollForChangesInternal);              
+            mipMapOptionContainer.Add(alphaCutoffField);           
+            
+            // Fade Out Toggle
+            var fadeOutToggle = new Toggle(styles.mipmapFadeOutToggle.text)
+            {
+                value = m_FadeOut.intValue > 0,
+                tooltip = styles.mipmapFadeOutToggle.tooltip,
+            };
+            fadeOutToggle.AddToClassList(k_BaseFieldAlignedUssClass);
+            fadeOutToggle.AddToClassList(k_SubElementUssClass);
+            fadeOutToggle.RegisterValueChangedCallback(_ =>
+            {
+                m_FadeOut.intValue = fadeOutToggle.value ? 1 : 0;
+                m_FadeOut.serializedObject.ApplyModifiedProperties();
+            });
+            mipMapOptionContainer.Add(fadeOutToggle);     
+            
+            // Fade Distance Slider
+            var fadeDistanceSlider = new MinMaxSlider(styles.mipmapFadeOut.text, m_MipMapFadeDistanceStart.intValue, m_MipMapFadeDistanceEnd.intValue, 0, 10)
+            {
+                tooltip = styles.mipmapFadeOut.tooltip
+            };
+            fadeDistanceSlider.AddToClassList(k_BaseFieldAlignedUssClass);
+            fadeDistanceSlider.AddToClassList(k_SubSubElementUssClass);
+            fadeDistanceSlider.RegisterValueChangedCallback(_ =>
+            {
+                m_MipMapFadeDistanceStart.intValue = Mathf.RoundToInt(fadeDistanceSlider.minValue);
+                m_MipMapFadeDistanceEnd.intValue = Mathf.RoundToInt(fadeDistanceSlider.maxValue);
+                m_MipMapFadeDistanceStart.serializedObject.ApplyModifiedProperties();
+                m_MipMapFadeDistanceEnd.serializedObject.ApplyModifiedProperties();
+            });
+            fadeDistanceSlider.schedule.Execute(() =>
+            {
+                var shouldShow = fadeOutToggle.value;
+                if (fadeDistanceSlider.visible != shouldShow)
+                {
+                    fadeDistanceSlider.visible = shouldShow;
+                    fadeDistanceSlider.EnableInClassList(k_HiddenElementUssClass, !shouldShow);
+                }
+            }).Every(k_PollForChangesInternal);              
+            mipMapOptionContainer.Add(fadeDistanceSlider);              
         }
 
         void InitPreview()
@@ -1003,6 +1206,10 @@ namespace UnityEditor.U2D.Aseprite
                 wrapV.intValue = value;
                 wrapW.intValue = value;
                 showPerAxisWrapModes = false;
+
+                wrapU.serializedObject.ApplyModifiedProperties();
+                wrapV.serializedObject.ApplyModifiedProperties();
+                wrapW.serializedObject.ApplyModifiedProperties();
             }
 
             // show per-axis popups if needed
@@ -1080,98 +1287,7 @@ namespace UnityEditor.U2D.Aseprite
             }
             return false;
         }
-
-        void ColorSpaceGUI()
-        {
-            ToggleFromInt(m_sRGBTexture, styles.sRGBTexture);
-        }
-
-        void AlphaHandlingGUI()
-        {
-            EditorGUI.showMixedValue = m_AlphaSource.hasMultipleDifferentValues;
-            EditorGUI.BeginChangeCheck();
-            int newAlphaUsage = EditorGUILayout.IntPopup(styles.alphaSource, m_AlphaSource.intValue, styles.alphaSourceOptions, styles.alphaSourceValues);
-
-            EditorGUI.showMixedValue = false;
-            if (EditorGUI.EndChangeCheck())
-            {
-                m_AlphaSource.intValue = newAlphaUsage;
-            }
-
-            bool showAlphaIsTransparency = (TextureImporterAlphaSource)m_AlphaSource.intValue != TextureImporterAlphaSource.None;
-            using (new EditorGUI.DisabledScope(!showAlphaIsTransparency))
-            {
-                ToggleFromInt(m_AlphaIsTransparency, styles.alphaIsTransparency);
-            }
-        }
-
-        void POTScaleGUI()
-        {
-            using (new EditorGUI.DisabledScope(m_IsPowerOfTwo || m_TextureType.intValue == (int)TextureImporterType.Sprite))
-            {
-                EnumPopup(m_NPOTScale, typeof(TextureImporterNPOTScale), styles.npot);
-            }
-        }
-
-        void ReadableGUI()
-        {
-            ToggleFromInt(m_IsReadable, styles.readWrite);
-        }
-
-        void MipMapGUI()
-        {
-            ToggleFromInt(m_EnableMipMap, styles.generateMipMaps);
-
-            if (m_EnableMipMap.boolValue && !m_EnableMipMap.hasMultipleDifferentValues)
-            {
-                EditorGUI.indentLevel++;
-                ToggleFromInt(m_BorderMipMap, styles.borderMipMaps);
-
-#if ENABLE_TEXTURE_STREAMING
-                ToggleFromInt(m_StreamingMipmaps, styles.streamingMipMaps);
-                if (m_StreamingMipmaps.boolValue && !m_StreamingMipmaps.hasMultipleDifferentValues)
-                {
-                    EditorGUI.indentLevel++;
-                    EditorGUI.BeginChangeCheck();
-                    EditorGUILayout.PropertyField(m_StreamingMipmapsPriority, styles.streamingMipmapsPriority);
-                    if (EditorGUI.EndChangeCheck())
-                    {
-                        m_StreamingMipmapsPriority.intValue = Mathf.Clamp(m_StreamingMipmapsPriority.intValue, -128, 127);
-                    }
-                    EditorGUI.indentLevel--;
-                }
-#endif
-
-                m_MipMapMode.intValue = EditorGUILayout.Popup(styles.mipMapFilter, m_MipMapMode.intValue, styles.mipMapFilterOptions);
-
-                ToggleFromInt(m_MipMapsPreserveCoverage, styles.mipMapsPreserveCoverage);
-                if (m_MipMapsPreserveCoverage.intValue != 0 && !m_MipMapsPreserveCoverage.hasMultipleDifferentValues)
-                {
-                    EditorGUI.indentLevel++;
-                    EditorGUILayout.PropertyField(m_AlphaTestReferenceValue, styles.alphaTestReferenceValue);
-                    EditorGUI.indentLevel--;
-                }
-
-                // Mipmap fadeout
-                ToggleFromInt(m_FadeOut, styles.mipmapFadeOutToggle);
-                if (m_FadeOut.intValue > 0)
-                {
-                    EditorGUI.indentLevel++;
-                    EditorGUI.BeginChangeCheck();
-                    float min = m_MipMapFadeDistanceStart.intValue;
-                    float max = m_MipMapFadeDistanceEnd.intValue;
-                    EditorGUILayout.MinMaxSlider(styles.mipmapFadeOut, ref min, ref max, 0, 10);
-                    if (EditorGUI.EndChangeCheck())
-                    {
-                        m_MipMapFadeDistanceStart.intValue = Mathf.RoundToInt(min);
-                        m_MipMapFadeDistanceEnd.intValue = Mathf.RoundToInt(max);
-                    }
-                    EditorGUI.indentLevel--;
-                }
-                EditorGUI.indentLevel--;
-            }
-        }
-
+        
         /// <summary>
         /// Implementation of AssetImporterEditor.Apply
         /// </summary>
@@ -1474,18 +1590,6 @@ namespace UnityEditor.U2D.Aseprite
             public readonly GUIContent readWrite = new("Read/Write Enabled", "Enable to be able to access the raw pixel data from code.");
 
             public readonly GUIContent alphaSource = new("Alpha Source", "How is the alpha generated for the imported texture.");
-            public readonly GUIContent[] alphaSourceOptions =
-            {
-                new ("None", "No Alpha will be used."),
-                new ("Input Texture Alpha", "Use Alpha from the input texture if one is provided."),
-                new ("From Gray Scale", "Generate Alpha from image gray scale."),
-            };
-            public readonly int[] alphaSourceValues =
-            {
-                (int)TextureImporterAlphaSource.None,
-                (int)TextureImporterAlphaSource.FromInput,
-                (int)TextureImporterAlphaSource.FromGrayScale,
-            };
 
             public readonly GUIContent generateMipMaps = new("Generate Mip Maps");
             public readonly GUIContent sRGBTexture = new("sRGB (Color Texture)", "Texture content is stored in gamma space. Non-HDR color textures should enable this flag (except if used for IMGUI).");
@@ -1494,15 +1598,9 @@ namespace UnityEditor.U2D.Aseprite
             public readonly GUIContent streamingMipMaps = EditorGUIUtility.TrTextContent("Mip Streaming", "Only load larger mipmaps as needed to render the current game cameras. Requires texture streaming to be enabled in quality settings.");
             public readonly GUIContent streamingMipmapsPriority = EditorGUIUtility.TrTextContent("Priority", "Mipmap streaming priority when there's contention for resources. Positive numbers represent higher priority. Valid range is -128 to 127.");
 #endif
-            public readonly GUIContent mipMapsPreserveCoverage = new("Mip Maps Preserve Coverage", "The alpha channel of generated Mip Maps will preserve coverage during the alpha test.");
+            public readonly GUIContent mipMapsPreserveCoverage = new("Preserve Coverage", "The alpha channel of generated Mip Maps will preserve coverage during the alpha test.");
             public readonly GUIContent alphaTestReferenceValue = new("Alpha Cutoff Value", "The reference value used during the alpha test. Controls Mip Map coverage.");
             public readonly GUIContent mipMapFilter = new("Mip Map Filtering");
-            public readonly GUIContent[] mipMapFilterOptions =
-            {
-                new ("Box"),
-                new ("Kaiser"),
-            };
-            public readonly GUIContent npot = new("Non Power of 2", "How non-power-of-two textures are scaled on import.");
 
             public readonly List<string> spriteMeshTypeOptions = new()
             {

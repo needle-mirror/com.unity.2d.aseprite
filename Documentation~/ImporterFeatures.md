@@ -67,8 +67,8 @@ The Aseprite Importer is available after you import a .ase/.aseprite file into y
   </tbody>
 </table>
 
-### Layer import
-![](images/Ase-LayerImport-section.png)
+### Layer import (For Animated Sprites)
+![](images/Ase-LayerImport-section-animated.png)
 <table>
   <thead>
     <tr>
@@ -116,6 +116,23 @@ The Aseprite Importer is available after you import a .ase/.aseprite file into y
     <tr>
       <td rowspan="1"><strong>Sprite Padding</strong></td>
       <td colspan="2">Internal padding within each SpriteRect. This property is set <b>0</b> pixels by default.</td>
+    </tr>
+  </tbody>
+</table>
+
+### Layer import (For Tile Set)
+![](images/Ase-LayerImport-section-TileSet.png)
+<table>
+  <thead>
+    <tr>
+      <th colspan="1"><strong>Property</strong></th>
+      <th colspan="2"><strong>Description</strong></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td rowspan="1"><strong>Mosaic Padding</strong></td>
+      <td colspan="2">External padding between each SpriteRect. This property is set <b>4</b> pixels by default.</td>
     </tr>
   </tbody>
 </table>

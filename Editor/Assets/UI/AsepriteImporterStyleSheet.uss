@@ -2,7 +2,7 @@
     display: flex;
 }
 
-Foldout > Toggle {
+Foldout > Toggle.unity-foldout__toggle {
     -unity-font-style: bold;
     border-top-width: 1px;
     margin: 0;
@@ -40,4 +40,8 @@ Button {
 
 .SubElement {
     margin-left: 15px;
+}
+
+.SubSubElement {
+    margin-left: 30px;
 }
