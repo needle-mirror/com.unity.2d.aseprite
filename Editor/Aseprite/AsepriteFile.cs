@@ -14,6 +14,15 @@ namespace UnityEditor.U2D.Aseprite
     /// </summary>
     public class AsepriteFile : IDisposable
     {
+        [Flags]
+        internal enum HeaderFlags : uint
+        {
+            None = 0,
+            LayerOpacityInvalidValue = 1,
+            LayerBlendModeValidForGroups = 2,
+            LayersHaveUuid = 4
+        }
+        
         /// <summary>
         /// File size in bytes.
         /// </summary>
@@ -34,9 +43,10 @@ namespace UnityEditor.U2D.Aseprite
         /// Color depth (bits per pixel).
         /// </summary>
         public ushort colorDepth { get; private set; }
-
-        internal uint flags { get; private set; }
-
+        /// <summary>
+        /// Flags are used to highlight behavior changes in this particular file
+        /// </summary>
+        internal HeaderFlags flags { get; private set; }
         /// <summary>
         /// Time per frame in milliseconds.
         /// </summary>
@@ -93,7 +103,7 @@ namespace UnityEditor.U2D.Aseprite
             width = reader.ReadUInt16();
             height = reader.ReadUInt16();
             colorDepth = reader.ReadUInt16();
-            flags = reader.ReadUInt32();
+            flags = (HeaderFlags)reader.ReadUInt32();
             animSpeed = reader.ReadUInt16();
             var misc1 = reader.ReadUInt32();
             var misc2 = reader.ReadUInt32();

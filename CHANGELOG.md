@@ -1,4 +1,11 @@
 # Changelog
+## [1.1.9] - 2025-03-20
+### Added
+- Added support for Aseprite's new Layer UUID, to help identify each Aseprite Layer by id instead of name and path.
+- Fixed an issue where going from Import Mode: Individual Layers to Import Mode: Merge Frame would cause the importer to fail the import. (DANB-875)
+- Fixed an issue where the content in the Aseprite's Preference menu were misaligned. (DANB-880)
+- Fixed an issue where some elements in the Aseprite Importer inspector could not be edited when in Debug mode. (DANB-863)
+
 ## [1.1.8] - 2025-01-07
 ### Fixed
 - Fixed an issue where the importer inspector would throw an exception if an animation clip was empty of data. (DANB-788)

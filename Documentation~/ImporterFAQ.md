@@ -18,6 +18,13 @@ The Aseprite Importer will overwrite custom Sprite data authored in the Sprite E
 * Packing texture's size has changed.
 * Removed or renamed a layer.
 
+### Enable UUID for layers
+By default, the Aseprite Importer identifies the layers (and the Sprites) by the name and the path of a layer. In Aseprite `v1.3.14-beta1`, a unique identifier for layers was introduced. If switched on, the Sprite data is kept even if the layer name in Aseprite is changed. 
+
+To turn the unique identifiers on, open Aseprite, go to **Sprite > Properties...** and check the **Create UUID for layers**-checkbox. Note that this has to be done for every Aseprite file. 
+
+![](images/Faq_uuid_00.png)
+
 ## How to combine multiple sprite sheets into one?
 You can make use of Sprite Atlases to combine multiple sprite sheets into a single texture. Read more about Sprite Atlas [here](https://docs.unity3d.com/2021.3/Documentation/Manual/class-SpriteAtlas.html). Combining multiple sprite sheets into one is a good way to reduce the draw calls in a scene.
 
@@ -106,3 +113,10 @@ public class GameObjectInjector : AssetPostprocessor
     }
 }
 ```
+
+## How to disable looping on Animation Clips?
+By default, Animation Clips generated from Aseprite [Tags](https://www.aseprite.org/docs/tags/) will automatically loop. To disable looping, open Aseprite and bring up the Tag Property window of the Tag you wish to turn non-looping. In the Repeat field, change the value from ∞ to 1 (Aseprite Importer only supports looping and non-looping. Any value greater than 1 will still result in only a single playback). 
+
+![](images/Faq_NonLoop_00.png)
+
+Save your changes in Aseprite and switch over to Unity. The Aseprite file will automatically be reimported with the Animation Clip updated with non-looping set.

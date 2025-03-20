@@ -79,7 +79,7 @@ namespace UnityEditor.U2D.Aseprite
                             chunk = new ExternalFilesChunk(chunkHeader.chunkSize);
                             break;
                         case ChunkTypes.Layer:
-                            chunk = new LayerChunk(chunkHeader.chunkSize);
+                            chunk = new LayerChunk(chunkHeader.chunkSize, (file.flags & AsepriteFile.HeaderFlags.LayersHaveUuid) != 0);
                             break;
                         case ChunkTypes.Mask:
                             chunk = new MaskChunk(chunkHeader.chunkSize);

@@ -14,7 +14,7 @@ namespace UnityEditor.U2D.Aseprite
     /// ScriptedImporter to import Aseprite files
     /// </summary>
     // Version using unity release + 5 digit padding for future upgrade. Eg 2021.2 -> 21200000
-    [ScriptedImporter(21300003, new string[] { "aseprite", "ase" }, AllowCaching = true)]
+    [ScriptedImporter(21300004, new string[] { "aseprite", "ase" }, AllowCaching = true)]
     [HelpURL("https://docs.unity3d.com/Packages/com.unity.2d.aseprite@latest")]
     public partial class AsepriteImporter : ScriptedImporter, ISpriteEditorDataProvider
     {
@@ -321,6 +321,15 @@ namespace UnityEditor.U2D.Aseprite
                     layer.guid = Layer.GenerateGuid(layer, m_AsepriteLayers);
                 m_ImporterVersion++;
             }
+            // Upgrade from version 1 -> 2
+            // This upgrade populates the UUID field for each layer.
+            // The UUID is a unique identifier for each layer, which is also used by Aseprite (if the setting has been enabled in Aseprite).
+            if (m_ImporterVersion == 1)
+            {
+                foreach (var layer in m_AsepriteLayers)
+                    layer.uuid = new UUID((uint)layer.guid, 0, 0, 0);
+                m_ImporterVersion++;
+            }
         }
 
         bool ParseAsepriteFile(string path)
@@ -374,7 +383,12 @@ namespace UnityEditor.U2D.Aseprite
                         layer.blendMode = layerChunk.blendMode;
                         layer.opacity = layerChunk.opacity / 255f;
                         layer.index = layers.Count;
-                        layer.guid = Layer.GenerateGuid(layer, layers);
+                        layer.uuid = layerChunk.uuid;
+                        if (layer.uuid == UUID.zero)
+                        {
+                            var guid = (uint)Layer.GenerateGuid(layer, layers);
+                            layer.uuid = new UUID(guid, 0, 0, 0);
+                        }
 
                         layers.Add(layer);
                     }
@@ -511,31 +525,32 @@ namespace UnityEditor.U2D.Aseprite
 
             var finalLayers = new List<Layer>(oldLayers);
 
-            if (isIndividual)
+            // Remove old layers & Add new layers if: 
+            // - We are using Individual layer import mode
+            // OR
+            // - There are more than one old layer. This path is for when going from Individual mode to Merged mode.
+            if (isIndividual || oldLayers.Count > 1)
             {
                 // Remove old layers
-                for (var i = 0; i < oldLayers.Count; ++i)
+                foreach (var oldLayer in oldLayers)
                 {
-                    var oldLayer = oldLayers[i];
-                    if (newLayers.FindIndex(x => x.guid == oldLayer.guid) == -1)
+                    if (newLayers.FindIndex(x => x.uuid == oldLayer.uuid) == -1)
                         finalLayers.Remove(oldLayer);
                 }
 
                 // Add new layers
-                for (var i = 0; i < newLayers.Count; ++i)
+                foreach (var newLayer in newLayers)
                 {
-                    var newLayer = newLayers[i];
-                    var layerIndex = finalLayers.FindIndex(x => x.guid == newLayer.guid);
+                    var layerIndex = finalLayers.FindIndex(x => x.uuid == newLayer.uuid);
                     if (layerIndex == -1)
                         finalLayers.Add(newLayer);
                 }
             }
 
             // Update layer data
-            for (var i = 0; i < finalLayers.Count; ++i)
+            foreach (var finalLayer in finalLayers)
             {
-                var finalLayer = finalLayers[i];
-                var layerIndex = isIndividual ? newLayers.FindIndex(x => x.guid == finalLayer.guid) : 0;
+                var layerIndex = isIndividual ? newLayers.FindIndex(x => x.uuid == finalLayer.uuid) : 0;
                 if (layerIndex != -1)
                 {
                     var oldCells = finalLayer.cells;
