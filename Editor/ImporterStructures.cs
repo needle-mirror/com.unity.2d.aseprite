@@ -16,9 +16,9 @@ namespace UnityEditor.U2D.Aseprite
         [SerializeField] LayerFlags m_LayerFlags;
         [SerializeField] LayerTypes m_LayerType;
         [SerializeField] BlendModes m_BlendMode;
-        [SerializeField] List<Cell> m_Cells = new ();
-        [SerializeField] List<LinkedCell> m_LinkedCells = new ();
-        [SerializeField] List<TileCell> m_TileCells = new ();
+        [SerializeField] List<Cell> m_Cells = new();
+        [SerializeField] List<LinkedCell> m_LinkedCells = new();
+        [SerializeField] List<TileCell> m_TileCells = new();
         [SerializeField] uint m_TileSetIndex;
         [SerializeField] int m_ParentIndex = -1;
 
@@ -86,7 +86,7 @@ namespace UnityEditor.U2D.Aseprite
         {
             get => m_TileSetIndex;
             set => m_TileSetIndex = value;
-        }        
+        }
         public int parentIndex
         {
             get => m_ParentIndex;
@@ -103,9 +103,9 @@ namespace UnityEditor.U2D.Aseprite
                 parent = layers.Find(x => x.index == parentIndex);
                 if (parent != null)
                     fullName = fullName.Insert(0, parent.name + "/");
-                
+
             } while (parent != null);
-            
+
             var hash = fullName.GetHashCode();
             return hash;
         }
@@ -153,14 +153,14 @@ namespace UnityEditor.U2D.Aseprite
 
         public bool Equals(Cell other)
         {
-            return m_Name == other.m_Name && 
-                   m_FrameIndex == other.m_FrameIndex && 
-                   m_AdditiveSortOrder == other.m_AdditiveSortOrder && 
-                   m_CellRect.Equals(other.m_CellRect) && 
-                   m_SpriteId == other.m_SpriteId && 
-                   updatedCellRect == other.updatedCellRect && 
-                   opacity.Equals(other.opacity) && 
-                   blendMode == other.blendMode && 
+            return m_Name == other.m_Name &&
+                   m_FrameIndex == other.m_FrameIndex &&
+                   m_AdditiveSortOrder == other.m_AdditiveSortOrder &&
+                   m_CellRect.Equals(other.m_CellRect) &&
+                   m_SpriteId == other.m_SpriteId &&
+                   updatedCellRect == other.updatedCellRect &&
+                   opacity.Equals(other.opacity) &&
+                   blendMode == other.blendMode &&
                    image.Equals(other.image);
         }
 
@@ -180,7 +180,7 @@ namespace UnityEditor.U2D.Aseprite
                 hashCode = (hashCode * 397) ^ (m_SpriteId != null ? m_SpriteId.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ updatedCellRect.GetHashCode();
                 hashCode = (hashCode * 397) ^ opacity.GetHashCode();
-                hashCode = (hashCode * 397) ^ (int) blendMode;
+                hashCode = (hashCode * 397) ^ (int)blendMode;
                 hashCode = (hashCode * 397) ^ image.GetHashCode();
                 return hashCode;
             }
@@ -269,7 +269,7 @@ namespace UnityEditor.U2D.Aseprite
         [SerializeField] uint m_Id;
         [SerializeField] string m_Name;
         [SerializeField] int2 m_TileSize;
-        [SerializeField] List<Tile> m_Tiles = new ();
+        [SerializeField] List<Tile> m_Tiles = new();
         [SerializeField] int m_Guid;
 
         public uint id
@@ -277,7 +277,7 @@ namespace UnityEditor.U2D.Aseprite
             get => m_Id;
             set => m_Id = value;
         }
-        
+
         public string name
         {
             get => m_Name;
@@ -298,13 +298,13 @@ namespace UnityEditor.U2D.Aseprite
             get => m_Guid;
             set => m_Guid = value;
         }
-        
+
         public static int GenerateGuid(TileSet tileSet)
         {
             var hash = tileSet.name.GetHashCode();
             hash = (hash * 397) ^ tileSet.id.GetHashCode();
             return hash;
-        }        
+        }
     }
 
     [Serializable]
@@ -389,7 +389,7 @@ namespace UnityEditor.U2D.Aseprite
     internal struct UUID : IComparable, IComparable<UUID>, IEquatable<UUID>
     {
         public static readonly UUID zero = default;
-        
+
         [SerializeField] uint m_Value0;
         [SerializeField] uint m_Value1;
         [SerializeField] uint m_Value2;
@@ -402,18 +402,18 @@ namespace UnityEditor.U2D.Aseprite
             m_Value2 = value2;
             m_Value3 = value3;
         }
-        
-        public static bool operator==(UUID x, UUID y)
+
+        public static bool operator ==(UUID x, UUID y)
         {
             return x.m_Value0 == y.m_Value0 && x.m_Value1 == y.m_Value1 && x.m_Value2 == y.m_Value2 && x.m_Value3 == y.m_Value3;
         }
 
-        public static bool operator!=(UUID x, UUID y)
+        public static bool operator !=(UUID x, UUID y)
         {
             return !(x == y);
-        }        
-        
-        public static bool operator<(UUID x, UUID y)
+        }
+
+        public static bool operator <(UUID x, UUID y)
         {
             if (x.m_Value0 != y.m_Value0)
                 return x.m_Value0 < y.m_Value0;
@@ -424,14 +424,14 @@ namespace UnityEditor.U2D.Aseprite
             return x.m_Value3 < y.m_Value3;
         }
 
-        public static bool operator>(UUID x, UUID y)
+        public static bool operator >(UUID x, UUID y)
         {
             if (x < y)
                 return false;
             if (x == y)
                 return false;
             return true;
-        }        
+        }
 
         public override bool Equals(object obj)
         {

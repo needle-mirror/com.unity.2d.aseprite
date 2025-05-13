@@ -37,7 +37,7 @@ namespace UnityEditor.U2D.Aseprite
                         frame.Add(cell);
                     else
                         cellsPerFrame.Add(cell.frameIndex, new List<Cell>() { cell });
-                    
+
                     cellsToSortingIndex.Add(cell, layer.index + cell.additiveSortOrder);
                 }
 
@@ -61,12 +61,12 @@ namespace UnityEditor.U2D.Aseprite
                         frame.Add(cell);
                     else
                         cellsPerFrame.Add(frameIndex, new List<Cell>() { cell });
-                    
+
                     // Since the cell is linked, it may have already been added. If so, use the previous sorting index.
                     cellsToSortingIndex.TryAdd(cell, layer.index + cell.additiveSortOrder);
                 }
             }
-            
+
             // Sort the cell lists in the order of their cell index.
             // The cell index is a combination of the layer index and the Z-Index of the cell.
             foreach (var cellList in cellsPerFrame.Values)
@@ -85,7 +85,7 @@ namespace UnityEditor.U2D.Aseprite
 
             return cellsPerFrame;
         }
-        
+
         public static List<Cell> MergeCells(IReadOnlyDictionary<int, List<Cell>> cellsPerFrame, string cellName)
         {
             var mergedCells = new List<Cell>(cellsPerFrame.Count);
@@ -151,7 +151,7 @@ namespace UnityEditor.U2D.Aseprite
                     var buffer = imageBuffers[i];
                     TextureTasks.FlipTextureY((Color32*)buffer.GetUnsafePtr(), buffer.Length, cellSize[i]);
                     imageBuffers[i] = buffer;
-                }   
+                }
             }
         }
     }

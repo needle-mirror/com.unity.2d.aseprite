@@ -20,9 +20,9 @@ The Aseprite Importer will overwrite custom Sprite data authored in the Sprite E
 * Import mode is set to TileSet.
 
 ### Enable UUID for layers
-By default, the Aseprite Importer identifies the layers (and the Sprites) by the name and the path of a layer. In Aseprite `v1.3.14-beta1`, a unique identifier for layers was introduced. If switched on, the Sprite data is kept even if the layer name in Aseprite is changed. 
+By default, the Aseprite Importer identifies the layers (and the Sprites) by the name and the path of a layer. In Aseprite `v1.3.14-beta1`, a unique identifier for layers was introduced. If switched on, the Sprite data is kept even if the layer name in Aseprite is changed.
 
-To turn the unique identifiers on, open Aseprite, go to **Sprite > Properties...** and check the **Create UUID for layers**-checkbox. Note that this has to be done for every Aseprite file. 
+To turn the unique identifiers on, open Aseprite, go to **Sprite > Properties...** and check the **Create UUID for layers**-checkbox. Note that this has to be done for every Aseprite file.
 
 ![](images/Faq_uuid_00.png)
 
@@ -62,7 +62,7 @@ using UnityEngine;
 
 public class MyEventReceiver : MonoBehaviour
 {
-    // In our example, we created an event called "OnIdle". 
+    // In our example, we created an event called "OnIdle".
     // This should be changed to the event name you specified in Aseprite.
     private void OnIdle()
     {
@@ -93,7 +93,7 @@ using UnityEngine;
 
 public class MyEventReceiver : MonoBehaviour
 {
-    // In our example, we created an event called "MyEventReceiver" with a string parameter. 
+    // In our example, we created an event called "MyEventReceiver" with a string parameter.
     // This should be changed to the event name and parameter type you specified in Aseprite.
     private void MyStringEvent(string data)
     {
@@ -104,11 +104,11 @@ public class MyEventReceiver : MonoBehaviour
 
 ### Single event receiver for all events
 
-There are times when you prefer to receive all animation events from an Animator in one method. To do this, begin by unchecking the Individual Events toggle in the Aseprite Importer inspector. 
+There are times when you prefer to receive all animation events from an Animator in one method. To do this, begin by unchecking the Individual Events toggle in the Aseprite Importer inspector.
 
 ![](images/Faq_ComboEvents_00.png)
 
-By unchecking the Individual Events toggle and pressing Apply, the Aseprite Importer will update the AnimationClips to use the following event string "OnAnimationEvent" for all events. 
+By unchecking the Individual Events toggle and pressing Apply, the Aseprite Importer will update the AnimationClips to use the following event string "OnAnimationEvent" for all events.
 
 To receive the events, place the following script on the same GameObject as the Animator is located on:
 
@@ -171,7 +171,7 @@ public class GameObjectInjector : AssetPostprocessor
 ```
 
 ## How to disable looping on Animation Clips?
-By default, Animation Clips generated from Aseprite [Tags](https://www.aseprite.org/docs/tags/) will automatically loop. To disable looping, open Aseprite and bring up the Tag Property window of the Tag you wish to turn non-looping. In the Repeat field, change the value from ∞ to 1 (Aseprite Importer only supports looping and non-looping. Any value greater than 1 will still result in only a single playback). 
+By default, Animation Clips generated from Aseprite [Tags](https://www.aseprite.org/docs/tags/) will automatically loop. To disable looping, open Aseprite and bring up the Tag Property window of the Tag you wish to turn non-looping. In the Repeat field, change the value from ∞ to 1 (Aseprite Importer only supports looping and non-looping. Any value greater than 1 will still result in only a single playback).
 
 ![](images/Faq_NonLoop_00.png)
 

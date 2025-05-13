@@ -43,7 +43,7 @@ namespace UnityEditor.U2D.Aseprite.Common
         {
             if (model.platformTextureSettingsProp != null && model.platformTextureSettingsProp.isValid && m_DataProvider.GetBuildTargetName(model.platformTextureSettingsProp) == model.platformTextureSettings.name)
                 return;
-            
+
             if (platformSettingsArray.arraySize == 0)
             {
                 model.platformTextureSettingsProp = null;

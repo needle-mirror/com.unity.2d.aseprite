@@ -20,7 +20,7 @@ namespace UnityEditor.U2D.Aseprite
         const string k_SubElementUssClass = "SubElement";
         const string k_SubSubElementUssClass = "SubSubElement";
 
-        // This number is in milliseconds. 
+        // This number is in milliseconds.
         const long k_PollForChangesInternal = 50;
 
         SerializedProperty m_GeneratePhysicsShape;
@@ -77,7 +77,7 @@ namespace UnityEditor.U2D.Aseprite
 
         VisualElement m_RootVisualElement;
         VisualElement m_InspectorSettingsView;
-        
+
         readonly AsepriteImporterEditorFoldOutState m_EditorFoldOutState = new();
         bool m_ShowPerAxisWrapModes = false;
         readonly int[] m_FilterModeOptions = (int[])(Enum.GetValues(typeof(FilterMode)));
@@ -344,7 +344,7 @@ namespace UnityEditor.U2D.Aseprite
                     hiddenLayersField.visible = shouldShow;
                     hiddenLayersField.EnableInClassList(k_HiddenElementUssClass, !shouldShow);
                 }
-            }).Every(k_PollForChangesInternal);             
+            }).Every(k_PollForChangesInternal);
             hiddenLayersField.Bind(serializedObject);
             foldOut.Add(hiddenLayersField);
 
@@ -366,7 +366,7 @@ namespace UnityEditor.U2D.Aseprite
                     layerModePopup.visible = shouldShow;
                     layerModePopup.EnableInClassList(k_HiddenElementUssClass, !shouldShow);
                 }
-            }).Every(k_PollForChangesInternal);            
+            }).Every(k_PollForChangesInternal);
             layerModePopup.AddToClassList(k_BaseFieldAlignedUssClass);
             foldOut.Add(layerModePopup);
 
@@ -503,7 +503,7 @@ namespace UnityEditor.U2D.Aseprite
                     tileSetParent.visible = shouldShow;
                     tileSetParent.EnableInClassList(k_HiddenElementUssClass, !shouldShow);
                 }
-            }).Every(k_PollForChangesInternal);            
+            }).Every(k_PollForChangesInternal);
             foldOut.Add(tileSetParent);
             SetupGeneratedAssetsForTileSet(tileSetParent);
             */
@@ -524,7 +524,7 @@ namespace UnityEditor.U2D.Aseprite
 #else
             const bool isUrpEnabled = false;
 #endif
-            
+
             // Generate model prefab toggle
             var generateModelField = new PropertyField(m_GenerateModelPrefab, styles.generateModelPrefab.text)
             {
@@ -549,7 +549,7 @@ namespace UnityEditor.U2D.Aseprite
                     sortingGroupField.SetEnabled(isSortingEnabled);
             }).Every(k_PollForChangesInternal);
             parent.Add(sortingGroupField);
-            
+
             // Add "shadow caster"-component
             var areShadowsEnabled = isUrpEnabled && m_GenerateModelPrefab.boolValue;
             var shadowCasterField = new PropertyField(m_AddShadowCasters, styles.addShadowCasters.text)
@@ -574,7 +574,7 @@ namespace UnityEditor.U2D.Aseprite
             };
             generateClipsField.Bind(serializedObject);
             parent.Add(generateClipsField);
-            
+
             // Generate individual animation events toggle
             var isIndividualEventsEnabled = m_GenerateAnimationClips.boolValue;
             var generateIndividualEventsField = new PropertyField(m_GenerateIndividualEvents, styles.generateIndividualEvents.text)
@@ -590,7 +590,7 @@ namespace UnityEditor.U2D.Aseprite
                 if (generateIndividualEventsField.enabledSelf != isIndividualEventsEnabled)
                     generateIndividualEventsField.SetEnabled(isIndividualEventsEnabled);
             }).Every(k_PollForChangesInternal);
-            parent.Add(generateIndividualEventsField);            
+            parent.Add(generateIndividualEventsField);
 
             SetupAnimationAssetsButton(parent);
         }
@@ -602,7 +602,7 @@ namespace UnityEditor.U2D.Aseprite
                 tooltip = styles.generateSpriteAtlas.tooltip
             };
             generateSpriteAtlasField.Bind(serializedObject);
-            parent.Add(generateSpriteAtlasField);           
+            parent.Add(generateSpriteAtlasField);
         }
 
         void SetupAnimationAssetsButton(VisualElement root)
@@ -707,7 +707,7 @@ namespace UnityEditor.U2D.Aseprite
                 EditorGUI.showMixedValue = false;
                 if (EditorGUI.EndChangeCheck())
                 {
-                    m_FilterMode.intValue = (int) filter;
+                    m_FilterMode.intValue = (int)filter;
                     m_FilterMode.serializedObject.ApplyModifiedProperties();
                 }
 
@@ -787,7 +787,7 @@ namespace UnityEditor.U2D.Aseprite
             ImporterEditorUtils.AddSkinUssClass(foldOut.Q<Toggle>());
             foldOut.RegisterValueChangedCallback(_ => { m_EditorFoldOutState.advancedFoldout = foldOut.value; });
             root.Add(foldOut);
-            
+
             // sRGB Toggle
             var srgbToggle = new Toggle(styles.sRGBTexture.text)
             {
@@ -814,8 +814,8 @@ namespace UnityEditor.U2D.Aseprite
                 m_AlphaSource.intValue = (int)(TextureImporterAlphaSource)alphaSourceEnum.value;
                 m_AlphaSource.serializedObject.ApplyModifiedProperties();
             });
-            foldOut.Add(alphaSourceEnum);       
-            
+            foldOut.Add(alphaSourceEnum);
+
             // AlphaIsTransparency Toggle
             var alphaIsTransparencyToggle = new Toggle(styles.alphaIsTransparency.text)
             {
@@ -835,9 +835,9 @@ namespace UnityEditor.U2D.Aseprite
                 showAlphaIsTransparency = (TextureImporterAlphaSource)m_AlphaSource.intValue != TextureImporterAlphaSource.None;
                 if (alphaIsTransparencyToggle.enabledSelf != showAlphaIsTransparency)
                     alphaIsTransparencyToggle.SetEnabled(showAlphaIsTransparency);
-            }).Every(k_PollForChangesInternal);            
-            foldOut.Add(alphaIsTransparencyToggle);            
-            
+            }).Every(k_PollForChangesInternal);
+            foldOut.Add(alphaIsTransparencyToggle);
+
             // Read/Write Enabled Toggle
             var readWriteToggle = new Toggle(styles.readWrite.text)
             {
@@ -851,7 +851,7 @@ namespace UnityEditor.U2D.Aseprite
                 m_IsReadable.serializedObject.ApplyModifiedProperties();
             });
             foldOut.Add(readWriteToggle);
-            
+
             // MipMap Toggle
             var mipmapToggle = new Toggle(styles.generateMipMaps.text)
             {
@@ -876,9 +876,9 @@ namespace UnityEditor.U2D.Aseprite
                     mipMapOptionContainer.visible = shouldShow;
                     mipMapOptionContainer.EnableInClassList(k_HiddenElementUssClass, !shouldShow);
                 }
-            }).Every(k_PollForChangesInternal);            
+            }).Every(k_PollForChangesInternal);
             foldOut.Add(mipMapOptionContainer);
-            
+
             // Border MipMap Toggle
             var borderToggle = new Toggle(styles.borderMipMaps.text)
             {
@@ -893,7 +893,7 @@ namespace UnityEditor.U2D.Aseprite
                 m_BorderMipMap.serializedObject.ApplyModifiedProperties();
             });
             mipMapOptionContainer.Add(borderToggle);
-            
+
 #if ENABLE_TEXTURE_STREAMING
             // Streaming Toggle
             var streamingToggle = new Toggle(styles.streamingMipMaps.text)
@@ -909,7 +909,7 @@ namespace UnityEditor.U2D.Aseprite
                 m_StreamingMipmaps.serializedObject.ApplyModifiedProperties();
             });
             mipMapOptionContainer.Add(streamingToggle);
-            
+
             // Streaming Priority Field
             var streamingPriorityField = new PropertyField(m_StreamingMipmapsPriority, styles.streamingMipmapsPriority.text)
             {
@@ -921,7 +921,7 @@ namespace UnityEditor.U2D.Aseprite
             {
                 m_StreamingMipmapsPriority.intValue = Mathf.Clamp(m_StreamingMipmapsPriority.intValue, -128, 127);
                 m_StreamingMipmapsPriority.serializedObject.ApplyModifiedProperties();
-            });  
+            });
             streamingPriorityField.schedule.Execute(() =>
             {
                 var shouldShow = streamingToggle.value;
@@ -930,10 +930,10 @@ namespace UnityEditor.U2D.Aseprite
                     streamingPriorityField.visible = shouldShow;
                     streamingPriorityField.EnableInClassList(k_HiddenElementUssClass, !shouldShow);
                 }
-            }).Every(k_PollForChangesInternal);              
+            }).Every(k_PollForChangesInternal);
             mipMapOptionContainer.Add(streamingPriorityField);
 #endif
-            
+
             // Mip Map Filtering Enum
             var mipmapModeEnum = new EnumField(styles.mipMapFilter.text, TextureImporterMipFilter.BoxFilter)
             {
@@ -947,8 +947,8 @@ namespace UnityEditor.U2D.Aseprite
                 m_MipMapMode.intValue = (int)(TextureImporterMipFilter)mipmapModeEnum.value;
                 m_MipMapMode.serializedObject.ApplyModifiedProperties();
             });
-            mipMapOptionContainer.Add(mipmapModeEnum);  
-            
+            mipMapOptionContainer.Add(mipmapModeEnum);
+
             // Preserve Coverage Toggle
             var preserveCoverageToggle = new Toggle(styles.mipMapsPreserveCoverage.text)
             {
@@ -963,7 +963,7 @@ namespace UnityEditor.U2D.Aseprite
                 m_MipMapsPreserveCoverage.serializedObject.ApplyModifiedProperties();
             });
             mipMapOptionContainer.Add(preserveCoverageToggle);
-            
+
             // Alpha Cutoff Field
             var alphaCutoffField = new PropertyField(m_AlphaTestReferenceValue, styles.alphaTestReferenceValue.text)
             {
@@ -979,9 +979,9 @@ namespace UnityEditor.U2D.Aseprite
                     alphaCutoffField.visible = shouldShow;
                     alphaCutoffField.EnableInClassList(k_HiddenElementUssClass, !shouldShow);
                 }
-            }).Every(k_PollForChangesInternal);              
-            mipMapOptionContainer.Add(alphaCutoffField);           
-            
+            }).Every(k_PollForChangesInternal);
+            mipMapOptionContainer.Add(alphaCutoffField);
+
             // Fade Out Toggle
             var fadeOutToggle = new Toggle(styles.mipmapFadeOutToggle.text)
             {
@@ -995,8 +995,8 @@ namespace UnityEditor.U2D.Aseprite
                 m_FadeOut.intValue = fadeOutToggle.value ? 1 : 0;
                 m_FadeOut.serializedObject.ApplyModifiedProperties();
             });
-            mipMapOptionContainer.Add(fadeOutToggle);     
-            
+            mipMapOptionContainer.Add(fadeOutToggle);
+
             // Fade Distance Slider
             var fadeDistanceSlider = new MinMaxSlider(styles.mipmapFadeOut.text, m_MipMapFadeDistanceStart.intValue, m_MipMapFadeDistanceEnd.intValue, 0, 10)
             {
@@ -1019,8 +1019,8 @@ namespace UnityEditor.U2D.Aseprite
                     fadeDistanceSlider.visible = shouldShow;
                     fadeDistanceSlider.EnableInClassList(k_HiddenElementUssClass, !shouldShow);
                 }
-            }).Every(k_PollForChangesInternal);              
-            mipMapOptionContainer.Add(fadeDistanceSlider);              
+            }).Every(k_PollForChangesInternal);
+            mipMapOptionContainer.Add(fadeDistanceSlider);
         }
 
         void InitPreview()
@@ -1126,7 +1126,7 @@ namespace UnityEditor.U2D.Aseprite
             if (m_RootVisualElement != null)
                 m_RootVisualElement.Clear();
         }
-        
+
         /// <summary>
         /// Implementation of AssetImporterEditor.DiscardChanges.
         /// </summary>
@@ -1141,7 +1141,7 @@ namespace UnityEditor.U2D.Aseprite
             m_InspectorSettingsView.Clear();
             m_InspectorSettingsView.Add(m_InspectorUI[tab]);
         }
-        
+
         /// <summary>
         /// Implementation of AssetImporterEditor.SaveChanges.
         /// </summary>
@@ -1287,7 +1287,7 @@ namespace UnityEditor.U2D.Aseprite
             }
             return false;
         }
-        
+
         /// <summary>
         /// Implementation of AssetImporterEditor.Apply
         /// </summary>
@@ -1687,7 +1687,7 @@ namespace UnityEditor.U2D.Aseprite
             public readonly GUIContent addShadowCasters = EditorGUIUtility.TrTextContent("Shadow Casters", "Add Shadow Casters on all GameObjects with SpriteRenderer. Note: The Universal Rendering Pipeline package has to be installed.");
             public readonly GUIContent generateAnimationClips = EditorGUIUtility.TrTextContent("Animation Clips", "Generate Animation Clips based on the frame and tag data from the Aseprite file.");
             public readonly GUIContent generateIndividualEvents = EditorGUIUtility.TrTextContent("Individual Events", "Events will be generated with their own method name. If disabled, all events will be received by the method `OnAnimationEvent(string)`.");
-            
+
             public readonly GUIContent generateSpriteAtlas = EditorGUIUtility.TrTextContent("Sprite Atlas", "Generate a Sprite Atlas to contain the created texture. This is to remove any gaps between tiles when drawing a tile map.");
 
             public readonly GUIContent generalHeaderText = EditorGUIUtility.TrTextContent("General", "General settings.");

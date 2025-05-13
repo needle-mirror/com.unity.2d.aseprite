@@ -31,14 +31,14 @@ namespace UnityEditor.U2D.Aseprite
                 tileTemplates = GetLayerOrderedTileTemplate(tileLayers, tileSets, sprites, out tileSprites);
             }
             else
-#endif            
+#endif
             {
                 tileSprites = GetTileSprites(tileSets, sprites);
                 tileTemplates = GetDefaultTileTemplate(textures.Count);
             }
 
             var tileSet = GetFirstUsedTileSet(tileSets, tileLayers);
-            
+
             var paletteName = tileSet.name;
             var cellLayout = GridLayout.CellLayout.Rectangle;
             var cellSizing = GridPalette.CellSizing.Manual;
@@ -46,7 +46,7 @@ namespace UnityEditor.U2D.Aseprite
             var cellSwizzle = GridLayout.CellSwizzle.XYZ;
             var sortMode = TransparencySortMode.Default;
             var sortAxis = Vector3.forward;
-            
+
             var paletteGameObject = GridPaletteUtility.CreateNewPaletteAsSubAsset(
                 paletteName,
                 cellLayout,
@@ -61,7 +61,7 @@ namespace UnityEditor.U2D.Aseprite
                 out var palette,
                 out var tileAssets
             );
-            
+
             foreach (var tile in tileAssets)
                 ctx.AddObjectToAsset(tile.name, tile);
 
@@ -69,7 +69,7 @@ namespace UnityEditor.U2D.Aseprite
             ctx.AddObjectToAsset(paletteGameObject.name, paletteGameObject);
             mainAsset = paletteGameObject;
         }
-        
+
         static List<Texture2D> GetTextures(AssetImportContext ctx)
         {
             var assetObjects = new List<Object>();
@@ -81,7 +81,7 @@ namespace UnityEditor.U2D.Aseprite
                 if (obj is Texture2D texture)
                     textures.Add(texture);
             }
-            return textures;            
+            return textures;
         }
 
         static List<Layer> GetTileLayers(List<Layer> layers)
@@ -106,7 +106,7 @@ namespace UnityEditor.U2D.Aseprite
             }
             return tileSets[0];
         }
-        
+
 #if ENABLE_TILEMAP_API
         static TileTemplate[] GetLayerOrderedTileTemplate(List<Layer> layers, List<TileSet> tileSets, Sprite[] sprites, out List<Sprite>[] spritesPerTileSet)
         {
@@ -132,10 +132,10 @@ namespace UnityEditor.U2D.Aseprite
         {
             var tileSet = tileSets.Find(x => x.id == layer.tileSetIndex);
             var tiles = tileSet.tiles;
-            
+
             // We only support single cell tileMaps right now.
             var cell = layer.tileCells[0];
-            
+
             var width = cell.cellRect.width;
             var xPos = cell.cellRect.x / tileSet.tileSize.x;
             var yPos = cell.cellRect.y / tileSet.tileSize.y;
@@ -144,7 +144,7 @@ namespace UnityEditor.U2D.Aseprite
             var spriteIdCache = new GUID[sprites.Length];
             for (var i = 0; i < spriteIdCache.Length; ++i)
                 spriteIdCache[i] = sprites[i].GetSpriteID();
-                
+
             for (var i = 0; i < tileIndices.Length; ++i)
             {
                 if (tileIndices[i] == 0)
@@ -153,7 +153,7 @@ namespace UnityEditor.U2D.Aseprite
                 var tileIndex = tiles.FindIndex(x => x.tileId == tileIndices[i]);
                 var spriteId = tiles[tileIndex].spriteId;
                 var spriteIndex = spriteIdCache.FindIndex(x => x == spriteId);
-                
+
                 tileSprites.Add(sprites[spriteIndex]);
                 var tilePos = new Vector3Int(xPos + (i % width), yPos + (i / width), layerIndex);
                 tilePos.y *= -1;
@@ -178,12 +178,12 @@ namespace UnityEditor.U2D.Aseprite
                     var spriteIndex = System.Array.FindIndex(sprites, x => x.GetSpriteID() == tile.spriteId);
                     if (spriteIndex == -1)
                         continue;
-                    
+
                     tileSprites.Add(sprites[spriteIndex]);
                 }
             }
 
-            return new []{ tileSprites };
+            return new[] { tileSprites };
         }
     }
 }

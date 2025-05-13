@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor.Build;
-using System; 
+using System;
 
 namespace UnityEditor.U2D.Aseprite.Common
 {
@@ -9,7 +9,7 @@ namespace UnityEditor.U2D.Aseprite.Common
     internal class TexturePlatformSettingsHelper
     {
         public delegate TextureImporterPlatformSettings CreateDefaultTextureImporterPlatformSettings(string platformName);
-        
+
         [SerializeField] List<TexturePlatformSettings> m_PlatformSettings;
         ITexturePlatformSettingsDataProvider m_DataProvider;
 

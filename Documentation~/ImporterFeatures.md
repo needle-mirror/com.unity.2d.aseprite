@@ -43,7 +43,7 @@ The Aseprite Importer is available after you import a .ase/.aseprite file into y
         <tr>
       <td><strong>Tile Set</strong></td>
       <td>The importer finds all tile data in the file and generates Unity Tilemap assets on import.</td>
-    </tr>    
+    </tr>
     <tr>
       <td rowspan="1"><strong>Pixels Per Unit</strong></td>
       <td colspan="2">Set the number of pixels that equals one Unity unit.</td>
@@ -166,7 +166,7 @@ The Aseprite Importer is available after you import a .ase/.aseprite file into y
     <tr>
       <td rowspan="1"><strong>Individual Events</strong></td>
       <td colspan="2">Enable this property to let Animation Events be generated with their own method names. If disabled, all events will be received by the method `OnAnimationEvent(string)`. This property is set to <b>True</b> by default.</td>
-    </tr>    
+    </tr>
     <tr>
       <td rowspan="1"><strong>Export Animation Assets</strong></td>
       <td colspan="2">The Animator Controller and the Animation Clips are generated as Read-Only assets. This option can be used to export editable versions of these assets.</td>

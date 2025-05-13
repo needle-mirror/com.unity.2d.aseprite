@@ -21,11 +21,11 @@ namespace UnityEditor.U2D.Aseprite
                 texturesToPack[i] = textures[i];
             atlas.Add(texturesToPack);
             atlas.name = $"{assetName}_Atlas";
-            
+
             InternalEditorBridge.RegisterAndPackSpriteAtlas(atlas, ctx, importer, null);
             ctx.AddObjectToAsset(atlas.name, atlas);
         }
-        
+
         static SpriteAtlas CreateDefaultSpriteAtlas()
         {
             var spriteAtlas = new SpriteAtlas();
@@ -42,8 +42,8 @@ namespace UnityEditor.U2D.Aseprite
             PlatformSettingsUtilities.SetupPlatformSettingsWithDefaultVales(platformSettings);
             spriteAtlas.SetPlatformSettings(platformSettings);
             return spriteAtlas;
-        }  
-        
+        }
+
         static List<Texture2D> GetTextures(AssetImportContext ctx)
         {
             var assetObjects = new List<Object>();
@@ -55,7 +55,7 @@ namespace UnityEditor.U2D.Aseprite
                 if (obj is Texture2D texture)
                     textures.Add(texture);
             }
-            return textures;            
-        }        
+            return textures;
+        }
     }
 }

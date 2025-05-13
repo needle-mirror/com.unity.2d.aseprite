@@ -21,14 +21,14 @@ namespace UnityEditor.U2D.Aseprite
             var container = new VisualElement();
             container.style.paddingLeft = 5;
             rootElement.Add(container);
-            
+
             var header = new Label(k_SettingsTitle);
             header.style.paddingLeft = 5;
             header.style.paddingBottom = 10;
             header.style.fontSize = 20;
             header.style.unityFontStyleAndWeight = new StyleEnum<FontStyle>(FontStyle.Bold);
             container.Add(header);
-            
+
             var toggle = new Toggle(k_BackgroundImportLabel.text)
             {
                 tooltip = k_BackgroundImportLabel.tooltip,

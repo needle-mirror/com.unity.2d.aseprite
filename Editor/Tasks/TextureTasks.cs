@@ -23,7 +23,7 @@ namespace UnityEditor.U2D.Aseprite
                     var color = texture[i];
                     color.a = (byte)(color.a * opacity);
                     texturePtr[i] = color;
-                }   
+                }
             }
         }
 
@@ -47,7 +47,7 @@ namespace UnityEditor.U2D.Aseprite
                     outputTexturePtr[outIndex] = texturePtr[inIndex];
                 }
             }
-            
+
             UnsafeUtility.MemCpy(texturePtr, outputTexturePtr, length * sizeof(Color32));
         }
 
@@ -59,7 +59,7 @@ namespace UnityEditor.U2D.Aseprite
 
         /// <summary>
         /// Merge a set of textures into a single texture, applying blend modes to each texture (if requested).
-        /// The merging happens from front to back of the texture array. 
+        /// The merging happens from front to back of the texture array.
         /// </summary>
         /// <param name="textures">Textures to merge</param>
         /// <param name="textureSizes">Texture sizes</param>

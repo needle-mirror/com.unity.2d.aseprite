@@ -90,7 +90,7 @@ namespace UnityEditor.U2D.Aseprite
     {
         /// <inheritdoc />
         public override ChunkTypes chunkType => ChunkTypes.Layer;
-        
+
         /// <summary>
         /// Layer UUID (Only available if the user has enabled UUID for layers in Aseprite).
         /// </summary>
@@ -150,7 +150,7 @@ namespace UnityEditor.U2D.Aseprite
             name = AsepriteUtilities.ReadString(reader);
             if (layerType == LayerTypes.Tilemap)
                 tileSetIndex = reader.ReadUInt32();
-            
+
             if (m_HasUuid)
             {
                 var value0 = reader.ReadUInt32();

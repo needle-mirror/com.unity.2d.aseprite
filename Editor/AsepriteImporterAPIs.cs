@@ -203,7 +203,7 @@ namespace UnityEditor.U2D.Aseprite
                 SetDirty();
             }
         }
-        
+
         /// <summary>
         /// Add Shadow Casters to the generated GameObjects with SpriteRenderers.
         /// </summary>
@@ -234,7 +234,7 @@ namespace UnityEditor.U2D.Aseprite
             get => m_AsepriteImporterSettings.generateIndividualEvents;
             set => m_AsepriteImporterSettings.generateIndividualEvents = value;
         }
-        
+
         /// <summary>
         /// Generate a Sprite Atlas to contain the created texture. This is only available when importing a Tile Set.
         /// </summary>
@@ -242,7 +242,7 @@ namespace UnityEditor.U2D.Aseprite
         {
             get => m_AsepriteImporterSettings.generateSpriteAtlas;
             set => m_AsepriteImporterSettings.generateSpriteAtlas = value;
-        }        
+        }
 
         /// <summary>
         /// Texture coordinate wrapping mode.
@@ -325,7 +325,7 @@ namespace UnityEditor.U2D.Aseprite
                 SetDirty();
             }
         }
-        
+
         /// <summary>
         /// Whether this texture stores data in sRGB (also called gamma) color space.
         /// </summary>

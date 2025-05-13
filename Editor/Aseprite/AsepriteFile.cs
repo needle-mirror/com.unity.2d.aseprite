@@ -22,7 +22,7 @@ namespace UnityEditor.U2D.Aseprite
             LayerBlendModeValidForGroups = 2,
             LayersHaveUuid = 4
         }
-        
+
         /// <summary>
         /// File size in bytes.
         /// </summary>

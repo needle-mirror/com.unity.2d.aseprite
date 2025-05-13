@@ -203,7 +203,7 @@ namespace UnityEditor.U2D.Aseprite
             for (var i = 0; i < clips.Length; ++i)
                 controller.AddMotion(clips[i]);
         }
-        
+
         public static float2 CalculateCellPivot(RectInt cellRect, uint spritePadding, int2 canvasSize, SpriteAlignment alignment, float2 customPivot)
         {
             if (cellRect.width == 0 || cellRect.height == 0)
@@ -287,7 +287,7 @@ namespace UnityEditor.U2D.Aseprite
                 isVisible = IsLayerVisible(layer.parentIndex, in layers);
             return isVisible;
         }
-        
+
         [BurstCompile]
         public static bool IsEmptyImage(in NativeArray<Color32> image)
         {

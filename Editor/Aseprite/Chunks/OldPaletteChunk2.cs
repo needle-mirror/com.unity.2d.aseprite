@@ -12,11 +12,11 @@ namespace UnityEditor.U2D.Aseprite
         public override ChunkTypes chunkType => ChunkTypes.OldPalette2;
 
         internal OldPaletteChunk2(uint chunkSize) : base(chunkSize) { }
-        
+
         /// <summary>
         /// Read and store the chunk data.
         /// </summary>
-        /// <param name="reader">The active binary reader of the file.</param>        
+        /// <param name="reader">The active binary reader of the file.</param>
         protected override void InternalRead(BinaryReader reader) { }
     }
 }

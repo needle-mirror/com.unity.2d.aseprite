@@ -41,7 +41,7 @@ namespace UnityEditor.U2D.Aseprite
         static EditCapability k_DefaultEditCapability = new EditCapability(EEditCapability.EditPivot);
         static EditCapability k_SpriteSheetCapabilities = new EditCapability(EEditCapability.All);
 
-    public EditCapability GetEditCapability()
+        public EditCapability GetEditCapability()
         {
             switch (dataProvider.importMode)
             {

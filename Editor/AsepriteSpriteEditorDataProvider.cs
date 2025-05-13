@@ -54,7 +54,7 @@ namespace UnityEditor.U2D.Aseprite
             if (typeof(T) == typeof(ISpriteFrameEditCapability))
             {
                 return new SpriteFrameEditCapabilityDataProvider() { dataProvider = this } as T;
-            }            
+            }
             else
                 return this as T;
         }
@@ -118,33 +118,33 @@ namespace UnityEditor.U2D.Aseprite
                 switch (m_AsepriteImporterSettings.fileImportMode)
                 {
                     case FileImportModes.SpriteSheet:
+                    {
+                        var spriteRects = new SpriteRect[m_SpriteSheetImportData.Count];
+                        for (var i = 0; i < spriteRects.Length; i++)
                         {
-                            var spriteRects = new SpriteRect[m_SpriteSheetImportData.Count];
-                            for (var i = 0; i < spriteRects.Length; i++)
-                            {
-                                spriteRects[i] = new SpriteMetaData(m_SpriteSheetImportData[i]);
-                            }
-                            return spriteRects;
+                            spriteRects[i] = new SpriteMetaData(m_SpriteSheetImportData[i]);
                         }
+                        return spriteRects;
+                    }
                     case FileImportModes.TileSet:
+                    {
+                        var spriteRects = new SpriteRect[m_TileSetImportData.Count];
+                        for (var i = 0; i < spriteRects.Length; i++)
                         {
-                            var spriteRects = new SpriteRect[m_TileSetImportData.Count];
-                            for (var i = 0; i < spriteRects.Length; i++)
-                            {
-                                spriteRects[i] = new SpriteMetaData(m_TileSetImportData[i]);
-                            }
-                            return spriteRects;
-                        }                    
+                            spriteRects[i] = new SpriteMetaData(m_TileSetImportData[i]);
+                        }
+                        return spriteRects;
+                    }
                     case FileImportModes.AnimatedSprite:
                     default:
+                    {
+                        var spriteRects = new SpriteRect[m_AnimatedSpriteImportData.Count];
+                        for (var i = 0; i < spriteRects.Length; i++)
                         {
-                            var spriteRects = new SpriteRect[m_AnimatedSpriteImportData.Count];
-                            for (var i = 0; i < spriteRects.Length; i++)
-                            {
-                                spriteRects[i] = new SpriteMetaData(m_AnimatedSpriteImportData[i]);
-                            }
-                            return spriteRects;
+                            spriteRects[i] = new SpriteMetaData(m_AnimatedSpriteImportData[i]);
                         }
+                        return spriteRects;
+                    }
 
                 }
             }

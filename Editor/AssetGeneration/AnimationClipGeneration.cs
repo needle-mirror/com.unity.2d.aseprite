@@ -108,11 +108,11 @@ namespace UnityEditor.U2D.Aseprite
         {
             if (layer.layerType != LayerTypes.Normal)
                 return false;
-            
+
             var cells = layer.cells;
             var linkedCells = layer.linkedCells;
 
-            foreach(var cell in cells)
+            foreach (var cell in cells)
             {
                 if (cell.additiveSortOrder != 0)
                     return true;
@@ -128,18 +128,18 @@ namespace UnityEditor.U2D.Aseprite
                 if (cell.additiveSortOrder != 0)
                     return true;
             }
-            
-            return false;            
+
+            return false;
         }
 
         static AnimationClip CreateClip(
-            Tag tag, 
-            string clipName, 
-            IReadOnlyList<Layer> layers, 
-            IReadOnlyCollection<Layer> layersWithDisabledRenderer, 
-            IReadOnlyCollection<Layer> layersWithCustomSorting, 
-            IReadOnlyList<Frame> frames, 
-            IReadOnlyList<Sprite> sprites, 
+            Tag tag,
+            string clipName,
+            IReadOnlyList<Layer> layers,
+            IReadOnlyCollection<Layer> layersWithDisabledRenderer,
+            IReadOnlyCollection<Layer> layersWithCustomSorting,
+            IReadOnlyList<Frame> frames,
+            IReadOnlyList<Sprite> sprites,
             IReadOnlyDictionary<int, GameObject> layerIdToGameObject,
             bool generateIndividualEvents)
         {
@@ -165,7 +165,7 @@ namespace UnityEditor.U2D.Aseprite
 
                 var doesLayerDisableRenderer = layersWithDisabledRenderer.Contains(layer);
                 var doesLayerHaveCustomSorting = layersWithCustomSorting.Contains(layer);
-                
+
                 var layerTransform = layerGo.transform;
                 var spriteKeyframes = new List<ObjectReferenceKeyframe>();
 
@@ -226,7 +226,7 @@ namespace UnityEditor.U2D.Aseprite
                 if (linkedCell.frameIndex < tag.fromFrame ||
                     linkedCell.frameIndex >= tag.toFrame)
                     continue;
-                
+
                 var cellIndex = cells.FindIndex(x => x.frameIndex == linkedCell.linkedToFrame);
                 if (cellIndex == -1)
                     continue;
@@ -343,7 +343,7 @@ namespace UnityEditor.U2D.Aseprite
                     continue;
 
                 var additiveSortOrder = cell.additiveSortOrder;
-                
+
                 // We want to add a keyframe if the current cell has additive sorting, or if the previous cell had additive sorting.
                 // This is to ensure that we reset the sort order to 0 if the previous cell had additive sorting.
                 if (additiveSortOrder == 0 && previousCell.additiveSortOrder == 0)

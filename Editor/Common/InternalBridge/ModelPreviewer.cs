@@ -90,11 +90,11 @@ namespace UnityEditor.U2D.Aseprite.Common
             }
 
             m_FrameTimings = new List<float>(timeSet.Count);
-            
+
             // If the clip is empty, early out.
             if (timeSet.Count == 0)
                 return;
-            
+
             foreach (var time in timeSet)
                 m_FrameTimings.Add(time);
             m_FrameTimings.Sort();

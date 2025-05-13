@@ -1,4 +1,9 @@
 # Changelog
+
+## [1.2.5] - 2025-05-13
+### Changed
+- Aseprite files containing Tile data will automatically be imported as Tile Set by default.
+
 ## [1.2.4] - 2025-03-18
 ### Fixed
 - Fixed an issue where going from Import Mode: Individual Layers to Import Mode: Merge Frame would cause the importer to fail the import. (DANB-875)

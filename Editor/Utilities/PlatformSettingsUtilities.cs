@@ -29,7 +29,7 @@ namespace UnityEditor.U2D.Aseprite
             settings.overridden = false;
 
             SetupPlatformSettingsWithDefaultVales(settings);
-            
+
             return settings;
         }
 
