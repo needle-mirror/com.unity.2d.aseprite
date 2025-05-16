@@ -1,7 +1,8 @@
 # Changelog
 
-## [1.2.5] - 2025-05-13
+## [2.0.0] - 2025-05-16
 ### Changed
+- Update minimum Unity version.
 - Aseprite files containing Tile data will automatically be imported as Tile Set by default.
 
 ## [1.2.4] - 2025-03-18
