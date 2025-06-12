@@ -8,7 +8,7 @@ Foldout > Toggle.unity-foldout__toggle {
     margin: 0;
 }
 
-Foldout > VisualElement {
+Foldout > VisualElement.unity-foldout__content {
     margin-right: 15px;
 }
 

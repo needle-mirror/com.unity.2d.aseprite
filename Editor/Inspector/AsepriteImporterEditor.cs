@@ -480,7 +480,10 @@ namespace UnityEditor.U2D.Aseprite
             }).Every(k_PollForChangesInternal);
             root.Add(foldOut);
 
-            var animatedSpritesParent = new VisualElement();
+            var animatedSpritesParent = new VisualElement()
+            {
+                name = "AnimatedSpritesParent"
+            };
             animatedSpritesParent.schedule.Execute(() =>
             {
                 var shouldShow = fileImportMode is FileImportModes.AnimatedSprite;
