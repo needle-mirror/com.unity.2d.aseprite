@@ -1,4 +1,8 @@
 # Changelog
+## [1.1.10] - 2025-07-01
+### Fixed
+- Fixed an issue where the "Export Animation Assets"-button had an additional offset of 15 px to the right. (DANB-1000)
+
 ## [1.1.9] - 2025-03-20
 ### Added
 - Added support for Aseprite's new Layer UUID, to help identify each Aseprite Layer by id instead of name and path.
