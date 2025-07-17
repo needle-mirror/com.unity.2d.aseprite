@@ -113,9 +113,47 @@ namespace UnityEditor.U2D.Aseprite
             base.OnEnable();
 
             CacheImporterData();
+            InitPreview();
+        }
+
+        /// <summary>
+        /// Implementation of virtual method CreateInspectorGUI.
+        /// </summary>
+        /// <returns>VisualElement container for Inspector visual.</returns>
+        public override VisualElement CreateInspectorGUI()
+        {
             CacheSerializedProperties();
             SetupInspectorUI();
-            InitPreview();
+
+            m_RootVisualElement = new VisualElement()
+            {
+                name = "Root"
+            };
+
+            var styleSheet = EditorGUIUtility.Load("packages/com.unity.2d.aseprite/Editor/Assets/UI/AsepriteImporterStyleSheet.uss") as StyleSheet;
+            m_RootVisualElement.styleSheets.Add(styleSheet);
+
+            m_InspectorSettingsView = new VisualElement()
+            {
+                name = "InspectorSettings"
+            };
+            m_RootVisualElement.Add(m_InspectorSettingsView);
+
+            ShowInspectorTab(m_ActiveEditorIndex);
+
+            return m_RootVisualElement;
+        }
+
+        /// <summary>
+        /// Implementation of AssetImporterEditor.OnDisable
+        /// </summary>
+        public override void OnDisable()
+        {
+            base.OnDisable();
+            DisposePreview();
+
+            if (m_RootVisualElement != null)
+                m_RootVisualElement.Clear();
         }
 
         void CacheImporterData()
@@ -1091,43 +1129,6 @@ namespace UnityEditor.U2D.Aseprite
             {
                 extraData.Init(importer, platformSettingsNeeded);
             }
-        }
-
-        /// <summary>
-        /// Implementation of virtual method CreateInspectorGUI.
-        /// </summary>
-        /// <returns>VisualElement container for Inspector visual.</returns>
-        public override VisualElement CreateInspectorGUI()
-        {
-            m_RootVisualElement = new VisualElement()
-            {
-                name = "Root"
-            };
-
-            var styleSheet = EditorGUIUtility.Load("packages/com.unity.2d.aseprite/Editor/Assets/UI/AsepriteImporterStyleSheet.uss") as StyleSheet;
-            m_RootVisualElement.styleSheets.Add(styleSheet);
-
-            m_InspectorSettingsView = new VisualElement()
-            {
-                name = "InspectorSettings"
-            };
-            m_RootVisualElement.Add(m_InspectorSettingsView);
-
-            ShowInspectorTab(m_ActiveEditorIndex);
-
-            return m_RootVisualElement;
-        }
-
-        /// <summary>
-        /// Implementation of AssetImporterEditor.OnDisable
-        /// </summary>
-        public override void OnDisable()
-        {
-            base.OnDisable();
-            DisposePreview();
-
-            if (m_RootVisualElement != null)
-                m_RootVisualElement.Clear();
         }
 
         /// <summary>

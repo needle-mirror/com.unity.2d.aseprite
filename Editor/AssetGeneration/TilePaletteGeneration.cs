@@ -114,7 +114,7 @@ namespace UnityEditor.U2D.Aseprite
             var tilePositions = new List<Vector3Int>();
 
             for (var i = 0; i < layers.Count; ++i)
-                GetSpriteAndPositionFromLayer(layers[i], i, tileSets, sprites, ref tileSprites, ref tilePositions);
+                GetSpriteAndPositionFromLayer(layers[i], layers[i].index, tileSets, sprites, ref tileSprites, ref tilePositions);
 
             var tileTemplate = ScriptableObject.CreateInstance<PositionTileTemplate>();
             tileTemplate.positions = tilePositions;

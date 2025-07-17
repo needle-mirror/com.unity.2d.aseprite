@@ -1,5 +1,15 @@
 # Changelog
 
+## [3.0.0] - 2025-07-17
+
+### Fixed
+- Use EditorUtility.EntityIdToObject instead of EditorUtility.InstanceIDToObject which is deprecated. (DANB-1042)
+- Fixed an issue where changing the order of TileMaps in Aseprite would not update the order in Unity.
+- Fixed an issue where the inspector would not work as expected when running in Debug mode.
+
+### Changed
+- Update minimum Unity version.
+
 ## [2.0.1] - 2025-06-12
 ### Fixed
 - Fixed an issue where the "Export Animation Assets"-button had an additional offset of 15 px to the right. (DANB-1000)
