@@ -10,6 +10,7 @@ The different versions of the Aseprite Importer package are supported by the fol
 
 Package version  | Unity Editor version
 --|--
+2.x |  6.2
 1.2.x |  6.1
 1.1.x  |  6.0, 2022.3 and 2021.3
 1.0.x  |  6.0, 2022.3 and 2021.3

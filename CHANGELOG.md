@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.0.2] - 2025-09-11
+### Fixed
+- Fixed an issue where changing the order of TileMaps in Aseprite would not update the order in Unity.
+
 ## [2.0.1] - 2025-06-12
 ### Fixed
 - Fixed an issue where the "Export Animation Assets"-button had an additional offset of 15 px to the right. (DANB-1000)
