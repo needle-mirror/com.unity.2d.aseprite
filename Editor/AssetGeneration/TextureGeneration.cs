@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Unity.Collections;
 using UnityEditor.AssetImporters;
-using UnityEditor.U2D.Aseprite.Common;
+using UnityEditor.U2D.Common;
 using UnityEngine;
 
 namespace UnityEditor.U2D.Aseprite

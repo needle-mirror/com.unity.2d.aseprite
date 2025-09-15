@@ -14,7 +14,7 @@ namespace UnityEditor.U2D.Aseprite
         /// Reads an Aseprite file from the given path.
         /// </summary>
         /// <param name="assetPath">Path to the file.</param>
-        /// <returns>Returns a parsed representation of the file.</returns>
+        /// <returns>If successful, returns an object representation of the file. Returns null if unsuccessful</returns>
         public static AsepriteFile ReadFile(string assetPath)
         {
             var doesFileExist = File.Exists(assetPath);

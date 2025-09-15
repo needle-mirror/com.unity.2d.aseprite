@@ -4,7 +4,7 @@ using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEditor.AssetImporters;
-using UnityEditor.U2D.Aseprite.Common;
+using UnityEditor.U2D.Common;
 using UnityEditor.U2D.Sprites;
 using UnityEngine.Serialization;
 
@@ -161,8 +161,6 @@ namespace UnityEditor.U2D.Aseprite
             }
         }
 
-        internal bool isNPOT => Mathf.IsPowerOfTwo(importData.textureActualWidth) && Mathf.IsPowerOfTwo(importData.textureActualHeight);
-
         internal int textureActualWidth
         {
             get => importData.textureActualWidth;
@@ -200,22 +198,43 @@ namespace UnityEditor.U2D.Aseprite
 
             try
             {
-                var isSuccessful = ParseAsepriteFile(ctx.assetPath);
-                if (!isSuccessful)
+                m_AsepriteFile = AsepriteReader.ReadFile(ctx.assetPath);
+                if (m_AsepriteFile == null)
                     return;
-
+                
+                // Initial setup of importer data and settings.
                 UpdateImporterDataToNewVersion();
-                SelectDefaultImportMode();
-
-                var layersFromFile = FetchLayersFromFile(asepriteFile, m_CanvasSize, includeHiddenLayers, layerImportMode == LayerImportModes.MergeFrame);
-
-                FetchImageDataFromLayers(layersFromFile, out var imageBuffers, out var imageSizes);
+                SelectDefaultImportMode(m_AsepriteFile);
+                
+                // Data extraction
+                m_CanvasSize = new Vector2Int(m_AsepriteFile.width, m_AsepriteFile.height);
+                m_Frames = ExtractFrameData(m_AsepriteFile);
+                m_Tags = ExtractTagsData(m_AsepriteFile);
+                var tileSetsFromFile = ExtractTileData(m_AsepriteFile);
+                var layersFromFile = ExtractLayersFromFile(asepriteFile, m_CanvasSize);
+                
+                // Process layers
+                FilterOutLayers(layersFromFile, includeHiddenLayers);
+                UpdateCellNames(layersFromFile, layerImportMode == LayerImportModes.MergeFrame);
+                
+                // Merging new and old data
+                m_TileSets = MergeNewAndExistingTileData(tileSetsFromFile, m_TileSets);
+                
+                m_AsepriteLayers = FetchImageDataFromLayers(layersFromFile, m_AsepriteLayers, out var imageBuffers, out var imageSizes);
                 FetchImageDataFromTilemaps(imageBuffers, imageSizes);
 
+                // Pack Sprites
+                var widthArr = new int[imageSizes.Count];
+                var heightArr = new int[imageSizes.Count];
+                for (var i = 0; i < imageSizes.Count; i++)
+                {
+                    widthArr[i] = imageSizes[i].x;
+                    heightArr[i] = imageSizes[i].y;
+                }
                 var mosaicPad = m_AsepriteImporterSettings.mosaicPadding;
                 var spritePad = m_AsepriteImporterSettings.fileImportMode == FileImportModes.AnimatedSprite ? m_AsepriteImporterSettings.spritePadding : 0;
                 var requireSquarePotTexture = IsRequiringSquarePotTexture(ctx);
-                ImagePacker.Pack(imageBuffers.ToArray(), imageSizes.ToArray(), (int)mosaicPad, spritePad, requireSquarePotTexture, out var outputImageBuffer, out var packedTextureWidth, out var packedTextureHeight, out var spriteRects, out var uvTransforms);
+                ImagePacker.Pack(imageBuffers.ToArray(), widthArr, heightArr, (int)mosaicPad, spritePad, out var outputImageBuffer, out var packedTextureWidth, out var packedTextureHeight, out var spriteRects, out var uvTransforms, requireSquarePotTexture);
 
                 var packOffsets = new Vector2Int[spriteRects.Length];
                 for (var i = 0; i < packOffsets.Length; ++i)
@@ -223,21 +242,20 @@ namespace UnityEditor.U2D.Aseprite
                     packOffsets[i] = new Vector2Int(uvTransforms[i].x - spriteRects[i].position.x, uvTransforms[i].y - spriteRects[i].position.y);
                     packOffsets[i] *= -1;
                 }
-
+                
+                // SpriteMetaData creation & merging
                 SpriteMetaData[] spriteImportData;
                 if (m_AsepriteImporterSettings.fileImportMode == FileImportModes.SpriteSheet)
                     spriteImportData = GetSpriteImportData().ToArray();
                 else
                 {
                     CellTasks.GetCellsFromLayers(m_AsepriteLayers, out var cells);
-
                     var newSpriteMeta = new List<SpriteMetaData>(cells.Count);
 
                     // Create SpriteMetaData for each cell
                     var importedRectsHaveChanged = false;
-                    for (var i = 0; i < cells.Count; ++i)
+                    foreach (var cell in cells)
                     {
-                        var cell = cells[i];
                         var dataIndex = newSpriteMeta.Count;
                         var spriteData = CreateNewSpriteMetaData(
                             cell.name,
@@ -254,12 +272,11 @@ namespace UnityEditor.U2D.Aseprite
                     }
 
                     // Create SpriteMetaData for each tile
-                    for (var i = 0; i < m_TileSets.Count; ++i)
+                    foreach (var tileSet in m_TileSets)
                     {
-                        var tiles = m_TileSets[i].tiles;
-                        for (var m = 0; m < tiles.Count; ++m)
+                        var tiles = tileSet.tiles;
+                        foreach (var tile in tiles)
                         {
-                            var tile = tiles[m];
                             var dataIndex = newSpriteMeta.Count;
                             var spriteData = CreateNewSpriteMetaData(
                                 tile.name,
@@ -283,7 +300,7 @@ namespace UnityEditor.U2D.Aseprite
                         importedRectsHaveChanged = true;
                     }
 
-                    spriteImportData = UpdateSpriteImportData(newSpriteMeta, spriteRects, uvTransforms, importedRectsHaveChanged);
+                    spriteImportData = MergeNewAndExistingSpriteMeta(newSpriteMeta, GetSpriteImportData(), spriteRects, uvTransforms, importedRectsHaveChanged);
                 }
 
                 // These two values should be set before we generate the Texture (and the Sprites)
@@ -314,12 +331,17 @@ namespace UnityEditor.U2D.Aseprite
                     importData.importedTextureWidth = textureActualWidth;
                 }
 
+                // Physics outline
                 if (output.texture != null && output.sprites != null)
                     SetPhysicsOutline(GetDataProvider<ISpritePhysicsOutlineDataProvider>(), output.sprites, definitionScale, pixelsPerUnit, m_GeneratePhysicsShape);
 
+                // Create sub assets
                 RegisterAssets(ctx, output);
+                
+                // Post import hook for external use
                 OnPostAsepriteImport?.Invoke(new ImportEventArgs(this, ctx));
 
+                // Cleanup
                 outputImageBuffer.DisposeIfCreated();
                 foreach (var cellBuffer in imageBuffers)
                     cellBuffer.DisposeIfCreated();
@@ -334,22 +356,6 @@ namespace UnityEditor.U2D.Aseprite
                 EditorUtility.SetDirty(this);
                 m_AsepriteFile?.Dispose();
             }
-        }
-
-        bool ParseAsepriteFile(string path)
-        {
-            m_AsepriteFile = AsepriteReader.ReadFile(path);
-            if (m_AsepriteFile == null)
-                return false;
-
-            m_CanvasSize = new Vector2Int(m_AsepriteFile.width, m_AsepriteFile.height);
-
-            m_Frames = ExtractFrameData(in m_AsepriteFile);
-            m_Tags = ExtractTagsData(in m_AsepriteFile);
-            var newTileData = ExtractTileData(in m_AsepriteFile);
-            m_TileSets = UpdateTileData(newTileData, m_TileSets);
-
-            return true;
         }
 
         void UpdateImporterDataToNewVersion()
@@ -375,13 +381,13 @@ namespace UnityEditor.U2D.Aseprite
             }
         }
 
-        void SelectDefaultImportMode()
+        void SelectDefaultImportMode(AsepriteFile file)
         {
             if (!m_AsepriteImporterSettings.Equals(k_DefaultImporterSettings))
                 return;
 
             // If the file contains TilesetChunks, we assume that the user wants to use the file as a Tile Set.
-            foreach (var frame in asepriteFile.frameData)
+            foreach (var frame in file.frameData)
             {
                 foreach (var chunk in frame.chunks)
                 {
@@ -394,7 +400,7 @@ namespace UnityEditor.U2D.Aseprite
             }
         }
 
-        static List<TileSet> UpdateTileData(List<TileSet> newTileSet, List<TileSet> oldTileSet)
+        static List<TileSet> MergeNewAndExistingTileData(List<TileSet> newTileSet, List<TileSet> oldTileSet)
         {
             if (oldTileSet.Count == 0)
                 return new List<TileSet>(newTileSet);
@@ -446,15 +452,7 @@ namespace UnityEditor.U2D.Aseprite
             return finalSets;
         }
 
-        static List<Layer> FetchLayersFromFile(in AsepriteFile asepriteFile, Vector2Int canvasSize, bool includeHiddenLayers, bool isMerged)
-        {
-            var newLayers = RestructureLayerAndCellData(in asepriteFile, canvasSize);
-            FilterOutLayers(newLayers, includeHiddenLayers);
-            UpdateCellNames(newLayers, isMerged);
-            return newLayers;
-        }
-
-        static List<Layer> RestructureLayerAndCellData(in AsepriteFile file, Vector2Int canvasSize)
+        static List<Layer> ExtractLayersFromFile(AsepriteFile file, Vector2Int canvasSize)
         {
             var frameData = file.frameData;
 
@@ -618,14 +616,13 @@ namespace UnityEditor.U2D.Aseprite
             }
         }
 
-        void FetchImageDataFromLayers(List<Layer> newLayers, out List<NativeArray<Color32>> imageBuffers, out List<int2> imageSizes)
+        List<Layer> FetchImageDataFromLayers(List<Layer> newLayers, IReadOnlyList<Layer> oldLayers, out List<NativeArray<Color32>> imageBuffers, out List<int2> imageSizes)
         {
             // TileSet will always be in individual layers, since each layer can refer to a different tileSet.
-            if (layerImportMode == LayerImportModes.IndividualLayers || importMode == FileImportModes.TileSet)
+            var isIndividual = layerImportMode == LayerImportModes.IndividualLayers || importMode == FileImportModes.TileSet; 
+            if (isIndividual)
             {
-                m_AsepriteLayers = UpdateLayers(newLayers, m_AsepriteLayers, true);
-
-                CellTasks.GetCellsFromLayers(m_AsepriteLayers, out var cells);
+                CellTasks.GetCellsFromLayers(newLayers, out var cells);
                 CellTasks.CollectDataFromCells(cells, out imageBuffers, out imageSizes);
                 CellTasks.FlipCellBuffers(imageBuffers, imageSizes);
             }
@@ -633,14 +630,12 @@ namespace UnityEditor.U2D.Aseprite
             {
                 var assetName = System.IO.Path.GetFileNameWithoutExtension(assetPath);
                 ImportMergedLayers.Import(assetName, newLayers, out imageBuffers, out imageSizes);
-
-                // Update layers after merged, since merged import creates new layers.
-                // The new layers should be compared and merged together with the ones existing in the meta file.
-                m_AsepriteLayers = UpdateLayers(newLayers, m_AsepriteLayers, false);
             }
+            
+            return MergeNewAndExistingLayerData(newLayers, oldLayers, isIndividual);
         }
 
-        static List<Layer> UpdateLayers(List<Layer> newLayers, List<Layer> oldLayers, bool isIndividual)
+        static List<Layer> MergeNewAndExistingLayerData(IReadOnlyList<Layer> newLayers, IReadOnlyList<Layer> oldLayers, bool isIndividual)
         {
             if (oldLayers.Count == 0)
                 return new List<Layer>(newLayers);
@@ -699,6 +694,8 @@ namespace UnityEditor.U2D.Aseprite
                 }
             }
 
+            // Sort so that layers are always ordered according to the layer index.
+            finalLayers.Sort((x, y) => x.index.CompareTo(y.index));
             return finalLayers;
         }
 
@@ -729,7 +726,7 @@ namespace UnityEditor.U2D.Aseprite
 #pragma warning restore CS0618
         }
 
-        static List<Frame> ExtractFrameData(in AsepriteFile file)
+        static List<Frame> ExtractFrameData(AsepriteFile file)
         {
             var noOfFrames = file.noOfFrames;
             var frames = new List<Frame>(noOfFrames);
@@ -795,7 +792,7 @@ namespace UnityEditor.U2D.Aseprite
             return eventArr;
         }
 
-        static List<Tag> ExtractTagsData(in AsepriteFile file)
+        static List<Tag> ExtractTagsData(AsepriteFile file)
         {
             var tags = new List<Tag>();
 
@@ -830,7 +827,7 @@ namespace UnityEditor.U2D.Aseprite
             return tags;
         }
 
-        static List<TileSet> ExtractTileData(in AsepriteFile file)
+        static List<TileSet> ExtractTileData(AsepriteFile file)
         {
             var tilemaps = new List<TileSet>();
             var tileSetNames = new HashSet<string>();
@@ -892,9 +889,9 @@ namespace UnityEditor.U2D.Aseprite
             return tilemaps;
         }
 
-        SpriteMetaData[] UpdateSpriteImportData(List<SpriteMetaData> newSpriteMeta, RectInt[] newSpriteRects, Vector2Int[] uvTransforms, bool importedRectsHaveChanged)
+        SpriteMetaData[] MergeNewAndExistingSpriteMeta(List<SpriteMetaData> newSpriteMeta, List<SpriteMetaData> oldSpriteMeta, RectInt[] newSpriteRects, Vector2Int[] uvTransforms, bool importedRectsHaveChanged)
         {
-            var finalSpriteMeta = GetSpriteImportData();
+            var finalSpriteMeta = oldSpriteMeta;
             if (finalSpriteMeta.Count <= 0)
             {
                 finalSpriteMeta.Clear();
@@ -902,6 +899,10 @@ namespace UnityEditor.U2D.Aseprite
             }
             else
             {
+                // The spriteRect, UV, etc. are all based on the latest order of cells. When adding or removing an item from the finalSpriteMeta, there is a chance
+                // that the order is no longer the same. We therefore need to update all spriteRects, UVs and pivots to match the new order.
+                // This is why we have to set importedRectsHaveChanged to true here.
+                
                 // Remove old SpriteMeta.
                 for (var i = finalSpriteMeta.Count - 1; i >= 0; --i)
                 {
@@ -909,9 +910,6 @@ namespace UnityEditor.U2D.Aseprite
                     if (newSpriteMeta.FindIndex(x => x.spriteID == spriteData.spriteID) == -1)
                     {
                         finalSpriteMeta.Remove(spriteData);
-
-                        // The spriteRect, UV, etc. are all based on the latest order of cells. When removing an item from the finalSpriteMeta, there is a chance
-                        // that the order is no longer the same. We therefore need to update all spriteRects, UVs and pivots to match the new order.
                         importedRectsHaveChanged = true;
                     }
                 }
@@ -921,7 +919,10 @@ namespace UnityEditor.U2D.Aseprite
                 {
                     var newMeta = newSpriteMeta[i];
                     if (finalSpriteMeta.FindIndex(x => x.spriteID == newMeta.spriteID) == -1)
+                    {
                         finalSpriteMeta.Add(newMeta);
+                        importedRectsHaveChanged = true;
+                    }
                 }
 
                 // Update with new pack data
@@ -937,7 +938,7 @@ namespace UnityEditor.U2D.Aseprite
                     // - OR
                     // - The packing texture's size has changed
                     // - OR
-                    // - A layer has been removed / renamed
+                    // - A layer has been added / removed / renamed
                     // - OR
                     // - The import mode is set to TileSet
                     if (finalMeta != null && (AreSettingsUpdated() || importedRectsHaveChanged))

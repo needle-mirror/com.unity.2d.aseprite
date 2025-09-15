@@ -10,11 +10,11 @@ namespace UnityEditor.U2D.Aseprite
 {
     internal static class CellTasks
     {
-        public static void GetCellsFromLayers(List<Layer> layers, out List<Cell> cells)
+        public static void GetCellsFromLayers(IReadOnlyList<Layer> layers, out List<Cell> cells)
         {
             cells = new List<Cell>();
-            for (var i = 0; i < layers.Count; ++i)
-                cells.AddRange(layers[i].cells);
+            foreach (var layer in layers)
+                cells.AddRange(layer.cells);
         }
 
         public static Dictionary<int, List<Cell>> GetAllCellsPerFrame(IReadOnlyList<Layer> layers)

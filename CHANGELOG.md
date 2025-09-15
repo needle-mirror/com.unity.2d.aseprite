@@ -1,5 +1,11 @@
 # Changelog
 
+# Changelog
+
+## [3.0.1] - 2025-09-15
+### Changed
+- Switched the internals from using custom common package, to make use of the 2D Common package.
+
 ## [3.0.0] - 2025-07-17
 
 ### Fixed
