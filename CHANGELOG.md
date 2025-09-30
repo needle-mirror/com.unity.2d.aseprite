@@ -1,6 +1,8 @@
 # Changelog
 
-# Changelog
+## [4.0.0] - 2025-09-30
+### Changed
+- Update Unity min version for package.
 
 ## [3.0.1] - 2025-09-15
 ### Changed
