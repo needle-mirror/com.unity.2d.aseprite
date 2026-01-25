@@ -1,4 +1,10 @@
 # Changelog
+## [1.1.11] - 2026-01-25
+### Fixed
+- Reduced the size of the buttons in the Export asset window. (UUM-132863)
+- Fixed an issue where the editor would display errors when reverting changes to the Import Mode in the inspector. (UUM-132892)
+- Fixed an issue where changes to the Pivot Alignment in the inspector could not be reverted. (UUM-132868)
+
 ## [1.1.10] - 2025-07-01
 ### Fixed
 - Fixed an issue where the "Export Animation Assets"-button had an additional offset of 15 px to the right. (DANB-1000)
