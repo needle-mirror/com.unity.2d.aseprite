@@ -126,10 +126,10 @@ namespace UnityEditor.U2D.Aseprite
             return mergedCells;
         }
 
-        public static void CollectDataFromCells(List<Cell> cells, out List<NativeArray<Color32>> cellBuffers, out List<int2> cellSize)
+        public static void CollectDataFromCells(List<Cell> cells, out List<NativeArray<Color32>> cellBuffers, out NativeList<int2> cellSize)
         {
             cellBuffers = new List<NativeArray<Color32>>();
-            cellSize = new List<int2>();
+            cellSize = new NativeList<int2>(Allocator.Temp);
 
             for (var m = 0; m < cells.Count; ++m)
             {
@@ -142,7 +142,7 @@ namespace UnityEditor.U2D.Aseprite
             }
         }
 
-        public static void FlipCellBuffers(List<NativeArray<Color32>> imageBuffers, List<int2> cellSize)
+        public static void FlipCellBuffers(List<NativeArray<Color32>> imageBuffers, NativeList<int2> cellSize)
         {
             unsafe
             {

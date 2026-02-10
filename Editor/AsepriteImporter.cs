@@ -21,7 +21,7 @@ namespace UnityEditor.U2D.Aseprite
         [SerializeField] int m_ImporterVersion = 0;
 
         [SerializeField]
-        TextureImporterSettings m_TextureImporterSettings = new TextureImporterSettings()
+        TextureImporterSettings m_TextureImporterSettings = new ()
         {
             mipmapEnabled = false,
             mipmapFilter = TextureImporterMipFilter.BoxFilter,
@@ -74,7 +74,7 @@ namespace UnityEditor.U2D.Aseprite
             wrapModeW = TextureWrapMode.Clamp
         };
 
-        static readonly AsepriteImporterSettings k_DefaultImporterSettings = new AsepriteImporterSettings()
+        static readonly AsepriteImporterSettings k_DefaultImporterSettings = new ()
         {
             fileImportMode = FileImportModes.AnimatedSprite,
             importHiddenLayers = false,
@@ -95,46 +95,35 @@ namespace UnityEditor.U2D.Aseprite
         [SerializeField] AsepriteImporterSettings m_PreviousAsepriteImporterSettings;
         [SerializeField] AsepriteImporterSettings m_AsepriteImporterSettings = k_DefaultImporterSettings;
 
-        // Use for inspector to check if the file node is checked
-        [SerializeField]
-#pragma warning disable 169, 414
-        bool m_ImportFileNodeState = true;
-
         // Used by platform settings to mark it dirty so that it will trigger a reimport
-        [SerializeField]
-#pragma warning disable 169, 414
-        long m_PlatformSettingsDirtyTick;
+        [SerializeField] long m_PlatformSettingsDirtyTick;
 
-        [SerializeField] string m_TextureAssetName = null;
-
-        [SerializeField] List<SpriteMetaData> m_SingleSpriteImportData = new List<SpriteMetaData>(1) { new SpriteMetaData() };
+        [SerializeField] List<SpriteMetaData> m_SingleSpriteImportData = new (1) { new SpriteMetaData() };
         [FormerlySerializedAs("m_MultiSpriteImportData")]
-        [SerializeField] List<SpriteMetaData> m_AnimatedSpriteImportData = new List<SpriteMetaData>();
-        [SerializeField] List<SpriteMetaData> m_SpriteSheetImportData = new List<SpriteMetaData>();
-        [SerializeField] List<SpriteMetaData> m_TileSetImportData = new List<SpriteMetaData>();
+        [SerializeField] List<SpriteMetaData> m_AnimatedSpriteImportData = new ();
+        [SerializeField] List<SpriteMetaData> m_SpriteSheetImportData = new ();
+        [SerializeField] List<SpriteMetaData> m_TileSetImportData = new ();
 
-        [SerializeField] List<Layer> m_AsepriteLayers = new List<Layer>();
-        [SerializeField] List<TileSet> m_TileSets = new List<TileSet>();
+        [SerializeField] List<Layer> m_AsepriteLayers = new ();
+        [SerializeField] List<TileSet> m_TileSets = new ();
 
-        [SerializeField] List<TextureImporterPlatformSettings> m_PlatformSettings = new List<TextureImporterPlatformSettings>();
+        [SerializeField] List<TextureImporterPlatformSettings> m_PlatformSettings = new ();
 
         [SerializeField] bool m_GeneratePhysicsShape = false;
         [SerializeField] SecondarySpriteTexture[] m_SecondarySpriteTextures;
-        [SerializeField] string m_SpritePackingTag = "";
-
-        SpriteImportMode spriteImportModeToUse => m_TextureImporterSettings.textureType != TextureImporterType.Sprite ?
-            SpriteImportMode.None : (SpriteImportMode)m_TextureImporterSettings.spriteMode;
+        
+        [SerializeField] Vector2 m_PreviousTextureSize;
+        [SerializeField] Vector2Int m_CanvasSize;
+        
+        SpriteImportMode spriteImportModeToUse => m_TextureImporterSettings.textureType != TextureImporterType.Sprite ? SpriteImportMode.None : (SpriteImportMode)m_TextureImporterSettings.spriteMode;
 
         AsepriteImportData m_ImportData;
         AsepriteFile m_AsepriteFile;
-        List<Tag> m_Tags = new List<Tag>();
-        List<Frame> m_Frames = new List<Frame>();
-
-        [SerializeField] Vector2Int m_CanvasSize;
-        [SerializeField] Vector2 m_PreviousTextureSize;
+        List<Tag> m_Tags = new ();
+        List<Frame> m_Frames = new ();
 
         GameObject m_RootGameObject;
-        readonly Dictionary<int, GameObject> m_LayerIdToGameObject = new Dictionary<int, GameObject>();
+        readonly Dictionary<int, GameObject> m_LayerIdToGameObject = new ();
 
         AsepriteImportData importData
         {
@@ -222,108 +211,31 @@ namespace UnityEditor.U2D.Aseprite
                 
                 m_AsepriteLayers = FetchImageDataFromLayers(layersFromFile, m_AsepriteLayers, out var imageBuffers, out var imageSizes);
                 FetchImageDataFromTilemaps(imageBuffers, imageSizes);
-
-                // Pack Sprites
-                var widthArr = new int[imageSizes.Count];
-                var heightArr = new int[imageSizes.Count];
-                for (var i = 0; i < imageSizes.Count; i++)
-                {
-                    widthArr[i] = imageSizes[i].x;
-                    heightArr[i] = imageSizes[i].y;
-                }
-                var mosaicPad = m_AsepriteImporterSettings.mosaicPadding;
-                var spritePad = m_AsepriteImporterSettings.fileImportMode == FileImportModes.AnimatedSprite ? m_AsepriteImporterSettings.spritePadding : 0;
-                var requireSquarePotTexture = IsRequiringSquarePotTexture(ctx);
-                ImagePacker.Pack(imageBuffers.ToArray(), widthArr, heightArr, (int)mosaicPad, spritePad, out var outputImageBuffer, out var packedTextureWidth, out var packedTextureHeight, out var spriteRects, out var uvTransforms, requireSquarePotTexture);
-
-                var packOffsets = new Vector2Int[spriteRects.Length];
-                for (var i = 0; i < packOffsets.Length; ++i)
-                {
-                    packOffsets[i] = new Vector2Int(uvTransforms[i].x - spriteRects[i].position.x, uvTransforms[i].y - spriteRects[i].position.y);
-                    packOffsets[i] *= -1;
-                }
                 
-                // SpriteMetaData creation & merging
-                SpriteMetaData[] spriteImportData;
-                if (m_AsepriteImporterSettings.fileImportMode == FileImportModes.SpriteSheet)
-                    spriteImportData = GetSpriteImportData().ToArray();
-                else
-                {
-                    CellTasks.GetCellsFromLayers(m_AsepriteLayers, out var cells);
-                    var newSpriteMeta = new List<SpriteMetaData>(cells.Count);
-
-                    // Create SpriteMetaData for each cell
-                    var importedRectsHaveChanged = false;
-                    foreach (var cell in cells)
-                    {
-                        var dataIndex = newSpriteMeta.Count;
-                        var spriteData = CreateNewSpriteMetaData(
-                            cell.name,
-                            cell.spriteId,
-                            cell.cellRect.position,
-                            spriteRects[dataIndex],
-                            packOffsets[dataIndex],
-                            uvTransforms[dataIndex],
-                            new int2(m_CanvasSize.x, m_CanvasSize.y));
-                        newSpriteMeta.Add(spriteData);
-
-                        if (cell.updatedCellRect)
-                            importedRectsHaveChanged = true;
-                    }
-
-                    // Create SpriteMetaData for each tile
-                    foreach (var tileSet in m_TileSets)
-                    {
-                        var tiles = tileSet.tiles;
-                        foreach (var tile in tiles)
-                        {
-                            var dataIndex = newSpriteMeta.Count;
-                            var spriteData = CreateNewSpriteMetaData(
-                                tile.name,
-                                tile.spriteId,
-                                Vector2Int.one,
-                                spriteRects[dataIndex],
-                                packOffsets[dataIndex],
-                                uvTransforms[dataIndex],
-                                tile.size);
-                            newSpriteMeta.Add(spriteData);
-                        }
-                    }
-
-                    // If the packing texture size has changed, the rects will have a new position which must be taken into account.
-                    // OR
-                    // The import mode is set to Tile Set.
-                    if (Math.Abs(m_PreviousTextureSize.x - packedTextureWidth) > Mathf.Epsilon
-                        || Math.Abs(m_PreviousTextureSize.y - packedTextureHeight) > Mathf.Epsilon
-                        || importMode == FileImportModes.TileSet)
-                    {
-                        importedRectsHaveChanged = true;
-                    }
-
-                    spriteImportData = MergeNewAndExistingSpriteMeta(newSpriteMeta, GetSpriteImportData(), spriteRects, uvTransforms, importedRectsHaveChanged);
-                }
+                var packOffsets = PackSprites(ctx, imageBuffers.ToArray(), imageSizes, out var uvTransforms, out var spriteRects, out var outputImageBuffer, out var packedTextureSize);
+                var spriteImportData = GetSpriteMetaData(spriteRects, packOffsets, uvTransforms, packedTextureSize);
 
                 // These two values should be set before we generate the Texture (and the Sprites)
                 // as the values are used in OnPostprocessSprites by 2D Animation.
-                textureActualHeight = packedTextureHeight;
-                textureActualWidth = packedTextureWidth;
+                textureActualHeight = packedTextureSize.y;
+                textureActualWidth = packedTextureSize.x;
                 m_PreviousTextureSize = new Vector2(textureActualWidth, textureActualHeight);
 
-                var output = TextureGeneration.Generate(
+                var mainOutput = TextureGeneration.Generate(
                     ctx,
                     outputImageBuffer,
-                    packedTextureWidth,
-                    packedTextureHeight,
+                    packedTextureSize.x,
+                    packedTextureSize.y,
                     spriteImportData,
                     in m_PlatformSettings,
                     in m_TextureImporterSettings,
-                    m_SpritePackingTag,
+                    string.Empty,
                     in m_SecondarySpriteTextures);
 
-                if (output.texture)
+                if (mainOutput.texture)
                 {
-                    importData.importedTextureHeight = output.texture.height;
-                    importData.importedTextureWidth = output.texture.width;
+                    importData.importedTextureHeight = mainOutput.texture.height;
+                    importData.importedTextureWidth = mainOutput.texture.width;
                 }
                 else
                 {
@@ -332,11 +244,11 @@ namespace UnityEditor.U2D.Aseprite
                 }
 
                 // Physics outline
-                if (output.texture != null && output.sprites != null)
-                    SetPhysicsOutline(GetDataProvider<ISpritePhysicsOutlineDataProvider>(), output.sprites, definitionScale, pixelsPerUnit, m_GeneratePhysicsShape);
+                if (mainOutput.texture != null && mainOutput.sprites != null)
+                    SetPhysicsOutline(GetDataProvider<ISpritePhysicsOutlineDataProvider>(), mainOutput.sprites, definitionScale, pixelsPerUnit, m_GeneratePhysicsShape);
 
                 // Create sub assets
-                RegisterAssets(ctx, output);
+                RegisterAssets(ctx, mainOutput);
                 
                 // Post import hook for external use
                 OnPostAsepriteImport?.Invoke(new ImportEventArgs(this, ctx));
@@ -616,7 +528,7 @@ namespace UnityEditor.U2D.Aseprite
             }
         }
 
-        List<Layer> FetchImageDataFromLayers(List<Layer> newLayers, IReadOnlyList<Layer> oldLayers, out List<NativeArray<Color32>> imageBuffers, out List<int2> imageSizes)
+        List<Layer> FetchImageDataFromLayers(List<Layer> newLayers, IReadOnlyList<Layer> oldLayers, out List<NativeArray<Color32>> imageBuffers, out NativeList<int2> imageSizes)
         {
             // TileSet will always be in individual layers, since each layer can refer to a different tileSet.
             var isIndividual = layerImportMode == LayerImportModes.IndividualLayers || importMode == FileImportModes.TileSet; 
@@ -699,10 +611,10 @@ namespace UnityEditor.U2D.Aseprite
             return finalLayers;
         }
 
-        void FetchImageDataFromTilemaps(List<NativeArray<Color32>> imageBuffers, List<int2> imageSizes)
+        void FetchImageDataFromTilemaps(List<NativeArray<Color32>> imageBuffers, NativeList<int2> imageSizes)
         {
             var images = new List<NativeArray<Color32>>();
-            var sizes = new List<int2>();
+            var sizes = new NativeList<int2>(Allocator.Temp);
             for (var i = 0; i < m_TileSets.Count; ++i)
             {
                 var tiles = m_TileSets[i].tiles;
@@ -717,7 +629,35 @@ namespace UnityEditor.U2D.Aseprite
             imageBuffers.AddRange(images);
             imageSizes.AddRange(sizes);
         }
+        
+        /// <summary>
+        /// Pack Sprites
+        /// </summary>
+        NativeArray<int2> PackSprites(AssetImportContext ctx, NativeArray<Color32>[] imageBuffers, NativeList<int2> imageSizes, out Vector2Int[] uvTransforms, out RectInt[] spriteRects, out NativeArray<Color32> outputImageBuffer, out int2 packedTextureSize)
+        {
+            var widthArr = new int[imageSizes.Count];
+            var heightArr = new int[imageSizes.Count];
+            for (var i = 0; i < imageSizes.Count; i++)
+            {
+                widthArr[i] = imageSizes[i].x;
+                heightArr[i] = imageSizes[i].y;
+            }
+            var mosaicPad = m_AsepriteImporterSettings.mosaicPadding;
+            var spritePad = m_AsepriteImporterSettings.fileImportMode == FileImportModes.AnimatedSprite ? m_AsepriteImporterSettings.spritePadding : 0;
+            var requireSquarePotTexture = IsRequiringSquarePotTexture(ctx);
+            ImagePacker.Pack(imageBuffers, widthArr, heightArr, (int)mosaicPad, spritePad, out outputImageBuffer, out var packedTextureWidth, out var packedTextureHeight, out spriteRects, out uvTransforms, requireSquarePotTexture);
+            packedTextureSize = new int2(packedTextureWidth, packedTextureHeight);
 
+            var packOffsets = new NativeArray<int2>(spriteRects.Length, Allocator.Temp);
+            for (var i = 0; i < packOffsets.Length; ++i)
+            {
+                packOffsets[i] = new int2(uvTransforms[i].x - spriteRects[i].position.x, uvTransforms[i].y - spriteRects[i].position.y);
+                packOffsets[i] *= -1;
+            }
+
+            return packOffsets;
+        }   
+        
         bool IsRequiringSquarePotTexture(AssetImportContext ctx)
         {
 #pragma warning disable CS0618
@@ -725,6 +665,74 @@ namespace UnityEditor.U2D.Aseprite
             return platformSettings.format is >= TextureImporterFormat.PVRTC_RGB2 and <= TextureImporterFormat.PVRTC_RGBA4;
 #pragma warning restore CS0618
         }
+        
+        /// <summary>
+        /// SpriteMetaData creation & merging
+        /// </summary>
+        SpriteMetaData[] GetSpriteMetaData(RectInt[] spriteRects, NativeArray<int2> packOffsets, Vector2Int[] uvTransforms, int2 packedTextureSize)
+        {
+            SpriteMetaData[] spriteImportData;
+            if (m_AsepriteImporterSettings.fileImportMode == FileImportModes.SpriteSheet)
+                spriteImportData = GetSpriteImportData().ToArray();
+            else
+            {
+                CellTasks.GetCellsFromLayers(m_AsepriteLayers, out var cells);
+                var newSpriteMeta = new List<SpriteMetaData>(cells.Count);
+
+                // Create SpriteMetaData for each cell
+                var importedRectsHaveChanged = false;
+                foreach (var cell in cells)
+                {
+                    var dataIndex = newSpriteMeta.Count;
+                    var spriteData = CreateNewSpriteMetaData(
+                        this,
+                        cell.name,
+                        cell.spriteId,
+                        cell.cellRect.position,
+                        spriteRects[dataIndex],
+                        packOffsets[dataIndex],
+                        new int2(uvTransforms[dataIndex].x, uvTransforms[dataIndex].y),
+                        new int2(m_CanvasSize.x, m_CanvasSize.y));
+                    newSpriteMeta.Add(spriteData);
+
+                    if (cell.updatedCellRect)
+                        importedRectsHaveChanged = true;
+                }
+
+                // Create SpriteMetaData for each tile
+                foreach (var tileSet in m_TileSets)
+                {
+                    var tiles = tileSet.tiles;
+                    foreach (var tile in tiles)
+                    {
+                        var dataIndex = newSpriteMeta.Count;
+                        var spriteData = CreateNewSpriteMetaData(
+                            this,
+                            tile.name,
+                            tile.spriteId,
+                            Vector2Int.one,
+                            spriteRects[dataIndex],
+                            packOffsets[dataIndex],
+                            new int2(uvTransforms[dataIndex].x, uvTransforms[dataIndex].y),
+                            tile.size);
+                        newSpriteMeta.Add(spriteData);
+                    }
+                }
+
+                // If the packing texture size has changed, the rects will have a new position which must be taken into account.
+                // OR
+                // The import mode is set to Tile Set.
+                if (Math.Abs(m_PreviousTextureSize.x - packedTextureSize.x) > Mathf.Epsilon
+                    || Math.Abs(m_PreviousTextureSize.y - packedTextureSize.y) > Mathf.Epsilon
+                    || importMode == FileImportModes.TileSet)
+                {
+                    importedRectsHaveChanged = true;
+                }
+
+                spriteImportData = MergeNewAndExistingSpriteMeta(newSpriteMeta, GetSpriteImportData(), spriteRects, uvTransforms, importedRectsHaveChanged);
+            }
+            return spriteImportData;
+        }        
 
         static List<Frame> ExtractFrameData(AsepriteFile file)
         {
@@ -760,6 +768,10 @@ namespace UnityEditor.U2D.Aseprite
                 var dataText = cellChunk.dataChunk.text;
                 if (string.IsNullOrEmpty(dataText) || !dataText.StartsWith("event:"))
                     continue;
+
+                // Remove newlines & white spaces
+                dataText = dataText.Trim();
+                
                 var eventString = dataText.Remove(0, "event:".Length);
                 var eventParts = eventString.Split(',');
                 if (eventParts.Length == 0)
@@ -963,22 +975,24 @@ namespace UnityEditor.U2D.Aseprite
                     spritePadding != m_PreviousAsepriteImporterSettings.spritePadding);
         }
 
-        SpriteMetaData CreateNewSpriteMetaData(
+        static SpriteMetaData CreateNewSpriteMetaData(
+            AsepriteImporter importer,
             string spriteName,
             GUID spriteID,
             Vector2Int position,
             RectInt spriteRect,
-            Vector2Int packOffset,
-            Vector2Int uvTransform,
+            int2 packOffset,
+            int2 uvTransform,
             int2 canvasSize)
         {
             var spriteData = new SpriteMetaData();
             spriteData.border = Vector4.zero;
 
-            if (importMode == FileImportModes.TileSet)
+            if (importer.importMode == FileImportModes.TileSet)
             {
                 // Get the position of the sprite in the tile
-                var spritePosition = (Vector2)uvTransform;
+                var spritePosition = new Vector2Int(uvTransform.x, uvTransform.y);
+                
                 // Remove the mosaic padding
                 spritePosition.x -= spriteRect.x;
                 spritePosition.y -= spriteRect.y;
@@ -999,7 +1013,7 @@ namespace UnityEditor.U2D.Aseprite
                 spriteData.alignment = SpriteAlignment.Custom;
                 spriteData.pivot = pivot;
             }
-            else if (pivotSpace == PivotSpaces.Canvas)
+            else if (importer.pivotSpace == PivotSpaces.Canvas)
             {
                 spriteData.alignment = SpriteAlignment.Custom;
 
@@ -1007,18 +1021,18 @@ namespace UnityEditor.U2D.Aseprite
                 cellRect.x += packOffset.x;
                 cellRect.y += packOffset.y;
 
-                spriteData.pivot = ImportUtilities.CalculateCellPivot(cellRect, spritePadding, canvasSize, pivotAlignment, customPivotPosition);
+                spriteData.pivot = ImportUtilities.CalculateCellPivot(cellRect, importer.spritePadding, canvasSize, importer.pivotAlignment, importer.customPivotPosition);
             }
             else
             {
-                spriteData.alignment = pivotAlignment;
-                spriteData.pivot = customPivotPosition;
+                spriteData.alignment = importer.pivotAlignment;
+                spriteData.pivot = importer.customPivotPosition;
             }
 
             spriteData.rect = new Rect(spriteRect.x, spriteRect.y, spriteRect.width, spriteRect.height);
             spriteData.spriteID = spriteID;
             spriteData.name = spriteName;
-            spriteData.uvTransform = uvTransform;
+            spriteData.uvTransform = new Vector2Int(uvTransform.x, uvTransform.y);
             return spriteData;
         }
 
@@ -1120,7 +1134,7 @@ namespace UnityEditor.U2D.Aseprite
 
         void RegisterTextureAsset(AssetImportContext ctx, TextureGenerationOutput output, string assetName, ref UnityEngine.Object mainAsset)
         {
-            var registerTextureNameId = string.IsNullOrEmpty(m_TextureAssetName) ? "Texture" : m_TextureAssetName;
+            const string registerTextureNameId = "Texture";
 
             output.texture.name = assetName;
             ctx.AddObjectToAsset(registerTextureNameId, output.texture, output.thumbNail);

@@ -7,7 +7,7 @@ namespace UnityEditor.U2D.Aseprite
 {
     internal static class ImportMergedLayers
     {
-        public static void Import(string assetName, List<Layer> layers, out List<NativeArray<Color32>> cellBuffers, out List<int2> cellSize)
+        public static void Import(string assetName, List<Layer> layers, out List<NativeArray<Color32>> cellBuffers, out NativeList<int2> cellSize)
         {
             var cellsPerFrame = CellTasks.GetAllCellsPerFrame(layers);
             var mergedCells = CellTasks.MergeCells(cellsPerFrame, assetName);
