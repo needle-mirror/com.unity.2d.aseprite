@@ -1,6 +1,8 @@
 # Changelog
 
 
+## [5.0.2] - 2026-02-17
+
 ## [5.0.1] - 2026-02-10
 ### Changed
 - Update Unity min version for package.
