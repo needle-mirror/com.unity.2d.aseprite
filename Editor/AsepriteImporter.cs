@@ -760,6 +760,10 @@ namespace UnityEditor.U2D.Aseprite
                 var dataText = cellChunk.dataChunk.text;
                 if (string.IsNullOrEmpty(dataText) || !dataText.StartsWith("event:"))
                     continue;
+
+                // Remove newlines & white spaces
+                dataText = dataText.Trim();
+                
                 var eventString = dataText.Remove(0, "event:".Length);
                 var eventParts = eventString.Split(',');
                 if (eventParts.Length == 0)
