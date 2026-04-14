@@ -1,4 +1,7 @@
 # Changelog
+## [4.0.2] - 2026-04-14
+### Fixed
+- Fixed an issue where you could not change an Aseprite file containing tile data to AnimatedSprite import mode. (UUM-135150)
 
 ## [4.0.1] - 2026-02-23
 ### Fixed

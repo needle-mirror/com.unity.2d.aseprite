@@ -383,7 +383,8 @@ namespace UnityEditor.U2D.Aseprite
 
         void SelectDefaultImportMode(AsepriteFile file)
         {
-            if (!m_AsepriteImporterSettings.Equals(k_DefaultImporterSettings))
+            // Only select an import mode if this is the file's first import. 
+            if (m_PreviousAsepriteImporterSettings != default)
                 return;
 
             // If the file contains TilesetChunks, we assume that the user wants to use the file as a Tile Set.
@@ -582,7 +583,7 @@ namespace UnityEditor.U2D.Aseprite
                 for (var m = cells.Count - 1; m >= 0; --m)
                 {
                     var width = cells[m].cellRect.width;
-                    var height = cells[m].cellRect.width;
+                    var height = cells[m].cellRect.height;
                     if (width == 0 || height == 0)
                         cells.RemoveAt(m);
                     else if (cells[m].image == default || !cells[m].image.IsCreated)

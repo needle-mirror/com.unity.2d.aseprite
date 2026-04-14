@@ -149,5 +149,15 @@ namespace UnityEditor.U2D.Aseprite
                 return hashCode;
             }
         }
+
+        public static bool operator ==(in AsepriteImporterSettings left, in AsepriteImporterSettings right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(in AsepriteImporterSettings left, in AsepriteImporterSettings right)
+        {
+            return !left.Equals(right);
+        }
     }
 }
