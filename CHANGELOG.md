@@ -1,6 +1,14 @@
 # Changelog
+## [3.0.2] - 2026-04-29
+### Fixed
+- Reduced the size of the buttons in the Export asset window. (UUM-132863)
+- Fixed an issue where the editor would display errors when reverting changes to the Import Mode in the inspector. (UUM-132892)
+- Fixed an issue where changes to the Pivot Alignment in the inspector could not be reverted. (UUM-132868)
+- Fixed an issue where new lines and white spaces would create unusable animation events. (UUM-133339)
+- Fixed an issue where you could not change an Aseprite file containing tile data to AnimatedSprite import mode. (UUM-135150)
 
-# Changelog
+### Changed
+- Align online documentation URLs: package docs to @3.0; Unity Manual/Script Reference links to Unity 6000.3.
 
 ## [3.0.1] - 2025-09-15
 ### Changed

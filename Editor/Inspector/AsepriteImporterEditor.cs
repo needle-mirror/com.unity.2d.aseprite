@@ -290,17 +290,17 @@ namespace UnityEditor.U2D.Aseprite
             });
             foldOut.Add(ppuField);
 
-            var meshField = new PopupField<string>(styles.spriteMeshTypeOptions, m_SpriteMeshType.intValue)
+            var meshField = new EnumField(styles.spriteMeshType.text, (SpriteMeshType)m_SpriteMeshType.intValue)
             {
-                label = styles.spriteMeshType.text,
-                tooltip = styles.spriteMeshType.tooltip
+                tooltip = styles.spriteMeshType.tooltip,
+                bindingPath = m_SpriteMeshType.propertyPath,
             };
-            meshField.AddToClassList(k_BaseFieldAlignedUssClass);
-            meshField.RegisterValueChangedCallback(x =>
+            meshField.RegisterValueChangedCallback((x) =>
             {
-                m_SpriteMeshType.intValue = meshField.index;
+                m_SpriteMeshType.intValue = (int)(SpriteMeshType)x.newValue;
                 serializedObject.ApplyModifiedProperties();
             });
+            meshField.AddToClassList(k_BaseFieldAlignedUssClass);
             foldOut.Add(meshField);
 
             var physicsShapeField = new PropertyField(m_GeneratePhysicsShape, styles.generatePhysicsShape.text)
@@ -385,28 +385,23 @@ namespace UnityEditor.U2D.Aseprite
             }).Every(k_PollForChangesInternal);
             hiddenLayersField.Bind(serializedObject);
             foldOut.Add(hiddenLayersField);
-
-            var layerModePopup = new PopupField<string>(s_Styles.layerImportOptions, m_LayerImportMode.intValue)
+            
+            var layerModeField = new EnumField(s_Styles.layerImportMode.text, (LayerImportModes) m_LayerImportMode.intValue)
             {
-                label = s_Styles.layerImportMode.text,
-                tooltip = s_Styles.layerImportMode.tooltip
+                tooltip = s_Styles.layerImportMode.tooltip,
+                bindingPath = m_LayerImportMode.propertyPath
             };
-            layerModePopup.RegisterValueChangedCallback(_ =>
-            {
-                m_LayerImportMode.intValue = layerModePopup.index;
-                serializedObject.ApplyModifiedProperties();
-            });
-            layerModePopup.schedule.Execute(() =>
+            layerModeField.schedule.Execute(() =>
             {
                 var shouldShow = fileImportMode is FileImportModes.AnimatedSprite;
-                if (layerModePopup.visible != shouldShow)
+                if (layerModeField.visible != shouldShow)
                 {
-                    layerModePopup.visible = shouldShow;
-                    layerModePopup.EnableInClassList(k_HiddenElementUssClass, !shouldShow);
+                    layerModeField.visible = shouldShow;
+                    layerModeField.EnableInClassList(k_HiddenElementUssClass, !shouldShow);
                 }
             }).Every(k_PollForChangesInternal);
-            layerModePopup.AddToClassList(k_BaseFieldAlignedUssClass);
-            foldOut.Add(layerModePopup);
+            layerModeField.AddToClassList(k_BaseFieldAlignedUssClass);
+            foldOut.Add(layerModeField);
 
             var pivotSpaceField = new PropertyField(m_DefaultPivotSpace, styles.defaultPivotSpace.text)
             {
@@ -424,29 +419,24 @@ namespace UnityEditor.U2D.Aseprite
             }).Every(k_PollForChangesInternal);
             foldOut.Add(pivotSpaceField);
 
-            var pivotAlignmentPopup = new PopupField<string>(s_Styles.spriteAlignmentOptions, m_DefaultPivotAlignment.intValue)
+            var pivotAlignmentField = new EnumField(s_Styles.defaultPivotAlignment.text, (SpriteAlignment)m_DefaultPivotAlignment.intValue)
             {
-                label = s_Styles.defaultPivotAlignment.text,
-                tooltip = s_Styles.defaultPivotAlignment.tooltip
+                tooltip = s_Styles.defaultPivotAlignment.tooltip,
+                bindingPath = m_DefaultPivotAlignment.propertyPath
             };
-            pivotAlignmentPopup.RegisterValueChangedCallback(x =>
-            {
-                m_DefaultPivotAlignment.intValue = pivotAlignmentPopup.index;
-                serializedObject.ApplyModifiedProperties();
-            });
-            pivotAlignmentPopup.AddToClassList(k_BaseFieldAlignedUssClass);
-            pivotAlignmentPopup.schedule.Execute(() =>
+            pivotAlignmentField.AddToClassList(k_BaseFieldAlignedUssClass);
+            pivotAlignmentField.schedule.Execute(() =>
             {
                 var shouldShow = fileImportMode == FileImportModes.AnimatedSprite;
-                if (pivotAlignmentPopup.visible != shouldShow)
+                if (pivotAlignmentField.visible != shouldShow)
                 {
-                    pivotAlignmentPopup.visible = shouldShow;
-                    pivotAlignmentPopup.EnableInClassList(k_HiddenElementUssClass, !shouldShow);
+                    pivotAlignmentField.visible = shouldShow;
+                    pivotAlignmentField.EnableInClassList(k_HiddenElementUssClass, !shouldShow);
                 }
             }).Every(k_PollForChangesInternal);
-            foldOut.Add(pivotAlignmentPopup);
+            foldOut.Add(pivotAlignmentField);
 
-            var shouldShow = (SpriteAlignment)pivotAlignmentPopup.index == SpriteAlignment.Custom;
+            var shouldShow = (SpriteAlignment)pivotAlignmentField.value == SpriteAlignment.Custom;
             var customPivotField = new PropertyField(m_CustomPivotPosition, styles.customPivotPosition.text)
             {
                 tooltip = styles.customPivotPosition.tooltip,
@@ -456,7 +446,7 @@ namespace UnityEditor.U2D.Aseprite
             customPivotField.EnableInClassList(k_HiddenElementUssClass, !shouldShow);
             customPivotField.schedule.Execute(x =>
             {
-                var isShowing = (SpriteAlignment)pivotAlignmentPopup.index == SpriteAlignment.Custom;
+                var isShowing = (SpriteAlignment)pivotAlignmentField.value == SpriteAlignment.Custom;
                 if (customPivotField.visible != isShowing)
                 {
                     customPivotField.visible = isShowing;
@@ -1679,11 +1669,6 @@ namespace UnityEditor.U2D.Aseprite
             };
 
             public readonly GUIContent layerImportMode = EditorGUIUtility.TrTextContent("Import Mode", "Choose between generating one Sprite per layer, or merge all layers in a frame into a single Sprite.");
-            public readonly List<string> layerImportOptions = new()
-            {
-                L10n.Tr("Individual Layers"),
-                L10n.Tr("Merge Frame")
-            };
 
             public readonly GUIContent generateModelPrefab = EditorGUIUtility.TrTextContent("Model Prefab", "Generate a Model Prefab laid out the same way as inside Aseprite.");
 
