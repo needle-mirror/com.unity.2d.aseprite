@@ -1,5 +1,10 @@
 # Changelog
+## [5.0.3] - 2026-05-12
+### Fixed
+- Fixed an issue where you could not change an Aseprite file containing tile data to AnimatedSprite import mode. (UUM-135150)
 
+### Changed
+- Align online documentation URLs: package docs to @5.0; Unity Manual/Script Reference links to Unity 6000.5.
 
 ## [5.0.2] - 2026-02-17
 

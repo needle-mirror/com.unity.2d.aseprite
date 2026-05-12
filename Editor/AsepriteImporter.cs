@@ -15,7 +15,7 @@ namespace UnityEditor.U2D.Aseprite
     /// </summary>
     // Version using unity release + 5 digit padding for future upgrade. Eg 2021.2 -> 21200000
     [ScriptedImporter(21300004, new string[] { "aseprite", "ase" }, AllowCaching = true)]
-    [HelpURL("https://docs.unity3d.com/Packages/com.unity.2d.aseprite@latest")]
+    [HelpURL("https://docs.unity3d.com/Packages/com.unity.2d.aseprite@5.0")]
     public partial class AsepriteImporter : ScriptedImporter, ISpriteEditorDataProvider
     {
         [SerializeField] int m_ImporterVersion = 0;
@@ -295,7 +295,8 @@ namespace UnityEditor.U2D.Aseprite
 
         void SelectDefaultImportMode(AsepriteFile file)
         {
-            if (!m_AsepriteImporterSettings.Equals(k_DefaultImporterSettings))
+            // Only select an import mode if this is the file's first import. 
+            if (m_PreviousAsepriteImporterSettings != default)
                 return;
 
             // If the file contains TilesetChunks, we assume that the user wants to use the file as a Tile Set.
@@ -494,7 +495,7 @@ namespace UnityEditor.U2D.Aseprite
                 for (var m = cells.Count - 1; m >= 0; --m)
                 {
                     var width = cells[m].cellRect.width;
-                    var height = cells[m].cellRect.width;
+                    var height = cells[m].cellRect.height;
                     if (width == 0 || height == 0)
                         cells.RemoveAt(m);
                     else if (cells[m].image == default || !cells[m].image.IsCreated)
