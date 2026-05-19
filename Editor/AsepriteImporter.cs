@@ -15,7 +15,7 @@ namespace UnityEditor.U2D.Aseprite
     /// </summary>
     // Version using unity release + 5 digit padding for future upgrade. Eg 2021.2 -> 21200000
     [ScriptedImporter(21300004, new string[] { "aseprite", "ase" }, AllowCaching = true)]
-    [HelpURL("https://docs.unity3d.com/Packages/com.unity.2d.aseprite@5.0")]
+    [HelpURL("https://docs.unity3d.com/Packages/com.unity.2d.aseprite@latest")]
     public partial class AsepriteImporter : ScriptedImporter, ISpriteEditorDataProvider
     {
         [SerializeField] int m_ImporterVersion = 0;
