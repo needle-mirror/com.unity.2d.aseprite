@@ -1081,7 +1081,7 @@ namespace UnityEditor.U2D.Aseprite
                             index++;
                         }
                     }
-                    sprite.OverridePhysicsShape(convertedOutline);
+                    sprite.OverridePhysicsOutline(convertedOutline);
                 }
             }
         }
