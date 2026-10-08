@@ -1,6 +1,10 @@
 # Changelog
 
 
+## [7.0.1] - 2026-10-08
+### Fixed
+- Added correct .buginfo file.
+
 ## [7.0.0] - 2026-09-02
 ## [6.0.0] - 2026-05-19
 ### Fixed
