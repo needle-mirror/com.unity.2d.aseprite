@@ -1,6 +1,11 @@
 # Changelog
 
 
+
+## [7.0.2] - 2026-11-03
+### Fixed
+- Non-ASCII layer, tag and tile set names are no longer imported garbled. Existing layers and tile sets keep their sprite IDs. Animation clips made from non-ASCII tag names get new IDs, so references to them must be reassigned. (UUM-157618)
+
 ## [7.0.1] - 2026-10-08
 ### Fixed
 - Added correct .buginfo file.
