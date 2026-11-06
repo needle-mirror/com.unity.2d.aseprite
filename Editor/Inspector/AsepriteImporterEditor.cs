@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using Unity.Scripting.LifecycleManagement;
 using UnityEditor.AssetImporters;
 using UnityEditor.U2D.Aseprite.Common;
 using UnityEditor.UIElements;
@@ -1713,6 +1714,7 @@ namespace UnityEditor.U2D.Aseprite
             }
         }
 
+        [NoAutoStaticsCleanup]
         static Styles s_Styles;
 
         static Styles styles

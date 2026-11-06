@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using Unity.Scripting.LifecycleManagement;
 using UnityEditor.U2D.Aseprite.Common;
 using UnityEngine;
 
@@ -10,11 +11,16 @@ namespace UnityEditor.U2D.Aseprite
     internal static class BackgroundImport
     {
         static readonly string k_AssetsPath = "Assets/";
+        [NoAutoStaticsCleanup]
         static readonly List<string> s_AssetsFullPath = new List<string>();
+        [NoAutoStaticsCleanup]
         static bool s_HasChange = false;
+        [NoAutoStaticsCleanup]
         static bool s_LastSettingsValue = false;
 
+        [NoAutoStaticsCleanup]
         static FileSystemWatcher s_WatcherAse = null;
+        [NoAutoStaticsCleanup]
         static FileSystemWatcher s_WatcherAseprite = null;
 
         [InitializeOnLoadMethod]

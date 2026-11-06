@@ -187,7 +187,7 @@ namespace UnityEditor.U2D.Aseprite
         }
 
         [BurstCompile]
-        static void GetCombinedRect(in NativeArray<RectInt> rects, out RectInt combinedRect)
+        internal static void GetCombinedRect(in NativeArray<RectInt> rects, out RectInt combinedRect)
         {
             combinedRect = rects[0];
             for (var i = 1; i < rects.Length; ++i)
@@ -198,7 +198,7 @@ namespace UnityEditor.U2D.Aseprite
         }
 
         [BurstCompile]
-        static void FitRectInsideRect(ref RectInt baseRect, in RectInt rectToFitIn)
+        internal static void FitRectInsideRect(ref RectInt baseRect, in RectInt rectToFitIn)
         {
             if (baseRect.xMin > rectToFitIn.xMin)
                 baseRect.xMin = rectToFitIn.xMin;

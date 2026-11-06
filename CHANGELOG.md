@@ -1,9 +1,11 @@
 # Changelog
 
 
-## [7.0.1] - 2026-10-08
+## [8.0.0] - 2026-11-06
 ### Fixed
-- Added correct .buginfo file.
+- Fixed an issue where all sprites of an Aseprite file got new IDs, and references to them went missing, when the file was reimported in a new Editor session. (UUM-157004)
+- Non-ASCII layer, tag and tile set names are no longer imported garbled. Existing layers and tile sets keep their sprite IDs. Animation clips made from non-ASCII tag names get new IDs, so references to them must be reassigned. (UUM-157618)
+- Fixed UAC2017 "Failed to generate a Burst direct call" warnings. (UUM-160239)
 
 ## [7.0.0] - 2026-09-02
 ## [6.0.0] - 2026-05-19

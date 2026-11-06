@@ -53,8 +53,6 @@ namespace UnityEditor.U2D.Aseprite
                         break;
                     case TextureImporterType.Sprite:
                         var textureSpriteSettings = textureImporterSettings.ExtractTextureSpriteSettings();
-                        textureSpriteSettings.packingTag = spritePackingTag;
-                        textureSpriteSettings.qualifyForPacking = !string.IsNullOrEmpty(spritePackingTag);
                         textureSpriteSettings.spriteSheetData = new SpriteImportData[sprites.Length];
                         textureSettings.npotScale = TextureImporterNPOTScale.None;
                         textureSettings.secondaryTextures = secondarySpriteTextures;

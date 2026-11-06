@@ -90,7 +90,7 @@ namespace UnityEditor.U2D.Aseprite
         }
 
         [BurstCompile]
-        static byte BurnChannel(byte prevVal, byte inVal)
+        internal static byte BurnChannel(byte prevVal, byte inVal)
         {
             if (prevVal == 255)
                 return prevVal;
@@ -176,7 +176,7 @@ namespace UnityEditor.U2D.Aseprite
         }
 
         [BurstCompile]
-        static byte DodgeChannel(byte prevVal, byte inVal)
+        internal static byte DodgeChannel(byte prevVal, byte inVal)
         {
             if (prevVal == 0)
                 return 0;
@@ -233,7 +233,7 @@ namespace UnityEditor.U2D.Aseprite
         }
 
         [BurstCompile]
-        static byte HardLightChannel(byte valA, byte valB)
+        internal static byte HardLightChannel(byte valA, byte valB)
         {
             if (valB < 128)
                 return MultiplyUnsignedByte(valA, (byte)(valB << 1));
@@ -263,7 +263,7 @@ namespace UnityEditor.U2D.Aseprite
         }
 
         [BurstCompile]
-        static byte SoftLightChannel(byte inA, byte inB)
+        internal static byte SoftLightChannel(byte inA, byte inB)
         {
             var valA = inA / 255f;
             var valB = inB / 255f;
@@ -327,7 +327,7 @@ namespace UnityEditor.U2D.Aseprite
         }
 
         [BurstCompile]
-        static byte DifferenceChannel(byte valA, byte valB)
+        internal static byte DifferenceChannel(byte valA, byte valB)
         {
             return (byte)Mathf.Abs(valA - valB);
         }
@@ -355,7 +355,7 @@ namespace UnityEditor.U2D.Aseprite
         }
 
         [BurstCompile]
-        static byte ExclusionChannel(byte valA, byte valB)
+        internal static byte ExclusionChannel(byte valA, byte valB)
         {
             var valC = MultiplyUnsignedByte(valA, valB);
             return (byte)(valA + valB - 2 * valC);
@@ -406,7 +406,7 @@ namespace UnityEditor.U2D.Aseprite
         }
 
         [BurstCompile]
-        static byte DivideChannel(byte valA, byte valB)
+        internal static byte DivideChannel(byte valA, byte valB)
         {
             if (valA == 0)
                 return 0;
@@ -553,7 +553,7 @@ namespace UnityEditor.U2D.Aseprite
         }
 
         [BurstCompile]
-        static byte MultiplyUnsignedByte(byte valA, byte valB)
+        internal static byte MultiplyUnsignedByte(byte valA, byte valB)
         {
             const uint oneHalf = 0x80;
             const int gShift = 8;
@@ -562,25 +562,25 @@ namespace UnityEditor.U2D.Aseprite
         }
 
         [BurstCompile]
-        static byte ScreenUnsignedByte(byte valA, byte valB)
+        internal static byte ScreenUnsignedByte(byte valA, byte valB)
         {
             return (byte)(valB + valA - MultiplyUnsignedByte(valB, valA));
         }
 
         [BurstCompile]
-        static byte DivideUnsignedByte(byte valA, byte valB)
+        internal static byte DivideUnsignedByte(byte valA, byte valB)
         {
             return (byte)((valA * 0xFF) / valB);
         }
 
         [BurstCompile]
-        static float GetSaturation(float r, float g, float b)
+        internal static float GetSaturation(float r, float g, float b)
         {
             return Mathf.Max(r, Mathf.Max(g, b)) - Mathf.Min(r, Mathf.Min(g, b));
         }
 
         [BurstCompile]
-        static void SetSaturation(ref float r, ref float g, ref float b, float s)
+        internal static void SetSaturation(ref float r, ref float g, ref float b, float s)
         {
             ref var min = ref MinRef(ref r, ref MinRef(ref g, ref b));
             ref var mid = ref MidRef(ref r, ref g, ref b);
@@ -597,7 +597,6 @@ namespace UnityEditor.U2D.Aseprite
             min = 0f;
         }
 
-        [BurstCompile]
         static ref float MaxRef(ref float a, ref float b)
         {
             if (a > b)
@@ -605,7 +604,6 @@ namespace UnityEditor.U2D.Aseprite
             return ref b;
         }
 
-        [BurstCompile]
         static ref float MinRef(ref float a, ref float b)
         {
             if (a < b)
@@ -633,13 +631,13 @@ namespace UnityEditor.U2D.Aseprite
         }
 
         [BurstCompile]
-        static float GetLuminosity(float r, float g, float b)
+        internal static float GetLuminosity(float r, float g, float b)
         {
             return (0.3f * r) + (0.59f * g) + (0.11f * b);
         }
 
         [BurstCompile]
-        static void SetLuminosity(ref float r, ref float g, ref float b, float l)
+        internal static void SetLuminosity(ref float r, ref float g, ref float b, float l)
         {
             var d = l - GetLuminosity(r, g, b);
             r += d;
@@ -649,7 +647,7 @@ namespace UnityEditor.U2D.Aseprite
         }
 
         [BurstCompile]
-        static void ClipColor(ref float r, ref float g, ref float b)
+        internal static void ClipColor(ref float r, ref float g, ref float b)
         {
             var l = GetLuminosity(r, g, b);
             var n = Mathf.Min(r, Mathf.Min(g, b));

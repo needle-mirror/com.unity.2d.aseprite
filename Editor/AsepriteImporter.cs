@@ -291,6 +291,93 @@ namespace UnityEditor.U2D.Aseprite
                     layer.uuid = new UUID((uint)layer.guid, 0, 0, 0);
                 m_ImporterVersion++;
             }
+            // Upgrade from version 2 -> 3
+            // This upgrade decodes the stored names as UTF-8 and regenerates the ids generated from them.
+            if (m_ImporterVersion == 2)
+            {
+                var generatedSpriteNames = GetGeneratedSpriteNames(m_AsepriteLayers, m_TileSets);
+                UpgradeLegacyLayerNames(m_AsepriteLayers);
+                UpgradeLegacyTileSetNames(m_TileSets);
+
+                UpgradeLegacySpriteNames(m_AnimatedSpriteImportData, generatedSpriteNames);
+                UpgradeLegacySpriteNames(m_TileSetImportData, generatedSpriteNames);
+                m_ImporterVersion++;
+            }
+        }
+
+        internal static void UpgradeLegacyLayerNames(List<Layer> layers)
+        {
+            var legacyGuids = new int[layers.Count];
+            for (var i = 0; i < layers.Count; ++i)
+                legacyGuids[i] = Layer.GenerateGuid(layers[i], layers);
+
+            // Ids contain the parent names, so all names are upgraded first.
+            // Decoded names can be equal, so they are made unique the same way as on import.
+            var nameGenerator = new UniqueNameGenerator();
+            foreach (var layer in layers)
+                layer.name = nameGenerator.GetUniqueName(AsepriteUtilities.UpgradeLegacyString(layer.name), layer.parentIndex);
+
+            for (var i = 0; i < layers.Count; ++i)
+            {
+                var layer = layers[i];
+                var legacyGuid = legacyGuids[i];
+                var newGuid = Layer.GenerateGuid(layer, layers);
+                if (newGuid == legacyGuid)
+                    continue;
+
+                // UUIDs read from the file are kept
+                if (layer.uuid == new UUID((uint)legacyGuid, 0, 0, 0))
+                    layer.uuid = new UUID((uint)newGuid, 0, 0, 0);
+                if (layer.guid == legacyGuid)
+                    layer.guid = newGuid;
+            }
+        }
+
+        internal static void UpgradeLegacyTileSetNames(List<TileSet> tileSets)
+        {
+            var tileSetNames = new HashSet<string>();
+            foreach (var tileSet in tileSets)
+            {
+                var legacyGuid = TileSet.GenerateGuid(tileSet);
+                tileSet.name = GetUniqueTileSetName(AsepriteUtilities.UpgradeLegacyString(tileSet.name), tileSet.id, tileSetNames);
+                if (tileSet.guid == legacyGuid)
+                    tileSet.guid = TileSet.GenerateGuid(tileSet);
+            }
+        }
+
+        static Dictionary<GUID, string> GetGeneratedSpriteNames(List<Layer> layers, List<TileSet> tileSets)
+        {
+            var generatedSpriteNames = new Dictionary<GUID, string>();
+            foreach (var layer in layers)
+            {
+                foreach (var cell in layer.cells)
+                    generatedSpriteNames[cell.spriteId] = cell.name;
+            }
+            foreach (var tileSet in tileSets)
+            {
+                foreach (var tile in tileSet.tiles)
+                    generatedSpriteNames[tile.spriteId] = tile.name;
+            }
+            return generatedSpriteNames;
+        }
+
+        internal static void UpgradeLegacySpriteNames(List<SpriteMetaData> spriteMetaData, Dictionary<GUID, string> generatedSpriteNames)
+        {
+            foreach (var spriteData in spriteMetaData)
+            {
+                // Names the user changed in the Sprite Editor are kept
+                if (!generatedSpriteNames.TryGetValue(spriteData.spriteID, out var generatedName) || spriteData.name != generatedName)
+                    continue;
+                spriteData.name = AsepriteUtilities.UpgradeLegacyString(spriteData.name);
+            }
+        }
+
+        static string GetUniqueTileSetName(string tileSetName, uint tileSetId, HashSet<string> tileSetNames)
+        {
+            if (tileSetNames.Contains(tileSetName))
+                tileSetName = $"{tileSetName}_{tileSetId}";
+            tileSetNames.Add(tileSetName);
+            return tileSetName;
         }
 
         void SelectDefaultImportMode(AsepriteFile file)
@@ -861,13 +948,8 @@ namespace UnityEditor.U2D.Aseprite
                     var tileWidth = tileSetChunk.width;
                     var tileHeight = tileSetChunk.height;
                     var tileSize = new int2(tileWidth, tileHeight);
-                    var tileSetName = tileSetChunk.tileSetName;
                     var tileSetId = tileSetChunk.tileSetId;
-
-                    // Ensure the tileSets have unique names
-                    if (tileSetNames.Contains(tileSetName))
-                        tileSetName = $"{tileSetName}_{tileSetId}";
-                    tileSetNames.Add(tileSetName);
+                    var tileSetName = GetUniqueTileSetName(tileSetChunk.tileSetName, tileSetId, tileSetNames);
 
                     var tiles = new List<Tile>();
                     for (uint j = 0; j < noOfTiles; ++j)

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Unity.Scripting.LifecycleManagement;
 using UnityEditor.U2D.Aseprite.Common;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -38,8 +39,10 @@ namespace UnityEditor.U2D.Aseprite
 
     internal class SpriteFrameEditCapabilityDataProvider : AsepriteDataProvider, ISpriteFrameEditCapability
     {
-        static EditCapability k_DefaultEditCapability = new EditCapability(EEditCapability.EditPivot);
-        static EditCapability k_SpriteSheetCapabilities = new EditCapability(EEditCapability.All);
+        [NoAutoStaticsCleanup]
+        static readonly EditCapability k_DefaultEditCapability = new EditCapability(EEditCapability.EditPivot);
+        [NoAutoStaticsCleanup]
+        static readonly EditCapability k_SpriteSheetCapabilities = new EditCapability(EEditCapability.All);
 
         public EditCapability GetEditCapability()
         {

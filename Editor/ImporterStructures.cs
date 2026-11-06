@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEditor.U2D.Common;
 
 namespace UnityEditor.U2D.Aseprite
 {
@@ -106,7 +107,7 @@ namespace UnityEditor.U2D.Aseprite
 
             } while (parent != null);
 
-            var hash = fullName.GetHashCode();
+            var hash = StableStringHash.Compute(fullName);
             return hash;
         }
     }
@@ -301,7 +302,7 @@ namespace UnityEditor.U2D.Aseprite
 
         public static int GenerateGuid(TileSet tileSet)
         {
-            var hash = tileSet.name.GetHashCode();
+            var hash = StableStringHash.Compute(tileSet.name);
             hash = (hash * 397) ^ tileSet.id.GetHashCode();
             return hash;
         }

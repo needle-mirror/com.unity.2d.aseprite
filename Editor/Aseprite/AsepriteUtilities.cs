@@ -2,24 +2,58 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Text;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
+using Unity.Scripting.LifecycleManagement;
 using UnityEngine;
 
 namespace UnityEditor.U2D.Aseprite
 {
     internal static class AsepriteUtilities
     {
+        [NoAutoStaticsCleanup]
+        static readonly UTF8Encoding k_StrictUtf8 = new UTF8Encoding(false, true);
+
         public static string ReadString(BinaryReader reader)
         {
             var strLength = reader.ReadUInt16();
-            var text = "";
-            for (var m = 0; m < strLength; ++m)
+            var bytes = reader.ReadBytes(strLength);
+            if (bytes.Length != strLength)
+                throw new EndOfStreamException();
+            return DecodeString(bytes);
+        }
+
+        public static string DecodeString(byte[] bytes)
+        {
+            try
             {
-                var character = (char)reader.ReadByte();
-                text += character;
+                return k_StrictUtf8.GetString(bytes);
             }
-            return text;
+            catch (DecoderFallbackException)
+            {
+                // One char per byte keeps the names and ids of files with invalid UTF-8 unchanged
+                var chars = new char[bytes.Length];
+                for (var i = 0; i < bytes.Length; ++i)
+                    chars[i] = (char)bytes[i];
+                return new string(chars);
+            }
+        }
+
+        public static string UpgradeLegacyString(string legacyText)
+        {
+            if (string.IsNullOrEmpty(legacyText))
+                return legacyText;
+
+            var bytes = new byte[legacyText.Length];
+            for (var i = 0; i < legacyText.Length; ++i)
+            {
+                // Legacy strings hold one char per byte
+                if (legacyText[i] > 0xFF)
+                    return legacyText;
+                bytes[i] = (byte)legacyText[i];
+            }
+            return DecodeString(bytes);
         }
 
         public static byte[] ReadAndDecompressedData(BinaryReader reader, int dataLength)
