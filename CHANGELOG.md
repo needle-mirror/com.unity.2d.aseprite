@@ -1,6 +1,11 @@
 # Changelog
 
 
+## [8.0.1] - 2026-11-17
+### Fixed
+- Animation event float parameters were imported 10 times too large on operating systems set to a decimal-comma region. (UUM-160193)
+- Aseprite files failed to import in Merge Frame mode when a cel was linked to a cel with 0 opacity. (UUM-159522)
+
 ## [8.0.0] - 2026-11-06
 ### Fixed
 - Fixed an issue where all sprites of an Aseprite file got new IDs, and references to them went missing, when the file was reimported in a new Editor session. (UUM-157004)

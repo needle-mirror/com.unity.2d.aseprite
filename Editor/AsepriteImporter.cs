@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
@@ -590,7 +591,24 @@ namespace UnityEditor.U2D.Aseprite
                     else if (ImportUtilities.IsEmptyImage(cells[m].image))
                         cells.RemoveAt(m);
                 }
+
+                var linkedCells = layer.linkedCells;
+                for (var m = linkedCells.Count - 1; m >= 0; --m)
+                {
+                    if (!HasCellInFrame(cells, linkedCells[m].linkedToFrame))
+                        linkedCells.RemoveAt(m);
+                }
             }
+        }
+
+        static bool HasCellInFrame(List<Cell> cells, int frameIndex)
+        {
+            for (var i = 0; i < cells.Count; ++i)
+            {
+                if (cells[i].frameIndex == frameIndex)
+                    return true;
+            }
+            return false;
         }
 
         static void DisposeCellsInLayer(Layer layer)
@@ -873,9 +891,9 @@ namespace UnityEditor.U2D.Aseprite
                 else
                 {
                     var eventParam = eventParts[1];
-                    if (int.TryParse(eventParam, out var intParam))
+                    if (int.TryParse(eventParam, NumberStyles.Integer, CultureInfo.InvariantCulture, out var intParam))
                         eventData.Add((eventParts[0], intParam));
-                    else if (float.TryParse(eventParam, out var floatParam))
+                    else if (float.TryParse(eventParam, NumberStyles.Float, CultureInfo.InvariantCulture, out var floatParam))
                         eventData.Add((eventParts[0], floatParam));
                     else if (eventParam.StartsWith("\"") && eventParam.EndsWith("\""))
                     {
